@@ -1,16 +1,10 @@
 package fr.polytechnique.cmap.cnam.flattening
 
-import org.apache.spark.sql._
-
 import com.typesafe.config.Config
-
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
-import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
+import org.apache.spark.sql.{Dataset, SQLContext, SaveMode}
 
-/**
-  * Created by sathiya on 15/02/17.
-  */
 object FlatteningMain extends Main {
 
   def appName = "Flattening"
@@ -19,10 +13,10 @@ object FlatteningMain extends Main {
                              saveMode: SaveMode = SaveMode.Overwrite): Unit = {
 
     // Generate schemas from csv
-    val columnsTypeMap: Map[String, List[(String,String)]] = FlatteningConfig.columnTypes
+    val columnsTypeMap: Map[String, List[(String, String)]] = FlatteningConfig.columnTypes
 
 
-    FlatteningConfig.partitionsList.foreach{
+    FlatteningConfig.partitionsList.foreach {
       config: ConfigPartition =>
         val columnsType = columnsTypeMap(config.name).toMap
 
@@ -33,11 +27,22 @@ object FlatteningMain extends Main {
     }
   }
 
+  def computeFlattenedFiles(sqlContext: SQLContext, configs: List[Config]): Unit = {
+    configs.foreach(config => new FlatTable(sqlContext, config).writeAsParquet)
+  }
+
   def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
     argsMap.get("conf").foreach(sqlContext.setConf("conf", _))
     argsMap.get("env").foreach(sqlContext.setConf("env", _))
 
+    logger.info("begin converting csv to parquet")
     saveCSVTablesAsParquet(sqlContext)
+
+    logger.info("begin flattening")
+    computeFlattenedFiles(sqlContext, FlatteningConfig.joinTablesConfig)
+
+    logger.info("finished flattening")
+
     None
   }
 }

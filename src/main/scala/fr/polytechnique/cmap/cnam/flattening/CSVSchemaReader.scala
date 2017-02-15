@@ -2,9 +2,6 @@ package fr.polytechnique.cmap.cnam.flattening
 
 import fr.polytechnique.cmap.cnam.utilities.CollectionTool._
 
-/**
-  * Created by sathiya on 15/02/17.
-  */
 object CSVSchemaReader {
 
   final val delimiter: String = ";"
@@ -21,7 +18,7 @@ object CSVSchemaReader {
     filenames.map(readSchemaFile).reduce(_ ++ _)
   }
 
-  def readColumnsType(configLines: List[String]): Map[String, List[(String,String)]] = {
+  def readColumnsType(configLines: List[String]): Map[String, List[(String, String)]] = {
 
     val colNameLookup: Map[String, Int] = configLines.head.split(delimiter).map(_.trim).zipWithIndex.toMap
 
@@ -31,7 +28,7 @@ object CSVSchemaReader {
 
     configLines
       .map(_.split(delimiter).map(_.trim))
-      .map{
+      .map {
         line => line(tableNameIndex) -> (line(columnNameIndex), line(columnTypeIndex))
       }.groupByKey - tableCSVName
   }
