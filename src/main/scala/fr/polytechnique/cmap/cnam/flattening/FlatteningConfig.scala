@@ -4,7 +4,8 @@ import scala.collection.JavaConverters._
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
 import com.typesafe.config.{Config, ConfigFactory}
-
+import scala.collection.JavaConversions._
+import com.typesafe.config._
 /**
   * Created by sathiya on 15/02/17.
   */
@@ -27,8 +28,14 @@ object FlatteningConfig {
 
   val tablesConfigList : List[Config] = conf.getConfigList("tables_config").asScala.toList
 
+  val joinTablesConfig : List[Config] = conf.getConfigList("join").asScala.toList
+
+
+
+
   implicit class FlatteningConfigUtilities(config: Config) {
 
+    //reading implicits
     def name: String = config.getString("name")
 
     def schemaName: String = config.getString("schema_name")
@@ -39,6 +46,15 @@ object FlatteningConfig {
 
     def partitionKey: List[String] = config.getStringList("output.key").asScala.toList
 
+    //joining implicits
+    def tablesToJoin: List[String] = config.getStringList("tablesToJoin").asScala.toList
+    def foreignKeys: List[String] = config.getStringList("foreignKeys").asScala.toList
+    def pathTablesToJoin: List[String] = config.getStringList("pathTablesToJoin").asScala.toList
+
+    def mainTableName: String = config.getString("main_table.name")
+    def mainTablePath: String = config.getString("main_table.path")
+    def mainTableKey: String = config.getString("main_table.primaryKey")
+    def outputPath: String = config.getString("outputPath")
   }
 
   def getTableConfig(name: String): Config = {
