@@ -47,14 +47,16 @@ object FlatteningConfig {
     def partitionKey: List[String] = config.getStringList("output.key").asScala.toList
 
     //joining implicits
-    def tablesToJoin: List[String] = config.getStringList("tablesToJoin").asScala.toList
+    def tablesToJoin: List[Config] = config.getConfigList("tablesToJoin").asScala.toList
     def foreignKeys: List[String] = config.getStringList("foreignKeys").asScala.toList
-    def pathTablesToJoin: List[String] = config.getStringList("pathTablesToJoin").asScala.toList
+    def pathTablesToJoin: String = config.getString("path")
 
     def mainTableName: String = config.getString("main_table.name")
     def mainTablePath: String = config.getString("main_table.path")
-    def mainTableKey: String = config.getString("main_table.primaryKey")
+    def mainTableKey:  List[String]  = config.getStringList("main_table.primaryKey").asScala.toList
     def outputPath: String = config.getString("outputPath")
+
+
   }
 
   def getTableConfig(name: String): Config = {

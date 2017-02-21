@@ -45,13 +45,13 @@ class FlatteningMainSuite extends SharedContext {
 
     def joinTables(mainTable: joinTable, tablesToJoin: List[joinTable]) = {
       tablesToJoin.foldLeft(mainTable)( (acc:joinTable,other:joinTable) =>
-        joinTable(acc.df.join(other.df, Seq(mainTable.foreighKey),"leftouter"), ""))
+        joinTable(acc.df.join(other.df, mainTable.foreighKey,"leftouter"), List("")))
     }
 
     //When
-    val listeTables = (List(joinTable(inputTable1ToJoin,"patient"),joinTable(inputTable2Join,"patient")))
+    val listeTables = (List(joinTable(inputTable1ToJoin,List("patient")),joinTable(inputTable2Join,List("patient"))))
     val foreignKeys = List("patient","patient")
-    val mainTablesListDF = (joinTable(inputCentralTable,"PatientID"))
+    val mainTablesListDF = (joinTable(inputCentralTable,List("PatientID")))
     val result = joinTables(mainTablesListDF,listeTables)
 
     //Then
