@@ -11,10 +11,7 @@ import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
 class FlattenedTable(config: Config, sqlContext: SQLContext) {
 
   val mainTable = joinTable(sqlContext.read.parquet(config.mainTablePath),config.mainTableKey)
-  //val tablesToJoin = (List(config.pathTablesToJoin.map(path => sqlContext.read.parquet(path)), config.foreignKeys)).map{case(df,fk) => new joinTable(df,fk)}
-  //val tablesToJoin = ((config.pathTablesToJoin.map(path => sqlContext.read.parquet(path))) zip config.foreignKeys)
-  //  .map{case(df,fk) => new joinTable(df,fk)}
-  val tablesToJoin = config.tablesToJoin.map(x => joinTable(sqlContext.read.parquet(x.pathTablesToJoin),x.foreignKeys)).toList
+  val tablesToJoin = config.tablesToJoin.map(x => joinTable(sqlContext.read.parquet(x.pathTablesToJoin),x.foreignKeys))
   val outputPath = config.outputPath
 
   def joinTables(mainTable: joinTable, tablesToJoin: List[joinTable]) = {
