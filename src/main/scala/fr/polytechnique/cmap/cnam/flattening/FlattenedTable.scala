@@ -7,6 +7,7 @@ package fr.polytechnique.cmap.cnam.flattening
 import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 import com.typesafe.config.Config
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
+import org.apache.spark.sql.functions._
 
 class FlattenedTable(config: Config, sqlContext: SQLContext) {
 
@@ -15,11 +16,11 @@ class FlattenedTable(config: Config, sqlContext: SQLContext) {
   val outputPath = config.outputPath
 
   def joinTables(mainTable: joinTable, tablesToJoin: List[joinTable]) = {
-    tablesToJoin.foldLeft(mainTable)( (acc:joinTable,other:joinTable) =>
+    tablesToJoin.foldLeft(mainTable)( (acc: joinTable, other: joinTable) =>
       joinTable(acc.df.join(other.df, mainTable.foreighKey,"leftouter"), List("")))
   }
   lazy val flatTable = joinTables(mainTable,tablesToJoin)
-  def saveJoinTable(): Unit = flatTable.df.write.parquet(outputPath)
+  def saveJoinTable(): Unit = flatTable.df.write.partitionBy("").parquet(outputPath)
 
 }
 case class joinTable(df:DataFrame, foreighKey:List[String]){

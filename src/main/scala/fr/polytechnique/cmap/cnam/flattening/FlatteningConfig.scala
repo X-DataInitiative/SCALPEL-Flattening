@@ -56,6 +56,8 @@ object FlatteningConfig {
     def mainTableKey:  List[String]  = config.getStringList("main_table.primaryKey").asScala.toList
     def outputPath: String = config.getString("outputPath")
 
+    def yearPartitionCols: List[String] =  config.getStringList("yearPartitionCols").asScala.toList
+    def monthsPartitionCols: List[String] =  config.getStringList("monthsPartitionCols").asScala.toList
 
   }
 
