@@ -20,8 +20,28 @@ class FlattenedTable(config: Config, sqlContext: SQLContext) {
       joinTable(acc.df.join(other.df, mainTable.foreighKey,"leftouter"), List("")))
   }
   lazy val flatTable = joinTables(mainTable,tablesToJoin)
-  def saveJoinTable(): Unit = flatTable.df.write.partitionBy("").parquet(outputPath)
 
+
+
+  def saveJoinTable(): Unit = flatTable
+    .partitionByYear(config.yearPartitionCols)
+    .partitionByMonth(config.monthsPartitionCols)
+    .df.write.parquet(outputPath)
+
+  implicit class joinTableUtilities(jt: joinTable) {
+    def partitionByYear(colName: String): joinTable = {
+      if (colName != "")
+        joinTable(jt.df.withColumn("yearPartitionCol", year(jt.df.col(colName))).repartition(jt.df.col("yearPartitionCol")), jt.foreighKey)
+      jt
+    }
+
+    def partitionByMonth(colName: String): joinTable = {
+      if (colName != "")
+        joinTable(jt.df.withColumn("monthPartitionCol", month(jt.df.col(colName))).repartition(jt.df.col("monthPartitionCol")), jt.foreighKey)
+      jt
+    }
+
+  }
 }
 case class joinTable(df:DataFrame, foreighKey:List[String]){
 }
