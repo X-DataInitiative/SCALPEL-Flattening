@@ -50,6 +50,7 @@ object FlatteningConfig {
     def tablesToJoin: List[Config] = config.getConfigList("tablesToJoin").asScala.toList
     def foreignKeys: List[String] = config.getStringList("foreignKeys").asScala.toList
     def pathTablesToJoin: String = config.getString("path")
+    def tableToJoinName: String = config.getString("name")
 
     def mainTableName: String = config.getString("main_table.name")
     def mainTablePath: String = config.getString("main_table.path")

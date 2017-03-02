@@ -16,7 +16,7 @@ class ReadCSVTableSuite extends SharedContext {
       .read
       .option("header", "true")
       .option("delimiter", ";")
-      .csv("src/test/resources/flattening/schema/DCIR_schema.csv")
+        .format("csv").load("src/test/resources/flattening/schema/DCIR_schema.csv")
 
     val tableName = "IR_BEN_R"
     val expectedResult: Map[String, String] = Map(
@@ -61,13 +61,13 @@ class ReadCSVTableSuite extends SharedContext {
       .read
       .option("header", "true")
       .option("delimiter", ";")
-      .csv("src/test/resources/flattening/schema/DCIR_schema.csv")
+        .format("csv").load("src/test/resources/flattening/schema/DCIR_schema.csv")
 
     val input = sqlContext
       .read
       .option("header", "true")
       .option("delimiter", ";")
-      .csv("src/test/resources/flattening/csv-table/IR_BEN_R.csv")
+      .format("csv").load("src/test/resources/flattening/csv-table/IR_BEN_R.csv")
 
     val tableName = "IR_BEN_R"
     val config = FlatteningConfig.getTableConfig(tableName)
@@ -110,7 +110,7 @@ class ReadCSVTableSuite extends SharedContext {
       .read
       .option("header", "true")
       .option("delimiter", ";")
-      .csv("src/test/resources/flattening/csv-table/IR_BEN_R.csv")
+      .format("csv").load("src/test/resources/flattening/csv-table/IR_BEN_R.csv")
 
     input.show
     input.printSchema

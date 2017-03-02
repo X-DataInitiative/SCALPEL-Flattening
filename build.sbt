@@ -1,7 +1,7 @@
 name := "SNIIRAM-flattening-2.0"
 version := "1.0"
-scalaVersion := "2.11.7"
-val sparkVersion = "2.1.0"
+scalaVersion := "2.10.6"
+val sparkVersion = "1.6.2"
 
 parallelExecution in Test := false
 
