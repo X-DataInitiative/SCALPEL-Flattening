@@ -1,9 +1,8 @@
 package fr.polytechnique.cmap.cnam.flattening
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
-import org.apache.spark.sql.{Dataset, SaveMode}
+import org.apache.spark.sql.{Dataset, SQLContext, SaveMode}
 import fr.polytechnique.cmap.cnam.Main
 import org.apache.spark.sql
-import org.apache.spark.sql.hive.HiveContext
 
 /**
   * Created by sathiya on 15/02/17.
@@ -33,7 +32,7 @@ object FlatteningMain extends Main {
       }
   }
 
-  def computeFlattenedFiles(sqlContext: HiveContext, argsMap: Map[String, String] = Map()): Unit = {
+  def computeFlattenedFiles(sqlContext: SQLContext, argsMap: Map[String, String] = Map()): Unit = {
 
     argsMap.get("conf").foreach(sqlContext.setConf("conf", _))
     argsMap.get("env").foreach(sqlContext.setConf("env", _))
@@ -50,7 +49,7 @@ object FlatteningMain extends Main {
     logger.info("end save join")
   }
 
-  def run(sqlContext: HiveContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
+  def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
 
     logger.info("begin run")
     argsMap("strategy" )match {
