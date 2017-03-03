@@ -1,8 +1,7 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import scala.collection.JavaConverters._
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.{SQLContext, SparkSession}
+import org.apache.spark.sql.SparkSession
 import com.typesafe.config.{Config, ConfigFactory}
 
 /**
@@ -22,6 +21,7 @@ object FlatteningConfig {
     newConfig.withFallback(defaultConfig).resolve()
   }
 
+  val envName: String = conf.getString("env_name")
   val schemaFile: List[String] = conf.getStringList("schema_file_path").asScala.toList
   val outputPath: String = conf.getString("output_path")
 
@@ -29,11 +29,11 @@ object FlatteningConfig {
     .map(_.getConfigList("tables").asScala.toList)
     .reduce(_ ::: _)
 
-  implicit class FlatteningConfigUtilities(config: Config) {
+  implicit class FlatteningTableConfig(config: Config) {
 
     def name: String = config.getString("name")
 
-    def schemaName: String = config.getString("schema_name")
+    def schemaId: String = config.getString("schema_id")
 
     def dateFormat: String = {
       if(config.hasPath("date_format"))
@@ -41,13 +41,40 @@ object FlatteningConfig {
       else "dd/MM/yyyy"
     }
 
-    def inputPaths: List[String] = config.getStringList("input_path").asScala.toList
+    def inputPaths: List[String] = config.getStringList("input").asScala.toList
 
-    def partitionKey: List[String] = config.getStringList("output.key").asScala.toList
+    def outputTableName: String = config.getString("output.table_name")
 
+    def partitionColumn: Option[String] = {
+      if(config.hasPath("output.partition_column"))
+        Some(config.getString("output.partition_column"))
+      else None
+    }
+
+    override def toString: String = {
+      s"name -> $name \n" +
+      s"schemaName -> $schemaId \n" +
+      s"dateFormat -> $dateFormat \n" +
+      s"inputPaths -> $inputPaths \n" +
+      s"outputTableName -> $outputTableName \n" +
+      s"partitionColumn -> $partitionColumn"
+    }
   }
 
-  def getTableConfig(name: String): Config = {
+  def tableConfig(name: String): Config = {
     tablesConfigList.filter(_.name == name).head
+  }
+
+  def tablesConfigOutputPath: List[String] = tablesConfigList.map(_.outputTableName)
+
+  def tablesConfigNames: List[String] = tablesConfigList.map(_.name)
+
+  def tablesConfigSchemaIds: List[String] = tablesConfigList.map(_.schemaId)
+
+  override def toString: String = {
+    s"envName -> $envName \n" +
+    s"schemaFile -> $schemaFile \n" +
+    s"outputPath -> $outputPath \n" +
+    s"tablesConfigList -> $tablesConfigNames"
   }
 }

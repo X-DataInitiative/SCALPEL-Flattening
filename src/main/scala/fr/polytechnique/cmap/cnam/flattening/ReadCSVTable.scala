@@ -2,9 +2,11 @@ package fr.polytechnique.cmap.cnam.flattening
 
 import java.sql.Date
 import java.text.SimpleDateFormat
+import org.apache.log4j.Logger
+import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
-import com.typesafe.config.Config
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.FlatteningTableConfig
 
 /**
   * Created by sathiya on 15/02/17.
@@ -12,9 +14,8 @@ import com.typesafe.config.Config
 object ReadCSVTable {
 
   implicit class FlatteningDFUtilities(data: DataFrame) {
-    import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.FlatteningConfigUtilities
 
-    val parseDate = udf(
+    val parseDate: UserDefinedFunction = udf(
       (dateInString: String, format: String) => {
         if(dateInString == null)
           null
@@ -26,8 +27,8 @@ object ReadCSVTable {
       }
     )
 
-    def applySchema(schemaFile: DataFrame, tableConfig: FlatteningConfigUtilities): DataFrame = {
-      val expectedSchema = getSchema(schemaFile, tableConfig.name)
+    def applySchema(schemaFile: List[String], tableConfig: FlatteningTableConfig): DataFrame = {
+      val expectedSchema = getSchema(schemaFile, tableConfig.schemaId)
 
       val castedColNames = data.columns.map { colName =>
         if (expectedSchema.contains(colName)) {
@@ -37,57 +38,46 @@ object ReadCSVTable {
             case _ => col(colName).cast(expectedSchema(colName))
           }
         }
-        else
+        else {
+          val logger = Logger.getLogger(getClass)
+          logger.error(s"Column name: $colName for schema id: ${tableConfig.schemaId} not found, " +
+            s"choosing StringType")
           col(colName)
+        }
       }
 
       data.select(castedColNames: _*)
     }
   }
 
-  def getSchema(schemaFile: DataFrame, tableName: String): Map[String, String] = {
-    val tableSchema = schemaFile.filter(col("MEMNAME") like tableName)
-      .select("NAME", "FORMAT", "FORMATL", "FORMATD").distinct
+  def getSchema(schemaLines: List[String], tableName: String): Map[String, String] = {
 
-    val tableColumns = tableSchema.select("NAME").distinct
+    val tableSchema: List[(String, String)] = schemaLines
+      .map( _.split(";").map(_.trim))
+      .filter(_.apply(0).equals(tableName))
+      .map(
+        (row: Array[String]) =>
+          (row.apply(1), row.apply(5))
+      )
 
-    if(tableSchema.count != tableColumns.count)
+    val tableColumns = tableSchema.map(_._1).distinct
+
+    if(tableSchema.size != tableColumns.size)
       throw new Exception(s"Conflicting Schema definition for the table $tableName")
 
-    val computeDataType = udf(
-      (format: String, formatL: Int, formatD: Int) => (format, formatL, formatD) match {
-        case (null, formatL, 0) if formatL < 10 => "Integer"
-        case (null, formatL, 0) if formatL >= 10 => "Long"
-        case (null, formatL, formatD) if formatL < 6 && formatD > 0 => "Float"
-        case (null, formatL, formatD) if formatL >= 6 && formatD > 0 => "Double"
-        case ("$", formatL, 0) => "String"
-        case ("DATETIME", formatL, 0) => "Date"
-        case _ => "String"
-      }
-    )
-
-    val tableSchemaWithDataType = tableSchema
-      .withColumn("DATATYPE", computeDataType(col("FORMAT"), col("FORMATL"), col("FORMATD")))
-
-    import tableSchemaWithDataType.sqlContext.implicits._
-    tableSchemaWithDataType
-      .map(
-        (row: Row) =>
-          row.getString(0) -> row.getString(4)
-      ).collect().toMap
+    tableSchema.toMap
   }
 
-  def readSchemaFile(sqlContext: SQLContext,
-    inputPath: List[String]): DataFrame = readCSV(sqlContext, inputPath)
+  def readSchemaFile(schemaPath: List[String]): List[String] = schemaPath
+    .map(scala.io.Source.fromFile(_).getLines)
+    .reduce(_ ++ _).toList
 
-  def readCSVTable(sqlContext: SQLContext, tableConfig: Config): DataFrame = {
-
-    import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
+  def readCSVTable(sqlContext: SQLContext, tableConfig: FlatteningTableConfig): DataFrame = {
     readCSV(sqlContext, tableConfig.inputPaths, tableConfig.dateFormat)
   }
 
   def readCSV(sqlContext: SQLContext,
-    inputPath: List[String],
+    inputPath: Seq[String],
     dateFormat: String = "dd/MM/yyyy"): DataFrame = {
     sqlContext
       .read

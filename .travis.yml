@@ -1,0 +1,22 @@
+sudo: required
+dist: precise
+
+# Building on centOS require pulling a docker image
+env:
+  - linux
+
+language: scala
+scala:
+  - 2.10.6
+# JDK8 not available with OpenJDK
+jdk:
+  - oraclejdk8
+
+branches:
+  only:
+  - master
+git:
+  depth: 1
+
+script:
+  - sbt clean coverage test coverageReport
