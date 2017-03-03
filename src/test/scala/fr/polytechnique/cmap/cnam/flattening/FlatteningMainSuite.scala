@@ -81,7 +81,7 @@ class FlatteningMainSuite extends SharedContext {
     import sqlCtx.implicits._
 
     //Given
-    val path = "E:/flatteningProject/runResult/"
+    val path = "src/test/resources/flattening/join/DCIR1/"
     val expected: DataFrame = Seq(
       (Some("1"), Some("5"), None, Some("1"), Some("anti diabetic"), None, Some("2"), Some("cancer"), Some("CIP13")),
       (Some("2"), None, Some("3"), Some("5"), None, None, Some("5"), None, None),
