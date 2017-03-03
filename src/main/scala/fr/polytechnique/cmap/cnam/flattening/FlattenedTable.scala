@@ -18,7 +18,7 @@ class FlattenedTable(config: Config, sqlContext: SQLContext) {
 
   def joinTables(mainTable: joinTable, tablesToJoin: List[joinTable]) : joinTable = {
     tablesToJoin.foldLeft(mainTable)( (acc: joinTable, other: joinTable) =>
-      joinTable(mainTable.name, acc.df.join(other.addPrefix().df, mainTable.foreighKey,"left_outer"), List("")))
+      joinTable(config.name, acc.df.join(other.addPrefix().df, mainTable.foreighKey,"left_outer"), List("")))
 
   }
   lazy val flatTable = joinTables(mainTable,tablesToJoin)

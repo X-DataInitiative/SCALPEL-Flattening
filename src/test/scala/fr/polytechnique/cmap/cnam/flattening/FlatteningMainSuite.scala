@@ -90,7 +90,7 @@ class FlatteningMainSuite extends SharedContext {
       (Some("1"), Some("5"), None, Some("4"), None, None, Some("2"), Some("cancer"), Some("CIP13")),
       (Some("3"), Some("2"), Some("1"), None, None, None, Some("1"), Some("fever"), None),
       (Some("3"), Some("2"), Some("1"), None, None, None, Some("4"), None, None)
-    ).toDF("PatientID", "codep", "dab", "medicament", "descriptionDoc","dosage", "disease", "description", "code")
+    ).toDF("PatientID", "codep", "dab", "input1_medicament", "input1_descriptionDoc","input1_dosage", "input2_disease", "input2_description", "input2_code")
 
     //When
     FlatteningMain.run(sqlCtx,Map("env" -> "test", "strategy" -> "join"))
