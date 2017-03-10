@@ -13,8 +13,8 @@ class FlatteningConfigSuite extends SharedContext {
     // Given
     val expectedResult =
       s"envName -> test \n" +
-        s"schemaFile -> List(src/main/resources/flattening/config/schema/DCIR_schema.csv, " +
-                           s"src/main/resources/flattening/config/schema/PMSI_schema.csv) \n" +
+        s"schemaFilePath -> List(flattening/config/schema/DCIR_schema.csv, " +
+                               s"flattening/config/schema/PMSI_schema.csv) \n" +
         s"outputPath -> target/test/output \n" +
         s"tablesConfigList -> List(ER_CAM_F, ER_PHA_F, ER_PRS_F, ER_UCD_F, IR_BEN_R, IR_IMB_R, " +
                                  s"MCO06A, MCO07A, MCO08A, MCO06B, MCO07B, MCO08B, MCO06C, MCO07C, " +

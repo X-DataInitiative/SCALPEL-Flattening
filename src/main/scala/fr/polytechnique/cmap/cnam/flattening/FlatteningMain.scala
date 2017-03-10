@@ -16,7 +16,7 @@ object FlatteningMain extends Main {
     import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
     import fr.polytechnique.cmap.cnam.flattening.ReadCSVTable._
 
-    val schemaFile: List[String] = readSchemaFile(FlatteningConfig.schemaFile)
+    val schemaFile: List[String] = readSchemaFile(FlatteningConfig.schemaFilePath)
 
     FlatteningConfig.tablesConfigList
       .foreach{

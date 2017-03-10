@@ -22,7 +22,7 @@ object FlatteningConfig {
   }
 
   val envName: String = conf.getString("env_name")
-  val schemaFile: List[String] = conf.getStringList("schema_file_path").asScala.toList
+  val schemaFilePath: List[String] = conf.getStringList("schema_file_path").asScala.toList
   val outputPath: String = conf.getString("output_path")
 
   val tablesConfigList : List[Config] = conf.getConfigList("tables_config").asScala.toList
@@ -73,7 +73,7 @@ object FlatteningConfig {
 
   override def toString: String = {
     s"envName -> $envName \n" +
-    s"schemaFile -> $schemaFile \n" +
+    s"schemaFilePath -> $schemaFilePath \n" +
     s"outputPath -> $outputPath \n" +
     s"tablesConfigList -> $tablesConfigNames"
   }

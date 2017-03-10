@@ -68,9 +68,14 @@ object ReadCSVTable {
     tableSchema.toMap
   }
 
-  def readSchemaFile(schemaPath: List[String]): List[String] = schemaPath
-    .map(scala.io.Source.fromFile(_).getLines)
-    .reduce(_ ++ _).toList
+  //TODO: find a better way to do it
+  def readSchemaFile(schemaPaths: List[String]): List[String] = schemaPaths
+    .map{
+      (path: String) =>
+        val inputStream = getClass.getClassLoader.getResourceAsStream(path)
+        scala.io.Source.fromInputStream(inputStream).getLines().toList
+    }
+    .reduce(_ ++ _)
 
   def readCSVTable(sqlContext: SQLContext, tableConfig: FlatteningTableConfig): DataFrame = {
     readCSV(sqlContext, tableConfig.inputPaths, tableConfig.dateFormat)

@@ -10,13 +10,33 @@ import fr.polytechnique.cmap.cnam.SharedContext
   */
 class ReadCSVTableSuite extends SharedContext {
 
+  "readSchema" should "look for the right file and parse it without nullPointerException" in {
+
+    //Given
+    val schemaPathForParsing = List("flattening/config/schema/DCIR_schema.csv",
+                                    "flattening/config/schema/PMSI_schema.csv")
+    val schemaPathForFileReading = List("src/main/resources/flattening/config/schema/DCIR_schema.csv",
+                                        "src/main/resources/flattening/config/schema/PMSI_schema.csv")
+
+    val expectedResult: List[String] = schemaPathForFileReading
+      .map(scala.io.Source.fromFile(_).getLines)
+      .reduce(_ ++ _)
+      .toList
+
+    //When
+    val result: List[String] = ReadCSVTable.readSchemaFile(schemaPathForParsing)
+
+    //Then
+    result foreach println
+    assert(result == expectedResult)
+  }
+
   "getSchema" should "compute the right data types of the columns based on the format types " +
     "specified in the Schema file" in {
 
     //Given
-    val schemaPath = List("src/main/resources/flattening/config/schema/DCIR_schema.csv",
-                          "src/main/resources/flattening/config/schema/PMSI_schema.csv")
-    val schemaFile = ReadCSVTable.readSchemaFile(schemaPath)
+    val schemaPath = FlatteningConfig.schemaFilePath
+    val parsedSchemaFile = ReadCSVTable.readSchemaFile(schemaPath)
     val tableName = "IR_BEN_R"
     val expectedResult: Map[String, String] = Map(
       "BEN_CDI_NIR" ->  "String",
@@ -42,7 +62,7 @@ class ReadCSVTableSuite extends SharedContext {
 
 
     //When
-    val result = ReadCSVTable.getSchema(schemaFile, tableName)
+    val result = ReadCSVTable.getSchema(parsedSchemaFile, tableName)
 
     //Then
     println("result.diff(expectedResult):")
@@ -56,14 +76,15 @@ class ReadCSVTableSuite extends SharedContext {
   it should "work similar to working with data frames" in {
 
     //Given
-    val schemaPath = List("src/main/resources/flattening/config/schema/DCIR_schema.csv",
-                          "src/main/resources/flattening/config/schema/PMSI_schema.csv")
-    val schemaFile: List[String] = schemaPath.map(scala.io.Source.fromFile(_).getLines).reduce(_ ++ _).toList
+    val schemaPath = FlatteningConfig.schemaFilePath
+    val schemaPathForFile = List("src/main/resources/flattening/config/schema/DCIR_schema.csv",
+                                 "src/main/resources/flattening/config/schema/PMSI_schema.csv")
+    val parsedSchemaFile: List[String] = ReadCSVTable.readSchemaFile(schemaPath)
     val schemaDF = sqlContext
       .read
       .option("header", "true")
       .option("delimiter", ";")
-      .csv(schemaPath: _*)
+      .csv(schemaPathForFile: _*)
 
     val _sqlContxt = sqlContext
     import _sqlContxt.implicits._
@@ -83,7 +104,7 @@ class ReadCSVTableSuite extends SharedContext {
 
 
     //When
-    val result = tableNames.map((name: String) => ReadCSVTable.getSchema(schemaFile, name))
+    val result = tableNames.map((name: String) => ReadCSVTable.getSchema(parsedSchemaFile, name))
 
     //Then
     println("Expected Result")
@@ -97,12 +118,11 @@ class ReadCSVTableSuite extends SharedContext {
   "applySchema" should "should cast the input DF columns to the right data types" in {
 
     //Given
-    val schemaPath = List("src/main/resources/flattening/config/schema/DCIR_schema.csv",
-                          "src/main/resources/flattening/config/schema/PMSI_schema.csv")
+    val schemaPath = FlatteningConfig.schemaFilePath
     val inputPath = "src/test/resources/flattening/csv-table/DCIR/IR_BEN_R.csv"
     val tableName = "IR_BEN_R"
     val config = FlatteningConfig.tableConfig(tableName)
-    val schemaFile = ReadCSVTable.readSchemaFile(schemaPath)
+    val parsedSchemaFile = ReadCSVTable.readSchemaFile(schemaPath)
     val input = sqlContext
       .read
       .option("header", "true")
@@ -130,7 +150,7 @@ class ReadCSVTableSuite extends SharedContext {
 
     //When
     import fr.polytechnique.cmap.cnam.flattening.ReadCSVTable.FlatteningDFUtilities
-    val result = input.applySchema(schemaFile, config)
+    val result = input.applySchema(parsedSchemaFile, config)
 
     //Then
     println("Result:")
