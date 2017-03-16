@@ -17,14 +17,20 @@ class FlatteningMainSuite extends SharedContext {
     val expectedTables: List[String] = FlatteningConfig.tablesConfigList.map(config => config.name)
     val expectedDfs: Map[String, DataFrame]= expectedTables.map{
       name =>
-        name -> sqlContext.read.load("src/test/resources/flattening/parquet-table/" + name).toDF()
+        name -> sqlContext.read
+          .option("mergeSchema", "true")
+          .load("src/test/resources/flattening/parquet-table/" + name)
+          .toDF
     }.toMap
 
     //When
     FlatteningMain.saveCSVTablesAsParquet(sqlContext)
     val result = expectedTables.map{
       name =>
-        name -> sqlContext.read.load(resultPath + "/" + name).toDF()
+        name -> sqlContext.read
+          .option("mergeSchema", "true")
+          .load(resultPath + "/" + name)
+          .toDF
     }.toMap
 
 
