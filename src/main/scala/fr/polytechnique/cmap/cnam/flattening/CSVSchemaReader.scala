@@ -12,7 +12,8 @@ object CSVSchemaReader {
   private val COLUMN_TYPE_INDEX = 5
 
   def readSchemaFile(filename: String): List[String] = {
-    scala.io.Source.fromFile(filename).getLines.toList
+    val inputStream = getClass.getClassLoader.getResourceAsStream(filename)
+    scala.io.Source.fromInputStream(inputStream).getLines().toList
   }
 
   def readSchemaFiles(filenames: List[String]): List[String] = {
