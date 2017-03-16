@@ -14,3 +14,5 @@ libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion % "provi
 libraryDependencies += "org.apache.spark" %% "spark-hive" % sparkVersion % "provided"
 
 libraryDependencies += "com.typesafe" % "config" % "1.3.0"
+
+

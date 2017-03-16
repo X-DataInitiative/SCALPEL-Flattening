@@ -1,7 +1,12 @@
 package fr.polytechnique.cmap.cnam.flattening
 
-import org.apache.spark.sql.{Dataset, SQLContext, SaveMode}
+import org.apache.spark.sql._
+
+import com.typesafe.config.Config
+
 import fr.polytechnique.cmap.cnam.Main
+import fr.polytechnique.cmap.cnam.utilities.DFUtils
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
 
 /**
   * Created by sathiya on 15/02/17.
@@ -13,23 +18,19 @@ object FlatteningMain extends Main {
   def saveCSVTablesAsParquet(sqlContext: SQLContext,
                              saveMode: SaveMode = SaveMode.Overwrite): Unit = {
 
-    import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
-    import fr.polytechnique.cmap.cnam.flattening.ReadCSVTable._
+    // Generate schemas from csv
+    val columnsTypeMap: Map[String, List[(String,String)]] = FlatteningConfig.columnTypes
 
-    val schemaFile: List[String] = readSchemaFile(FlatteningConfig.schemaFilePath)
 
-    FlatteningConfig.tablesConfigList
-      .foreach{
-        table =>
-          println("################################################################################")
-          println(s"Preparing to WRITE CSV Table: ${table.outputTableName}, PartitionKey: ${table.partitionColumn}")
-          readCSVTable(sqlContext, table)
-            .applySchema(schemaFile, table)
-            .write
-            .mode(saveMode)
-            .parquet(FlatteningConfig.outputPath + "/" + table.outputTableName)
-          println("##########################----------DONE---------###############################")
-      }
+    FlatteningConfig.partitionsList.foreach{
+      config: ConfigPartition =>
+        val columnsType = columnsTypeMap(config.name).toMap
+
+        val rawTable = DFUtils.readCSV(sqlContext, config.inputPaths)
+        val typedTable = DFUtils.applySchema(rawTable, columnsType, config.dateFormat)
+
+        typedTable.write.parquet(config.output)
+    }
   }
 
   def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {

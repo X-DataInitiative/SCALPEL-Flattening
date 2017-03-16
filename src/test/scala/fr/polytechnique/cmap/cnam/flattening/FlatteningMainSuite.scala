@@ -2,6 +2,7 @@ package fr.polytechnique.cmap.cnam.flattening
 
 import org.apache.spark.sql.DataFrame
 import fr.polytechnique.cmap.cnam.SharedContext
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
 
 /**
   * Created by sathiya on 24/02/17.
@@ -11,33 +12,27 @@ class FlatteningMainSuite extends SharedContext {
   "saveCSVTablesAsParquet" should "read all dummy csv tables and save as parquet files" in {
 
     //Given
-    val expectedResultPathRoot: String = "src/test/resources/flattening/parquet-table"
-    val expectedResultPath: List[String] = FlatteningConfig.tablesConfigOutputPath
-      .map(expectedResultPathRoot + "/" + _)
-    val resultPathRoot = FlatteningConfig.outputPath
-    val resultPath = FlatteningConfig.tablesConfigOutputPath.map(resultPathRoot + "/" + _)
+    val resultPath = FlatteningConfig.outputBasePath
 
-    import fr.polytechnique.cmap.cnam.utilities.FileSystemUtils._
-    val expectedResult: Seq[DataFrame]= readAllParquetDFsFrom(expectedResultPath, sqlContext)
+    val expectedTables: List[String] = FlatteningConfig.tablesConfigList.map(config => config.name)
+    val expectedDfs: Map[String, DataFrame]= expectedTables.map{
+      name =>
+        name -> sqlContext.read.load("src/test/resources/flattening/parquet-table/" + name).toDF()
+    }.toMap
 
     //When
     FlatteningMain.saveCSVTablesAsParquet(sqlContext)
-    val result = readAllParquetDFsFrom(resultPath, sqlContext)
+    val result = expectedTables.map{
+      name =>
+        name -> sqlContext.read.load(resultPath + "/" + name).toDF()
+    }.toMap
+
 
     //Then
-    println("result DFs count: " + result.size)
-    println("expectedResult DFs count: " + expectedResult.size)
-
-    import fr.polytechnique.cmap.cnam.utilities.RichDataFrames._
-    for(i <- 0 to Math.max(result.size - 1,  expectedResult.size - 1)) {
-      if(result.apply(i) ==== expectedResult.apply(i)) {
-        println(s"${resultPath.apply(i)} equals ${expectedResultPath.apply(i)}")
-        assert(true)
-      }
-      else {
-        println(s"${resultPath.apply(i)} NOT equal to ${expectedResultPath.apply(i)}")
-        assert(false)
-      }
+    import fr.polytechnique.cmap.cnam.utilities.DFUtils._
+    expectedDfs.foreach{
+      case(name, df) =>
+        assert(df.sameAs(result(name)))
     }
   }
 }
