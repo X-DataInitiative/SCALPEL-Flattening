@@ -35,6 +35,8 @@ abstract class SharedContext extends FlatSpecLike with BeforeAndAfterAll with Be
         .appName("Tests")
         .master("local[4]")
         .config("spark.sql.testkey", "true")
+        .config("spark.default.parallelism", 2)
+        .config("spark.sql.shuffle.partitions", 2)
         .getOrCreate()
     }
 
