@@ -1,5 +1,6 @@
 package fr.polytechnique.cmap.cnam.flattening
 
+import com.typesafe.config.ConfigFactory
 import fr.polytechnique.cmap.cnam.SharedContext
 
 /**
@@ -56,5 +57,68 @@ class FlatteningConfigSuite extends SharedContext {
     // Then
     assert(result.toSet ==  expected.toSet)
 
+  }
+
+  "toPartitionConfig" should "return the correct Partition config given the two config" in {
+    // Given
+    val tableConfig = ConfigFactory.parseString(
+      """
+      { name = IR_BEN_R
+        partition_strategy = "none"
+        partitions = [{path = [/shared/Observapur/raw_data/IR_BEN_R.CSV]}]
+      }
+      """.stripMargin
+    )
+    val partitionConfig = ConfigFactory.parseString("{path = [/shared/Observapur/raw_data/IR_BEN_R.CSV]}")
+
+    val expected = ConfigPartition("IR_BEN_R","dd/MM/yyyy",List("/shared/Observapur/raw_data/IR_BEN_R.CSV"),
+      "target/test/output/IR_BEN_R")
+
+    // When
+    val result = FlatteningConfig.toConfigPartition(tableConfig, partitionConfig)
+
+    // Then
+    assert(result == expected)
+  }
+
+  "SinglePartitionConfig.outputPath" should "return correct path given year strategy" in {
+    // Given
+    val partitionConfig =  ConfigFactory.parseString(
+      """
+        {path = [/shared/Observapur/raw_data/IR_BEN_R.CSV]
+        year=2010}
+      """.stripMargin)
+
+    val strategyName = "year"
+    val tableName = "IR_BEN_R"
+
+    val expected = "target/test/output/IR_BEN_R/year=2010"
+
+    // When
+    import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.SinglePartitionConfig
+    val result = partitionConfig.outputPath(strategyName, tableName)
+
+    // Then
+    assert(result == expected)
+  }
+
+  it should "return correct path given no strategy" in {
+    // Given
+    val partitionConfig =  ConfigFactory.parseString(
+      """
+        {path = [/shared/Observapur/raw_data/IR_BEN_R.CSV]}
+      """.stripMargin)
+
+    val strategyName = "whatever"
+    val tableName = "IR_BEN_R"
+
+    val expected = "target/test/output/IR_BEN_R"
+
+    // When
+    import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.SinglePartitionConfig
+    val result = partitionConfig.outputPath(strategyName, tableName)
+
+    // Then
+    assert(result == expected)
   }
 }

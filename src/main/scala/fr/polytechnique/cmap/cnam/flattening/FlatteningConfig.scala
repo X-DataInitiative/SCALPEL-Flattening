@@ -56,11 +56,6 @@ object FlatteningConfig {
 
     def inputPaths: List[String] = config.getStringList("path").asScala.toList
 
-    def partitionColumn: Option[String] = {
-      if(config.hasPath("output.partition_column"))
-        Some(config.getString("output.partition_column"))
-      else None
-    }
   }
 
   implicit class SinglePartitionConfig(config: Config) {
@@ -75,17 +70,18 @@ object FlatteningConfig {
 
   def getPartitionList(tableConfigs: List[Config]): List[ConfigPartition] = {
     tableConfigs.flatMap{
-      config =>
-        config.partitions.map{
-          partitionConfig: Config =>
-            ConfigPartition(
-              name = config.name,
-              dateFormat = config.dateFormat,
-              inputPaths = partitionConfig.inputPaths,
-              output = partitionConfig.outputPath(config.strategy, config.name)
-            )
-        }
+      tableConfig =>
+        tableConfig.partitions.map(toConfigPartition(tableConfig,_))
     }
+  }
+
+  def toConfigPartition(tableConfig: Config, partitionConfig: Config): ConfigPartition = {
+    ConfigPartition(
+      name = tableConfig.name,
+      dateFormat = tableConfig.dateFormat,
+      inputPaths = partitionConfig.inputPaths,
+      output = partitionConfig.outputPath(tableConfig.strategy, tableConfig.name)
+    )
   }
 
 
