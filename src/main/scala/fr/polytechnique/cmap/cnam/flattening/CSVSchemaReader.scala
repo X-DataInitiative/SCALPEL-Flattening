@@ -7,9 +7,10 @@ import fr.polytechnique.cmap.cnam.utilities.CollectionTool._
   */
 object CSVSchemaReader {
 
-  private val TABLE_NAME_INDEX = 0
-  private val COLUMN_NAME_INDEX = 1
-  private val COLUMN_TYPE_INDEX = 5
+  final val delimiter: String = ";"
+  final val tableCSVName: String = "MEMNAME"
+  final val columnCSVName: String = "NAME"
+  final val typeCSVName: String = "DATATYPE"
 
   def readSchemaFile(filename: String): List[String] = {
     val inputStream = getClass.getClassLoader.getResourceAsStream(filename)
@@ -21,11 +22,18 @@ object CSVSchemaReader {
   }
 
   def readColumnsType(configLines: List[String]): Map[String, List[(String,String)]] = {
+
+    val colNameLookup: Map[String, Int] = configLines.head.split(delimiter).map(_.trim).zipWithIndex.toMap
+
+    val tableNameIndex = colNameLookup(tableCSVName)
+    val columnNameIndex = colNameLookup(columnCSVName)
+    val columnTypeIndex = colNameLookup(typeCSVName)
+
     configLines
-      .map(_.split(';'))
+      .map(_.split(delimiter).map(_.trim))
       .map{
-        line => line(TABLE_NAME_INDEX) -> (line(COLUMN_NAME_INDEX), line(COLUMN_TYPE_INDEX))
-      }.groupByKey()
+        line => line(tableNameIndex) -> (line(columnNameIndex), line(columnTypeIndex))
+      }.groupByKey - tableCSVName
   }
 
 

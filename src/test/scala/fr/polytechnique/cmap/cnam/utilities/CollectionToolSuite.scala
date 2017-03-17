@@ -20,7 +20,7 @@ class CollectionToolSuite extends FlatSpecLike {
 
     // When
     import fr.polytechnique.cmap.cnam.utilities.CollectionTool._
-    val result = inputList.groupByKey()
+    val result = inputList.groupByKey
 
     // Then
     assert(result == expected)

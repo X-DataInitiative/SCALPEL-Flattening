@@ -34,6 +34,7 @@ class CSVSchemaReaderSuite extends FlatSpecLike {
   "readColumnsType" should "transform a list of csv into a nice map of columns names and types" in {
     // Given
     val inputLines = List(
+      "MEMNAME;NAME;FORMAT;FORMATL;FORMATD;DATATYPE",
       "TABLE1;COLUMN1;$;4;0;TYPE1",
       "TABLE1;COLUMN2;$;4;0;TYPE2",
       "TABLE2;COLUMN1;$;4;0;TYPE3",
