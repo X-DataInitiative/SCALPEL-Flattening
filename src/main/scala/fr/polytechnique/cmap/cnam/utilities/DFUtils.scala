@@ -1,21 +1,13 @@
 package fr.polytechnique.cmap.cnam.utilities
 
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, SQLContext}
 
-import com.typesafe.config.Config
-
-import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig
-
-/**
-  * Created by sathiya on 27/02/17.
-  */
 object DFUtils {
 
   def readCSV(sqlContext: SQLContext,
-              inputPath: Seq[String],
-              dateFormat: String = "dd/MM/yyyy"): DataFrame = {
+              inputPath: Seq[String]): DataFrame = {
     sqlContext
       .read
       .option("header", "true")
@@ -23,8 +15,15 @@ object DFUtils {
       .csv(inputPath: _*)
   }
 
+  def readParquet(sqlContext: SQLContext,
+                  inputPath: String): DataFrame = {
+    sqlContext
+      .read
+      .option("mergeSchema", "true")
+      .parquet(inputPath)
+  }
 
-  def applySchema(df: DataFrame, columnsType: Map[String,String], dateFormat: String): DataFrame = {
+  def applySchema(df: DataFrame, columnsType: Map[String, String], dateFormat: String): DataFrame = {
 
     val inputColumns = df.columns
 
@@ -32,7 +31,7 @@ object DFUtils {
       columnName =>
         val columnType = columnsType(columnName)
 
-        if(columnType == "Date") {
+        if (columnType == "Date") {
           to_date(
             unix_timestamp(col(columnName), dateFormat)
               .cast(TimestampType)
@@ -80,4 +79,5 @@ object DFUtils {
         checkDuplicateRows
     }
   }
+
 }

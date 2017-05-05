@@ -8,6 +8,7 @@ parallelExecution in Test := false
 test in assembly := {}
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+libraryDependencies += "org.mockito" % "mockito-core" % "2.3.0" % "test"
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion % "provided"
 libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion % "provided"

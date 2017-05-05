@@ -1,16 +1,51 @@
 package fr.polytechnique.cmap.cnam.utilities
 
+import org.apache.spark.sql.types._
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
-import org.apache.spark.sql.types._
 
-/**
-  * Created by sathiya on 07/03/17.
-  */
 class DFUtilsSuite extends SharedContext {
+
+  "readCSV" should "read CSV files with correct header and delimiters correctly" in {
+
+    //Given
+    val sqlCtx = sqlContext
+    val inputPath = Seq("src/test/resources/flattening/csv-table/IR_BEN_R.csv",
+                        "src/test/resources/flattening/csv-table/IR_BEN_R.csv")
+    val expectedResult = sqlCtx
+      .read
+      .option("header", "true")
+      .option("delimiter", ";")
+      .csv(inputPath: _*)
+
+    //When
+    val result = DFUtils.readCSV(sqlCtx, inputPath)
+
+    //Then
+    assert(result sameAs expectedResult)
+  }
+
+  "readParquet" should "read parquet file merging the schema of the patitions" in {
+
+    //Given
+    val sqlCtx = sqlContext
+    val inputPath = "src/test/resources/flattening/parquet-table/MCO_A"
+    val expectedResult = sqlCtx
+      .read
+      .option("mergeSchema", "true")
+      .parquet(inputPath)
+
+    //When
+    val result = DFUtils.readParquet(sqlCtx, inputPath)
+
+    //Then
+    assert(result sameAs expectedResult)
+  }
+
+
   "applySchema" should "should cast a DF with correct schema" in {
     val sqlCtx = sqlContext
-    import  sqlCtx.implicits._
+    import sqlCtx.implicits._
 
     //Given
     val nullable = true
@@ -49,7 +84,7 @@ class DFUtilsSuite extends SharedContext {
 
   it should "raise en error when a column is missing" in {
     val sqlCtx = sqlContext
-    import  sqlCtx.implicits._
+    import sqlCtx.implicits._
 
     //Given
 
