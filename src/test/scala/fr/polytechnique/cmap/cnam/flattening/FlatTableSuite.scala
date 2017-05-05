@@ -9,7 +9,7 @@ import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
 class FlatTableSuite extends SharedContext {
 
-  "joinFunction" should "return correct results" in {
+  "joinByYear" should "return correct results" in {
 
     // Given
     val sqlCtx = sqlContext
@@ -22,9 +22,9 @@ class FlatTableSuite extends SharedContext {
     ).toDF("key", "value", "year")
     val tableName: String = "central"
     val other1: DataFrame = Seq(
-      (1, Some("world1")),
-      (2, Some("world2"))
-    ).toDF("key", "valueOther1")
+      (1, Some("world1"), 2014),
+      (2, Some("world2"), 2015)
+    ).toDF("key", "valueOther1", "year")
     val other2: DataFrame = Seq(
       (1, Some("other1"), 2014),
       (2, Some("other2"), 2015)
@@ -35,19 +35,22 @@ class FlatTableSuite extends SharedContext {
     val otherTable2 = new Table("other2", other2)
 
     val expectedJoin = Seq(
-      (1, Some("hello1"), 2014, Some("world1")),
-      (2, Some("hello2"), 2015, Some("world2"))
-    ).toDF("key", "value", "year", "valueOther1")
+      (2, Some("hello2"), 2015, Some("world2"), Some("other2"))
+    ).toDF("key", "value", "year", "other1__valueOther1", "other2__valueOther2")
 
-    // When Then
+    // When
     when(mockTable.mainTable).thenReturn(simpleTable)
     when(mockTable.tablesToJoin).thenReturn(List(otherTable1, otherTable2))
     when(mockTable.foreignKeys).thenReturn(List("key"))
+    when(mockTable.joinByYear(2015)).thenCallRealMethod()
     when(mockTable.joinFunction).thenReturn(
       (acc: DataFrame, toJoin:DataFrame) =>
         acc.join(toJoin, mockTable.foreignKeys, "inner"))
 
-}
+    // Then
+    val result = mockTable.joinByYear(2015)
+    assert(result.df sameAs expectedJoin)
+  }
 
   "flatTablePerYear" should "return correct flattened Table" in {
 

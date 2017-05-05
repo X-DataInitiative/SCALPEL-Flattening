@@ -1,9 +1,9 @@
 package fr.polytechnique.cmap.cnam.flattening
 
+import org.apache.spark.sql.{Dataset, SQLContext, SaveMode}
 import com.typesafe.config.Config
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
-import org.apache.spark.sql.{Dataset, SQLContext, SaveMode}
 
 object FlatteningMain extends Main {
 
