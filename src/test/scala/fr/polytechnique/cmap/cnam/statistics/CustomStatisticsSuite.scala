@@ -25,12 +25,12 @@ class CustomStatisticsSuite extends SharedContext {
     val inputDf = getSampleDf
       .select("BEN_CDI_NIR", "BEN_DTE_MAJ", "BEN_SEX_COD", "MAX_TRT_DTD", "ORG_CLE_NEW", "NUM_ENQ")
     val expected: DataFrame = Seq(
-        ("0", "0", 2L, 1L, "0", "0", "0.0", "BEN_CDI_NIR"),
-        ("01/01/2006", "25/01/2006", 2L, 2L, "NA", "NA", "NA", "BEN_DTE_MAJ"),
-        ("1", "2", 2L, 2L, "3", "3", "1.5", "BEN_SEX_COD"),
-        ("07/03/2008", "07/03/2008", 1L, 1L, "NA", "NA", "NA", "MAX_TRT_DTD"),
-        ("CODE1234", "CODE1234", 2L, 1L, "NA", "NA", "NA", "ORG_CLE_NEW"),
-        ("Patient_01", "Patient_02", 2L, 2L, "NA", "NA", "NA", "NUM_ENQ")
+        ("0", "0", 2L, 1L, Some(0.0), Some(0.0), Some(0.0), "BEN_CDI_NIR"),
+        ("01/01/2006", "25/01/2006", 2L, 2L, null, null, null, "BEN_DTE_MAJ"),
+        ("1", "2", 2L, 2L, Some(3.0), Some(3.0), Some(1.5), "BEN_SEX_COD"),
+        ("07/03/2008", "07/03/2008", 1L, 1L, null, null, null, "MAX_TRT_DTD"),
+        ("CODE1234", "CODE1234", 2L, 1L, null, null, null, "ORG_CLE_NEW"),
+        ("Patient_01", "Patient_02", 2L, 2L, null, null, null, "NUM_ENQ")
       ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName")
 
     // When
@@ -56,12 +56,12 @@ class CustomStatisticsSuite extends SharedContext {
     val inputDf = getSampleDf
       .select("BEN_CDI_NIR", "BEN_DTE_MAJ", "BEN_SEX_COD", "MAX_TRT_DTD", "ORG_CLE_NEW", "NUM_ENQ")
     val expected: DataFrame = Seq(
-      ("0", "0", 1L, "0", "BEN_CDI_NIR"),
-      ("01/01/2006", "25/01/2006", 2L, "NA", "BEN_DTE_MAJ"),
-      ("1", "2", 2L, "3", "BEN_SEX_COD"),
-      ("07/03/2008", "07/03/2008", 1L, "NA", "MAX_TRT_DTD"),
-      ("CODE1234", "CODE1234", 1L, "NA", "ORG_CLE_NEW"),
-      ("Patient_01", "Patient_02", 2L, "NA", "NUM_ENQ")
+      ("0", "0", 1L, Some(0.0), "BEN_CDI_NIR"),
+      ("01/01/2006", "25/01/2006", 2L, null, "BEN_DTE_MAJ"),
+      ("1", "2", 2L, Some(3.0), "BEN_SEX_COD"),
+      ("07/03/2008", "07/03/2008", 1L, null, "MAX_TRT_DTD"),
+      ("CODE1234", "CODE1234", 1L, null, "ORG_CLE_NEW"),
+      ("Patient_01", "Patient_02", 2L, null, "NUM_ENQ")
     ).toDF("Min", "Max", "CountDistinct", "SumDistinct", "ColName")
 
     // When
@@ -85,14 +85,12 @@ class CustomStatisticsSuite extends SharedContext {
 
     // Given
     val inputDf = getSampleDf
-    val inputColumns = Array("BEN_TOP_CNS", "BEN_DCD_DTE", "NUM_ENQ")
-    val expected = {
-      Seq(
-        ("1", "1", 2L, 1L, "2", "1", "1.0", "BEN_TOP_CNS"),
-        ("25/01/2008", "25/01/2008", 1L, 1L, "NA", "NA", "NA", "BEN_DCD_DTE"),
-        ("Patient_01", "Patient_02", 2L, 2L, "NA", "NA", "NA", "NUM_ENQ")
+    val inputColumns = Seq("BEN_TOP_CNS", "BEN_DCD_DTE", "NUM_ENQ")
+    val expected = Seq(
+        ("1", "1", 2L, 1L, Some(2.0), Some(1.0), Some(1.0), "BEN_TOP_CNS"),
+        ("25/01/2008", "25/01/2008", 1L, 1L, null, null, null, "BEN_DCD_DTE"),
+        ("Patient_01", "Patient_02", 2L, 2L, null, null, null, "NUM_ENQ")
       ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName")
-    }
 
     // When
     import fr.polytechnique.cmap.cnam.statistics.CustomStatistics._
@@ -107,7 +105,7 @@ class CustomStatisticsSuite extends SharedContext {
 
     // Given
     val givenDF = getSampleDf
-    val invalidCols = Array("NUM_ENQ", "INVALID_COLUMN")
+    val invalidCols = Seq("NUM_ENQ", "INVALID_COLUMN")
 
     // When
     import fr.polytechnique.cmap.cnam.statistics.CustomStatistics._

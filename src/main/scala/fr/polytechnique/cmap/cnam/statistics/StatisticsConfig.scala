@@ -17,24 +17,33 @@ object StatisticsConfig {
     newConfig.withFallback(defaultConfig).resolve()
   }
 
-  val oldFlatConfig: List[Config] = if(conf.hasPath("old_flat"))
-    conf.getConfigList("old_flat").asScala.toList
-  else
-    List[Config]()
+  val oldFlatConfig: List[Config] = {
+    if(conf.hasPath("old_flat")) {
+      conf.getConfigList("old_flat").asScala.toList
+    } else {
+      List[Config]()
+    }
+  }
 
-  val newFlatConfig: List[Config] = if(conf.hasPath("new_flat"))
-    conf.getConfigList("new_flat").asScala.toList
-  else
-    List[Config]()
+  val newFlatConfig: List[Config] = {
+    if(conf.hasPath("new_flat")) {
+      conf.getConfigList("new_flat").asScala.toList
+    } else  {
+      List[Config]()
+    }
+  }
 
   implicit class StatConfig(statConf: Config) {
 
     val flatTableName: String = statConf.getString("name")
     val mainTableName: String = statConf.getString("main_table")
-    val dateFormat: String = if(statConf.hasPath("date_format"))
-      statConf.getString("date_format")
-    else
-      "dd/MM/yyyy"
+    val dateFormat: String = {
+      if(statConf.hasPath("date_format")) {
+        statConf.getString("date_format")
+      } else {
+        "dd/MM/yyyy"
+      }
+    }
 
     val inputPath: String = statConf.getString("input_path")
     val statOutputPath: String = statConf.getString("output_stat_path")
