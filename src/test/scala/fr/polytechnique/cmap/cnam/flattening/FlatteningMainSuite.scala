@@ -37,6 +37,8 @@ class FlatteningMainSuite extends SharedContext {
     import fr.polytechnique.cmap.cnam.utilities.DFUtils._
     expectedDfs.foreach{
       case(name, df) =>
+        df.show()
+        result(name).show()
         assert(df.sameAs(result(name)))
     }
   }

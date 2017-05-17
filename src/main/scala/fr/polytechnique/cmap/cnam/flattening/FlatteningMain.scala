@@ -1,9 +1,11 @@
 package fr.polytechnique.cmap.cnam.flattening
 
+import com.sun.prism.PixelFormat.DataType
 import org.apache.spark.sql.{Dataset, SQLContext, SaveMode}
 import com.typesafe.config.Config
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
+import org.joda.time.DateTime
 
 object FlatteningMain extends Main {
 
@@ -22,8 +24,16 @@ object FlatteningMain extends Main {
 
         val rawTable = DFUtils.readCSV(sqlContext, config.inputPaths)
         val typedTable = DFUtils.applySchema(rawTable, columnsType, config.dateFormat)
+        import org.apache.spark.sql.Column
+        import org.apache.spark.sql.functions._
+        val partitionMonthColumnName = config.monthPartitionColumn
+//        if(partitionMonthColumnName != ""){
+//          val partitionMonthColumn: Column = month(typedTable(partitionMonthColumnName))
+//          typedTable.repartition(6,partitionMonthColumn).write.parquet(config.output)
+//        }
+//        else
+          typedTable.write.parquet(config.output)
 
-        typedTable.write.parquet(config.output)
     }
   }
 
