@@ -4,11 +4,12 @@ import scala.collection.JavaConverters._
 import org.apache.spark.sql.SparkSession
 import com.typesafe.config.{Config, ConfigFactory}
 
-case class ConfigPartition(
+case class PartitionConfig(
     name: String,
     dateFormat: String,
     inputPaths: List[String],
-    output: String)
+    output: String,
+    strategy: PartitionStrategy.Value = PartitionStrategy.None)
 
 object FlatteningConfig {
 
@@ -32,7 +33,7 @@ object FlatteningConfig {
     .map(_.getConfigList("tables").asScala.toList)
     .reduce(_ ::: _)
 
-  val partitionsList: List[ConfigPartition] = getPartitionList(tablesConfigList)
+  val partitionsList: List[PartitionConfig] = getPartitionList(tablesConfigList)
   val joinTablesConfig: List[Config] = conf.getConfigList("join").asScala.toList
 
   private val csvSchema = CSVSchemaReader.readSchemaFiles(schemaFilePath)
@@ -42,7 +43,13 @@ object FlatteningConfig {
 
     def name: String = config.getString("name")
 
-    def strategy: String = config.getString("partition_strategy")
+    def strategy: PartitionStrategy.Value = {
+      config.getString("partition_strategy") match {
+        case "year" => PartitionStrategy.Year
+        case "month" => PartitionStrategy.Month
+        case _ => PartitionStrategy.None
+      }
+    }
 
     def dateFormat: String = {
       if (config.hasPath("date_format"))
@@ -58,8 +65,8 @@ object FlatteningConfig {
 
   implicit class SinglePartitionConfig(config: Config) {
 
-    def outputPath(strategy: String, name: String): String = {
-      if (strategy == "year")
+    def outputPath(strategy: PartitionStrategy.Value, name: String): String = {
+      if (strategy == PartitionStrategy.Year || strategy == PartitionStrategy.Month)
         outputBasePath + "/" + name + "/year=" + config.getString("year")
       else
         outputBasePath + "/" + name
@@ -82,17 +89,18 @@ object FlatteningConfig {
     def outputJoinPath: String = config.getString("flat_output_path")
   }
 
-  def getPartitionList(tableConfigs: List[Config]): List[ConfigPartition] = {
+  def getPartitionList(tableConfigs: List[Config]): List[PartitionConfig] = {
     tableConfigs.flatMap {
       tableConfig =>
         tableConfig.partitions.map(toConfigPartition(tableConfig, _))
     }
   }
 
-  def toConfigPartition(tableConfig: Config, partitionConfig: Config): ConfigPartition = {
-    ConfigPartition(
+  def toConfigPartition(tableConfig: Config, partitionConfig: Config): PartitionConfig = {
+    PartitionConfig(
       name = tableConfig.name,
       dateFormat = tableConfig.dateFormat,
+      strategy = tableConfig.strategy,
       inputPaths = partitionConfig.inputPaths,
       output = partitionConfig.outputPath(tableConfig.strategy, tableConfig.name)
     )

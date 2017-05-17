@@ -133,9 +133,9 @@ class TableSuite extends SharedContext {
     val expectedDf = sqlCtx.read.parquet(s"$parquetTablesPath/$tableName")
 
     // When
-    val result = Table.build(sqlCtx, parquetTablesPath, tableName)
+    val result = new Table(sqlCtx, parquetTablesPath, tableName)
     // Then
-    assert(result.df sameAs expectedDf)
+    assert(result.getDF sameAs expectedDf)
     assert(result.name === tableName)
 
   }
