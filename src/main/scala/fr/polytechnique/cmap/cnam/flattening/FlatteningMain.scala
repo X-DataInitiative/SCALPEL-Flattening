@@ -17,13 +17,14 @@ object FlatteningMain extends Main {
 
 
     FlatteningConfig.partitionsList.foreach {
-      config: ConfigPartition =>
+      config: PartitionConfig =>
         val columnsType = columnsTypeMap(config.name).toMap
 
         val rawTable = DFUtils.readCSV(sqlContext, config.inputPaths)
         val typedTable = DFUtils.applySchema(rawTable, columnsType, config.dateFormat)
+        val partition = new Partition(typedTable, config.output, config.strategy)
 
-        typedTable.write.parquet(config.output)
+        partition.write()
     }
   }
 

@@ -49,7 +49,7 @@ class FlatTableSuite extends SharedContext {
 
     // Then
     val result = mockTable.joinByYear(2015)
-    assert(result.df sameAs expectedJoin)
+    assert(result.getDF sameAs expectedJoin)
   }
 
   "flatTablePerYear" should "return correct flattened Table" in {
@@ -70,7 +70,7 @@ class FlatTableSuite extends SharedContext {
 
     // Then
     assert(
-      result.filter(x => x.name.contains("2006")).head.df
+      result.filter(x => x.name.contains("2006")).head.getDF
         sameAs
         expectedDf.filter(col("year") === 2006)
     )
