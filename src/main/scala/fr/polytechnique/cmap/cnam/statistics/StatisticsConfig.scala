@@ -17,6 +17,8 @@ object StatisticsConfig {
     newConfig.withFallback(defaultConfig).resolve()
   }
 
+  val compareWithOldFlattening: Boolean = conf.getBoolean("compare_with_old")
+
   val oldFlatConfig: List[Config] = {
     if(conf.hasPath("old_flat")) {
       conf.getConfigList("old_flat").asScala.toList
@@ -25,9 +27,17 @@ object StatisticsConfig {
     }
   }
 
-  val newFlatConfig: List[Config] = {
+  val mainFlatConfig: List[Config] = {
     if(conf.hasPath("new_flat")) {
       conf.getConfigList("new_flat").asScala.toList
+    } else  {
+      List[Config]()
+    }
+  }
+
+  val singleTablesConfig: List[Config] = {
+    if(conf.hasPath("single_tables")) {
+      conf.getConfigList("single_tables").asScala.toList
     } else  {
       List[Config]()
     }

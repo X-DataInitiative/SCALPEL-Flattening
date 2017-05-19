@@ -4,7 +4,7 @@ import java.sql.Date
 import org.apache.spark.sql.types.TimestampType
 import fr.polytechnique.cmap.cnam.{SharedContext, utilities}
 
-class OldFlatHelperSuite extends SharedContext {
+class FlatTableHelperSuite extends SharedContext {
 
   "changeColumnNameDelimiter" should "change the column name delimiters from dot to underscore " in {
 
@@ -21,7 +21,7 @@ class OldFlatHelperSuite extends SharedContext {
     ).toDF("key1", "noDelimiter", "key__delimiter1", "key__delimiter2")
 
     // When
-    import OldFlatHelper.ImplicitDF
+    import FlatTableHelper.ImplicitDF
     val result = inputDf.changeColumnNameDelimiter
 
     // Then
@@ -53,7 +53,7 @@ class OldFlatHelperSuite extends SharedContext {
     val dateFormat = "yyyy-MM-dd"
 
     // When
-    import OldFlatHelper.ImplicitDF
+    import FlatTableHelper.ImplicitDF
     val result = inputDf.changeSchema(inputSchema, mainTableName, dateFormat)
 
     // Then
@@ -88,7 +88,7 @@ class OldFlatHelperSuite extends SharedContext {
     val mainTableName = "ER_PRS_F"
 
     // When
-    import OldFlatHelper.ImplicitDF
+    import FlatTableHelper.ImplicitDF
     val result = inputDf.changeSchema(schemaMap, mainTableName)
 
     // Then
@@ -130,7 +130,7 @@ class OldFlatHelperSuite extends SharedContext {
     val sampleDf = Seq("dummyValue").toDF("Col_1")
 
     // When
-    import OldFlatHelper.ImplicitDF
+    import FlatTableHelper.ImplicitDF
     val testResult = testInput.map { testInput =>
       sampleDf.annotateJoiningTablesColumns(testInput, mainTableName)
     }
@@ -152,7 +152,7 @@ class OldFlatHelperSuite extends SharedContext {
     val sampleDf = Seq("dummyValue").toDF("Col_1")
 
     // When
-    import OldFlatHelper.ImplicitDF
+    import FlatTableHelper.ImplicitDF
     val result = sampleDf.prefixColName(tableName, columnName)
 
     // Then
@@ -169,7 +169,7 @@ class OldFlatHelperSuite extends SharedContext {
     val expectedResult = sqlContext.read.parquet(expectedResultPath)
 
     // When
-    import OldFlatHelper.ImplicitDF
+    import FlatTableHelper.ImplicitDF
     inputDf.writeStatistics(resultPath)
     val result = sqlContext.read.parquet(resultPath)
 

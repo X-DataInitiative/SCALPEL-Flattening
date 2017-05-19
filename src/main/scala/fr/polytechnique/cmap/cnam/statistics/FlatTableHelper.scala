@@ -5,7 +5,7 @@ import org.apache.spark.sql.functions.col
 import fr.polytechnique.cmap.cnam.statistics
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
 
-object OldFlatHelper {
+object FlatTableHelper {
 
   implicit class ImplicitDF(data: DataFrame) {
 
@@ -60,13 +60,15 @@ object OldFlatHelper {
 
     import statistics.CustomStatistics._
 
-    def computeStatistics: DataFrame = data.customDescribe(data.columns)
+    def computeStatistics(distinctOnly: Boolean): DataFrame = {
+      data.customDescribe(data.columns, distinctOnly)
+    }
 
-    def writeStatistics(outputPath: String): Unit = {
+    def writeStatistics(outputPath: String, distinctOnly: Boolean = false): Unit = {
       data
-          .computeStatistics
-          .write
-          .parquet(outputPath)
+        .computeStatistics(distinctOnly)
+        .write
+        .parquet(outputPath)
     }
   }
 

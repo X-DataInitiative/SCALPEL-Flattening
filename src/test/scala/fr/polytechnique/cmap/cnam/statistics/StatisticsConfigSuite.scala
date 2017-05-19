@@ -15,7 +15,7 @@ class StatisticsConfigSuite extends SharedContext {
 
     // When
     import fr.polytechnique.cmap.cnam.statistics.StatisticsConfig._
-    val result = StatisticsConfig.newFlatConfig.head.prettyPrint
+    val result = StatisticsConfig.mainFlatConfig.head.prettyPrint
 
     println(result)
     println(expectedResult)

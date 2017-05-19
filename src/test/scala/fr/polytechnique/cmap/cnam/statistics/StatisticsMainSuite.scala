@@ -18,6 +18,5 @@ class StatisticsMainSuite extends SharedContext{
     // Then
     import utilities.DFUtils.CSVDataFrame
     assert(result sameAs expectedResult)
-
   }
 }
