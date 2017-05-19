@@ -27,11 +27,15 @@ object FlatteningMain extends Main {
         import org.apache.spark.sql.Column
         import org.apache.spark.sql.functions._
         val partitionMonthColumnName = config.monthPartitionColumn
-//        if(partitionMonthColumnName != ""){
-//          val partitionMonthColumn: Column = month(typedTable(partitionMonthColumnName))
-//          typedTable.repartition(6,partitionMonthColumn).write.parquet(config.output)
-//        }
-//        else
+        if(partitionMonthColumnName != ""){
+          val partitionMonthColumn: Column = month(typedTable(partitionMonthColumnName))
+          val withMonthDf = typedTable.withColumn("month", partitionMonthColumn)
+          val listMonth = (1 to 12)
+          val listDfs = listMonth.map(x => (x, withMonthDf.filter(z => z.getAs("month") == x)))
+          listDfs.foreach(d => d._2.write.parquet(config.output + "/month" + d._1 ))
+          //typedTable.repartition(partitionMonthColumn).write.parquet(config.output)
+        }
+        else
           typedTable.write.parquet(config.output)
 
     }
