@@ -24,19 +24,19 @@ object FlatteningConfig {
     newConfig.withFallback(defaultConfig).resolve()
   }
 
-  val schemaFilePath: List[String] = conf.getStringList("schema_file_path").asScala.toList
+  lazy val schemaFilePath: List[String] = conf.getStringList("schema_file_path").asScala.toList
 
-  val outputBasePath: String = conf.getString("single_table_path")
+  lazy val outputBasePath: String = conf.getString("single_table_path")
 
-  val tablesConfigList: List[Config] = conf.getConfigList("tables_config").asScala.toList
+  lazy val tablesConfigList: List[Config] = conf.getConfigList("tables_config").asScala.toList
     .map(_.getConfigList("tables").asScala.toList)
     .reduce(_ ::: _)
 
-  val partitionsList: List[ConfigPartition] = getPartitionList(tablesConfigList)
-  val joinTablesConfig: List[Config] = conf.getConfigList("join").asScala.toList
+  lazy val partitionsList: List[ConfigPartition] = getPartitionList(tablesConfigList)
+  lazy val joinTablesConfig: List[Config] = conf.getConfigList("join").asScala.toList
 
-  private val csvSchema = CSVSchemaReader.readSchemaFiles(schemaFilePath)
-  val columnTypes: Map[String, List[(String, String)]] = CSVSchemaReader.readColumnsType(csvSchema)
+  private lazy val csvSchema = CSVSchemaReader.readSchemaFiles(schemaFilePath)
+  lazy val columnTypes: Map[String, List[(String, String)]] = CSVSchemaReader.readColumnsType(csvSchema)
 
   implicit class SingleTableConfig(config: Config) {
 

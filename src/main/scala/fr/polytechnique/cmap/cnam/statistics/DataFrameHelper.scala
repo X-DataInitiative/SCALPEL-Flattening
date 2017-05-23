@@ -5,7 +5,7 @@ import org.apache.spark.sql.functions.col
 import fr.polytechnique.cmap.cnam.statistics
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
 
-object FlatTableHelper {
+object DataFrameHelper {
 
   implicit class ImplicitDF(data: DataFrame) {
 
@@ -69,6 +69,12 @@ object FlatTableHelper {
         .computeStatistics(distinctOnly)
         .write
         .parquet(outputPath)
+    }
+
+    def prefixColumnNames(prefix: String, separator: String = "__"): DataFrame = {
+      data.columns.foldLeft(data) {
+        (curDF, colName) => curDF.withColumnRenamed(colName, prefix + separator + colName)
+      }
     }
   }
 

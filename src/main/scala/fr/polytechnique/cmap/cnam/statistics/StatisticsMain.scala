@@ -1,9 +1,10 @@
 package fr.polytechnique.cmap.cnam.statistics
 
-import org.apache.spark.sql.{Dataset, SQLContext}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, Dataset, SQLContext}
+import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig
 import fr.polytechnique.cmap.cnam.utilities.DFUtils.readParquet
-import fr.polytechnique.cmap.cnam.{Main, utilities}
 
 case class TableSchema(tableName: String, columnTypes: Map[String, String])
 
@@ -11,63 +12,79 @@ object StatisticsMain extends Main {
 
   override def appName = "Statistics"
 
-  def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
+  def computeSingleTableStats(
+      singleTableData: DataFrame,
+      centralTableName: String,
+      singleConf: SingleTableConfig): DataFrame = {
 
-    def describeOldFlatTable(): Unit = {
+    logger.info(s"Computing Statistics on the single table: ${singleConf.tableName}")
+    println(singleConf)
 
-      import FlatTableHelper.ImplicitDF
-      import StatisticsConfig.StatConfig
+    import CustomStatistics.Statistics
+    import DataFrameHelper._
 
-      val tablesSchema: List[TableSchema] = FlatteningConfig.columnTypes.map(x =>
-        TableSchema(x._1, x._2.toMap)).toList
+    val prefixedData = if(singleConf.tableName != centralTableName)
+      singleTableData.prefixColumnNames(singleConf.tableName, "__")
+    else
+      singleTableData
 
-      StatisticsConfig.oldFlatConfig.foreach { conf =>
-        logger.info(s"Computing Statistics on the old Flat: ${conf.flatTableName}")
-        println(conf.prettyPrint)
+    prefixedData.customDescribe(distinctOnly = true)
+  }
 
-        readParquet(sqlContext, conf.inputPath)
-          .drop("key")
-          .changeColumnNameDelimiter
-          .changeSchema(tablesSchema, conf.mainTableName, conf.dateFormat)
-      }
+  def describeFlatTable(data: DataFrame, flatConf: FlatTableConfig): Unit = {
+
+    import CustomStatistics.Statistics
+
+    logger.info(s"Computing Statistics on the flat table: ${flatConf.tableName}")
+    println(flatConf)
+
+    val flatTableStats = data.drop("year").customDescribe().persist()
+
+    flatTableStats.write.parquet(flatConf.outputStatPath + "/flat_table")
+
+    if(flatConf.singleTables.nonEmpty) {
+      val singleTablesStats = flatConf.singleTables.map { singleTableConf =>
+        val singleTableData = readParquet(data.sqlContext, singleTableConf.inputPath)
+        computeSingleTableStats(singleTableData, flatConf.centralTable, singleTableConf)
+      }.reduce(_.union(_)).persist()
+
+      val diff = flatTableStats
+        .select(singleTablesStats.columns.map(col): _*)
+        .except(singleTablesStats)
+
+      singleTablesStats.write.parquet(flatConf.outputStatPath + "/single_tables")
+      diff.write.parquet(flatConf.outputStatPath + "/diff")
     }
+  }
 
-    def describeSingleTables(): Unit = {
-
-      import StatisticsConfig.StatConfig
-
-      StatisticsConfig.singleTablesConfig.foreach { conf =>
-        logger.info(s"Computing Statistics on the single table: ${conf.flatTableName}")
-        println(conf.prettyPrint)
-
-        import CustomStatistics.Statistics
-        readParquet(sqlContext, conf.inputPath)
-          .customDescribe(distinctOnly = true)
-          .write.parquet(conf.statOutputPath)
-      }
-    }
-
-    def describeMainFlatTable(): Unit = {
-
-      import FlatTableHelper.ImplicitDF
-      import StatisticsConfig.StatConfig
-
-      StatisticsConfig.mainFlatConfig.foreach { conf =>
-        logger.info(s"Computing Statistics on the main Flat: ${conf.flatTableName}")
-        println(conf.prettyPrint)
-
-        readParquet(sqlContext, conf.inputPath)
-          .drop("year")
-          .writeStatistics(conf.statOutputPath)
-      }
-    }
+  override def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
 
     argsMap.get("conf").foreach(sqlContext.setConf("conf", _))
     argsMap.get("env").foreach(sqlContext.setConf("env", _))
 
-    if(StatisticsConfig.compareWithOldFlattening) describeOldFlatTable()
-    describeSingleTables()
-    describeMainFlatTable()
+    import DataFrameHelper.ImplicitDF
+    // Compute and save stats for old flattening
+    if(StatisticsConfig.describeOldFlatTable) {
+
+      StatisticsConfig.oldFlatConfig.foreach { conf =>
+
+        val tablesSchema: List[TableSchema] = FlatteningConfig.columnTypes.map(x =>
+          TableSchema(x._1, x._2.toMap)).toList
+
+        val oldFlatData = readParquet(sqlContext, conf.inputPath)
+          .drop("key")
+          .changeColumnNameDelimiter
+          .changeSchema(tablesSchema, conf.centralTable, conf.dateFormat)
+
+        describeFlatTable(oldFlatData, conf)
+      }
+    }
+
+    // Compute and save stats for main flattening
+    StatisticsConfig.mainFlatConfig.foreach { conf =>
+      val flatData = readParquet(sqlContext, conf.inputPath)
+      describeFlatTable(flatData, conf)
+    }
 
     None
   }

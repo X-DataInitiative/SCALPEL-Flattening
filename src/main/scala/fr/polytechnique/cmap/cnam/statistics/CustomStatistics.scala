@@ -22,9 +22,9 @@ object CustomStatistics {
               max(numericColumn).cast("string").as("Max"),
               count(numericColumn).cast("long").as("Count"),
               countDistinct(numericColumn).cast("long").as("CountDistinct"),
-              sum(numericColumn).cast("double").as("Sum"),
-              sumDistinct(numericColumn).cast("double").as("SumDistinct"),
-              avg(numericColumn).cast("double").as("Avg")
+              round(sum(numericColumn).cast("double"), 4).as("Sum"),
+              round(sumDistinct(numericColumn).cast("double"), 4).as("SumDistinct"),
+              round(avg(numericColumn).cast("double"), 4).as("Avg")
             ).withColumn("ColName", lit(numericColumn))
 
         // For other types, compute only min, max and counts

@@ -4,9 +4,9 @@ import java.sql.Date
 import org.apache.spark.sql.types.TimestampType
 import fr.polytechnique.cmap.cnam.{SharedContext, utilities}
 
-class FlatTableHelperSuite extends SharedContext {
+class DataFrameHelperSuite extends SharedContext {
 
-  "changeColumnNameDelimiter" should "change the column name delimiters from dot to underscore " in {
+  "changeColumnNameDelimiter" should "change the column tableName delimiters from dot to underscore " in {
 
     // Given
     val sqlCtx = sqlContext
@@ -21,7 +21,7 @@ class FlatTableHelperSuite extends SharedContext {
     ).toDF("key1", "noDelimiter", "key__delimiter1", "key__delimiter2")
 
     // When
-    import FlatTableHelper.ImplicitDF
+    import DataFrameHelper.ImplicitDF
     val result = inputDf.changeColumnNameDelimiter
 
     // Then
@@ -53,7 +53,7 @@ class FlatTableHelperSuite extends SharedContext {
     val dateFormat = "yyyy-MM-dd"
 
     // When
-    import FlatTableHelper.ImplicitDF
+    import DataFrameHelper.ImplicitDF
     val result = inputDf.changeSchema(inputSchema, mainTableName, dateFormat)
 
     // Then
@@ -88,7 +88,7 @@ class FlatTableHelperSuite extends SharedContext {
     val mainTableName = "ER_PRS_F"
 
     // When
-    import FlatTableHelper.ImplicitDF
+    import DataFrameHelper.ImplicitDF
     val result = inputDf.changeSchema(schemaMap, mainTableName)
 
     // Then
@@ -103,7 +103,7 @@ class FlatTableHelperSuite extends SharedContext {
     assert(inputDf.schema != result.schema)
   }
 
-  "annotateJoiningTablesColumns" should "prefix table name to the column names of the joining " +
+  "annotateJoiningTablesColumns" should "prefix table tableName to the column names of the joining " +
       "tables" in {
 
     // Given
@@ -130,7 +130,7 @@ class FlatTableHelperSuite extends SharedContext {
     val sampleDf = Seq("dummyValue").toDF("Col_1")
 
     // When
-    import FlatTableHelper.ImplicitDF
+    import DataFrameHelper.ImplicitDF
     val testResult = testInput.map { testInput =>
       sampleDf.annotateJoiningTablesColumns(testInput, mainTableName)
     }
@@ -152,7 +152,7 @@ class FlatTableHelperSuite extends SharedContext {
     val sampleDf = Seq("dummyValue").toDF("Col_1")
 
     // When
-    import FlatTableHelper.ImplicitDF
+    import DataFrameHelper.ImplicitDF
     val result = sampleDf.prefixColName(tableName, columnName)
 
     // Then
@@ -169,7 +169,7 @@ class FlatTableHelperSuite extends SharedContext {
     val expectedResult = sqlContext.read.parquet(expectedResultPath)
 
     // When
-    import FlatTableHelper.ImplicitDF
+    import DataFrameHelper.ImplicitDF
     inputDf.writeStatistics(resultPath)
     val result = sqlContext.read.parquet(resultPath)
 
