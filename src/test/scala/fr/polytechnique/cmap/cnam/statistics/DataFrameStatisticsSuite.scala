@@ -3,7 +3,7 @@ package fr.polytechnique.cmap.cnam.statistics
 import org.apache.spark.sql.DataFrame
 import fr.polytechnique.cmap.cnam.{SharedContext, utilities}
 
-class CustomStatisticsSuite extends SharedContext {
+class DataFrameStatisticsSuite extends SharedContext {
 
   def getSampleDf: DataFrame = {
     val srcFilePath: String = "src/test/resources/statistics/custom-statistics/IR_BEN_R.csv"
@@ -34,7 +34,7 @@ class CustomStatisticsSuite extends SharedContext {
       ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName")
 
     // When
-    import fr.polytechnique.cmap.cnam.statistics.CustomStatistics._
+    import fr.polytechnique.cmap.cnam.statistics.DataFrameStatistics._
     val result = inputDf.customDescribe(inputDf.columns)
 
     // Then
@@ -65,7 +65,7 @@ class CustomStatisticsSuite extends SharedContext {
     ).toDF("Min", "Max", "CountDistinct", "SumDistinct", "ColName")
 
     // When
-    import fr.polytechnique.cmap.cnam.statistics.CustomStatistics._
+    import fr.polytechnique.cmap.cnam.statistics.DataFrameStatistics._
     val result = inputDf.customDescribe(inputDf.columns, distinctOnly = true)
 
     // Then
@@ -93,7 +93,7 @@ class CustomStatisticsSuite extends SharedContext {
       ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName")
 
     // When
-    import fr.polytechnique.cmap.cnam.statistics.CustomStatistics._
+    import fr.polytechnique.cmap.cnam.statistics.DataFrameStatistics._
     val resultColumns = inputDf.customDescribe(inputColumns)
 
     // Then
@@ -108,7 +108,7 @@ class CustomStatisticsSuite extends SharedContext {
     val invalidCols = Seq("NUM_ENQ", "INVALID_COLUMN")
 
     // When
-    import fr.polytechnique.cmap.cnam.statistics.CustomStatistics._
+    import fr.polytechnique.cmap.cnam.statistics.DataFrameStatistics._
     val thrown = intercept[java.lang.IllegalArgumentException] {
       givenDF.customDescribe(invalidCols).count
     }

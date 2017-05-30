@@ -2,10 +2,10 @@
 
 C'est une étape de dénormalisation de la donnée initiale qui provient d'une base de donnée SQL. C'est une jointure entre les différentes table. Par exemple, DCIR contient plusieurs tables comme ER_PHA_F ou ER_PRS_F que nous recevons dans des fichiers CSV distincts. L'aplatissement va produire une seule table à partir de ces fichiers. le résultat est sauvegardé sur HDFS au format parquet. L'avantage d'une telle approche est de nous permettre d'utiliser la donnée beaucoup plus rapidement par la suite. En effet, faire des filtres avec Spark est beaucoup plus rapide que de faire des jointures.
 
-# Input Data
+## Input Data
 C'est une étape de dénormalisation de la donnée initiale qui provient d'une base de donnée SQL. C'est une jointure entre les différentes table. Par exemple, DCIR contient plusieurs tables comme ER_PHA_F ou ER_PRS_F que nous recevons dans des fichiers CSV distincts. L'aplatissement va produire une seule table à partir de ces fichiers. le résultat est sauvegardé sur HDFS au format parquet. L'avantage d'une telle approche est de nous permettre d'utiliser la donnée beaucoup plus rapidement par la suite. En effet, faire des filtres avec Spark est beaucoup plus rapide que de faire des jointures.
 
-# Processing and Parameters
+## Processing and Parameters
 Deux ensembles de paramètres sont requis pour cette étape:
 * Les schémas des tables d'entrées;
 * Les clés nécessaires pour faire les jointures (ainsi que le nom de la table centrale).
@@ -20,7 +20,7 @@ Cependant, la dénormalisation peut provoquer un effet d'expansion de la donnée
 
 Cette expansion n'est pas un soucis car Spark nous permet d'effectuer des filtrages de façon très efficace. Néanmoins nous pourrons éventuellement faire évoluer cette stratégie ultérieurement et utiliser des colonnes d'ensembles imbriquées (on pourrait alors stocker une liste de valeur dans une seule colonne).
 
-# Output Data
+## Output Data
 Une fois que la transformation est finie, les tables dénormalisées sont sauvegardées sur HDFS au format parquet. On sauvegarde aussi chaque table source au format parquet pour les recherches ultérieures sur la donnée brute. Le schéma de la donnée finale est le même que celui de la donnée initiale. Il utilise les types fournis dans le fichier de configuration.
 
 Les tables actuellement dénormalisées sont les suivantes :
@@ -29,3 +29,34 @@ Les tables actuellement dénormalisées sont les suivantes :
 |---------------------|---------------------------------------------------|
 | DCIR                | ER_PRS_F, ER_PHA_F, ER_CAM_F                      |
 | PMSI_MCO            | T_MCOXXC, T_MCOXXA, T_MCOXXB, T_MCOXXD, T_MCOXXUM |
+
+---
+
+# Validation Statistics
+
+The repository also contains a module for computing statistics on the flat data in order to validate its results. This module can be run to compare the result of the newest flattening with the old one, as well as to compare statistics of the result of the flattening with the individual tables.
+ 
+**Configuration**
+
+A configuration file is needed for indicating the paths for the input and the output. The format and default values for each environment can be found in [this directory](https://github.com/X-DataInitiative/SNIIRAM-flattening-2.0/tree/master/src/main/resources/statistics).
+
+**Usage**
+
+The statistics main contains a main class called `StatisticsMain` which can be invoked via spark-submit. An example of code that can be used is shown below.
+
+```bash
+spark-submit \
+  --executor-memory 100G \
+  --class fr.polytechnique.cmap.cnam.statistics.StatisticsMain \
+  /path/to/SNIIRAM-flattening-2.0-assembly-1.0.jar env=cmap conf=config_file.conf
+```
+
+Please note that the items in the file `config_file.conf` will override the default ones for the given environment.
+
+**Results**
+
+For each flat table present in the configuration file, the results will be written as parquet files under the path specified in `output_stat_path`. Three tables will be written for each flat table:
+
+* `${output_stat_path}/flat_table`: Contains the statistics for the flat table
+* `${output_stat_path}/single_tables`: Contains the statistics for the columns of all listed single tables
+* `${output_stat_path}/diff`: Contains the rows from the flat table statistics which have different values in the single_tables statistics (ideally it has to be empty).

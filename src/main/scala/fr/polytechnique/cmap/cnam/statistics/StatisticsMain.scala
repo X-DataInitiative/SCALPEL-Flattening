@@ -14,26 +14,26 @@ object StatisticsMain extends Main {
 
   def computeSingleTableStats(
       singleTableData: DataFrame,
-      centralTableName: String,
+      isCentral: Boolean,
       singleConf: SingleTableConfig): DataFrame = {
 
     logger.info(s"Computing Statistics on the single table: ${singleConf.tableName}")
     println(singleConf)
 
-    import CustomStatistics.Statistics
     import DataFrameHelper._
+    import DataFrameStatistics.Statistics
 
-    val prefixedData = if(singleConf.tableName != centralTableName)
-      singleTableData.prefixColumnNames(singleConf.tableName, "__")
-    else
+    val prefixedData = if(isCentral)
       singleTableData
+    else
+      singleTableData.prefixColumnNames(singleConf.tableName, "__")
 
     prefixedData.customDescribe(distinctOnly = true)
   }
 
   def describeFlatTable(data: DataFrame, flatConf: FlatTableConfig): Unit = {
 
-    import CustomStatistics.Statistics
+    import DataFrameStatistics.Statistics
 
     logger.info(s"Computing Statistics on the flat table: ${flatConf.tableName}")
     println(flatConf)
@@ -43,18 +43,21 @@ object StatisticsMain extends Main {
     flatTableStats.write.parquet(flatConf.outputStatPath + "/flat_table")
 
     if(flatConf.singleTables.nonEmpty) {
-      val singleTablesStats = flatConf.singleTables.map { singleTableConf =>
-        val singleTableData = readParquet(data.sqlContext, singleTableConf.inputPath)
-        computeSingleTableStats(singleTableData, flatConf.centralTable, singleTableConf)
+      val singleTablesStats = flatConf.singleTables.map {
+        singleTableConf =>
+          val singleTableData = readParquet(data.sqlContext, singleTableConf.inputPath)
+          val isCentral = flatConf.centralTable == singleTableConf.tableName
+          computeSingleTableStats(singleTableData, isCentral, singleTableConf)
       }.reduce(_.union(_)).persist()
 
-      val diff = flatTableStats
-        .select(singleTablesStats.columns.map(col): _*)
-        .except(singleTablesStats)
-
       singleTablesStats.write.parquet(flatConf.outputStatPath + "/single_tables")
-      diff.write.parquet(flatConf.outputStatPath + "/diff")
+      writeDiff(flatTableStats, singleTablesStats, flatConf.outputStatPath + "/diff")
     }
+  }
+
+  def writeDiff(left: DataFrame, right: DataFrame, path: String): Unit = {
+    val diff = left.select(right.columns.map(col): _*).except(right)
+    diff.write.parquet(path)
   }
 
   override def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
@@ -63,7 +66,7 @@ object StatisticsMain extends Main {
     argsMap.get("env").foreach(sqlContext.setConf("env", _))
 
     import DataFrameHelper.ImplicitDF
-    // Compute and save stats for old flattening
+    // Compute and save stats for the old flattening
     if(StatisticsConfig.describeOldFlatTable) {
 
       StatisticsConfig.oldFlatConfig.foreach { conf =>
@@ -80,7 +83,7 @@ object StatisticsMain extends Main {
       }
     }
 
-    // Compute and save stats for main flattening
+    // Compute and save stats for the new flattening
     StatisticsConfig.mainFlatConfig.foreach { conf =>
       val flatData = readParquet(sqlContext, conf.inputPath)
       describeFlatTable(flatData, conf)

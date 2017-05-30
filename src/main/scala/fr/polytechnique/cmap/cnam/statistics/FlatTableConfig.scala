@@ -31,8 +31,8 @@ object FlatTableConfig {
       List[SingleTableConfig]()
 
     FlatTableConfig(
-      tableName = c.getString("table_name"),
-      centralTable = c.getString("main_table"),
+      tableName = c.getString("name"),
+      centralTable = c.getString("central_table"),
       dateFormat = if (c.hasPath("date_format")) c.getString("date_format") else "dd/MM/yyyy",
       inputPath = c.getString("input_path"),
       outputStatPath = c.getString("output_stat_path"),

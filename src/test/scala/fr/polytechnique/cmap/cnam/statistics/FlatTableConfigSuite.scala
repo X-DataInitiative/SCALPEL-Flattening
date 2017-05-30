@@ -11,7 +11,7 @@ class FlatTableConfigSuite extends SharedContext {
   val inputPath = "/path/to/input/"
   val outputStatPath = "/path/to/output/"
   val singleTables = List(
-    SingleTableConfig("A_SINGLE_TABLE", "yyyy-MM-dd", "/path/to/input/single_table")
+    SingleTableConfig("A_SINGLE_TABLE", "/path/to/input/single_table")
   )
 
   "toString" should "print the class members" in {
@@ -47,8 +47,8 @@ class FlatTableConfigSuite extends SharedContext {
     val config = ConfigFactory.parseString(
       s"""
         {
-          table_name = $tableName
-          main_table = $centralTable
+          name = $tableName
+          central_table = $centralTable
           date_format = $dateFormat
           input_path = $inputPath
           output_stat_path = $outputStatPath

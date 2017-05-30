@@ -7,13 +7,13 @@ import fr.polytechnique.cmap.cnam.utilities.DFUtils
 
 object DataFrameHelper {
 
-  implicit class ImplicitDF(data: DataFrame) {
+  implicit class ImplicitDF(df: DataFrame) {
 
     final val OldDelimiter: String = "\\."
     final val NewDelimiter: String = "__"
 
     def changeColumnNameDelimiter: DataFrame = {
-      val renamedColumns = data.columns.map(columnName => {
+      val renamedColumns = df.columns.map(columnName => {
         val splittedColName = columnName.split(OldDelimiter)
         if (splittedColName.size == 2) {
           col("`" + columnName + "`").as(splittedColName(0) + NewDelimiter + splittedColName(1))
@@ -22,7 +22,7 @@ object DataFrameHelper {
         }
       })
 
-      data.select(renamedColumns: _*)
+      df.select(renamedColumns: _*)
     }
 
     def changeSchema(
@@ -36,7 +36,7 @@ object DataFrameHelper {
         annotateJoiningTablesColumns(tableSchema, mainTableName)
       ).reduce(_ ++ _) ++ unknownColumnNameType
 
-      DFUtils.applySchema(data, flatSchema, dateFormat)
+      DFUtils.applySchema(df, flatSchema, dateFormat)
     }
 
     def annotateJoiningTablesColumns(
@@ -58,22 +58,22 @@ object DataFrameHelper {
       tableName + NewDelimiter + columnName
     }
 
-    import statistics.CustomStatistics._
+    import statistics.DataFrameStatistics._
 
     def computeStatistics(distinctOnly: Boolean): DataFrame = {
-      data.customDescribe(data.columns, distinctOnly)
+      df.customDescribe(df.columns, distinctOnly)
     }
 
     def writeStatistics(outputPath: String, distinctOnly: Boolean = false): Unit = {
-      data
+      df
         .computeStatistics(distinctOnly)
         .write
         .parquet(outputPath)
     }
 
     def prefixColumnNames(prefix: String, separator: String = "__"): DataFrame = {
-      data.columns.foldLeft(data) {
-        (curDF, colName) => curDF.withColumnRenamed(colName, prefix + separator + colName)
+      df.columns.foldLeft(df) {
+        (currentDF, colName) => currentDF.withColumnRenamed(colName, prefix + separator + colName)
       }
     }
   }

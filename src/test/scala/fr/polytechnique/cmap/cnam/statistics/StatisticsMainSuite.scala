@@ -11,8 +11,8 @@ class StatisticsMainSuite extends SharedContext{
     import sqlCtx.implicits._
 
     // Given
-    val centralTableName = "CENTRAL"
-    val singleConf = SingleTableConfig("SINGLE", "yyyy-MM-dd", "/path/to/something/")
+    val isCentral = false
+    val singleConf = SingleTableConfig("SINGLE", "/path/to/something/")
     val input = Seq(
       ("1", 10, "1"), ("2", 20, "10"), ("2", 20, "10")
     ).toDF("NUM_ENQ", "NUMERIC_COL", "STRING_COL")
@@ -23,10 +23,12 @@ class StatisticsMainSuite extends SharedContext{
     ).toDF("Min", "Max", "CountDistinct", "SumDistinct", "ColName")
 
     // When
-    val result = StatisticsMain.computeSingleTableStats(input, centralTableName, singleConf)
+    val result = StatisticsMain.computeSingleTableStats(input, isCentral, singleConf)
 
     // Then
     import utilities.DFUtils.CSVDataFrame
+    result.show
+    expected.show
     assert(result sameAs expected)
   }
 
@@ -43,8 +45,8 @@ class StatisticsMainSuite extends SharedContext{
       inputPath = "/path/to/something/",
       outputStatPath = "target/test/output/stats",
       singleTables = List(
-        SingleTableConfig("CENTRAL", "yyyy-MM-dd", "src/test/resources/statistics/single-tables/CENTRAL"),
-        SingleTableConfig("OTHER", "yyyy-MM-dd", "src/test/resources/statistics/single-tables/OTHER")
+        SingleTableConfig("CENTRAL", "src/test/resources/statistics/single-tables/CENTRAL"),
+        SingleTableConfig("OTHER", "src/test/resources/statistics/single-tables/OTHER")
       )
     )
     val input = Seq(
@@ -75,6 +77,8 @@ class StatisticsMainSuite extends SharedContext{
 
     // Then
     import utilities.DFUtils.CSVDataFrame
+    resultSingle.show
+    expectedSingle.show
     assert(resultFlat sameAs expectedFlat)
     assert(resultSingle sameAs expectedSingle)
     assert(diff sameAs expectedDiff)
@@ -84,15 +88,16 @@ class StatisticsMainSuite extends SharedContext{
 
     // Given
     val expectedResultPath = "src/test/resources/statistics/flat_table/expected/newMCOStat"
-    val expectedResult = sqlContext.read.parquet(expectedResultPath)
-    val resultPath = "target/test/output/statistics/MCO/flat_table"
+    val expected = sqlContext.read.parquet(expectedResultPath)
 
     // When
-    StatisticsMain.run(sqlContext, Map())
-    val result = sqlContext.read.parquet(resultPath)
+    StatisticsMain.run(sqlContext, Map("conf" -> "src/main/resources/statistics/test.conf"))
+    val resultOld = spark.read.parquet("target/test/output/stats/oldMCO/flat_table")
+    val resultNew = spark.read.parquet("target/test/output/stats/newMCO/flat_table")
 
     // Then
     import utilities.DFUtils.CSVDataFrame
-    assert(result sameAs expectedResult)
+    assert(resultOld sameAs expected)
+    assert(resultNew sameAs expected)
   }
 }

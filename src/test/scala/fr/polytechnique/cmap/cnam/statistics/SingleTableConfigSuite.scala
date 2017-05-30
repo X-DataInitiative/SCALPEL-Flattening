@@ -6,7 +6,6 @@ import fr.polytechnique.cmap.cnam.SharedContext
 class SingleTableConfigSuite extends SharedContext {
 
   val tableName = "A_TABLE"
-  val dateFormat = "yyyy-MM-dd"
   val inputPath = "/path/to/parquet/"
 
   "toString" should "print the class members" in {
@@ -14,12 +13,11 @@ class SingleTableConfigSuite extends SharedContext {
     // Given
     val expected = {
       s"tableName -> $tableName \n" +
-      s"dateFormat -> $dateFormat \n" +
       s"inputPath -> $inputPath"
     }
 
     // When
-    val result = SingleTableConfig(tableName, dateFormat, inputPath).toString
+    val result = SingleTableConfig(tableName, inputPath).toString
 
     // Then
     assert(result == expected)
@@ -31,13 +29,12 @@ class SingleTableConfigSuite extends SharedContext {
     val config = ConfigFactory.parseString(
       s"""
         {
-          table_name = $tableName
-          date_format = $dateFormat
+          name = $tableName
           input_path = $inputPath
         }
       """.stripMargin)
 
-    val expected = SingleTableConfig(tableName, dateFormat, inputPath)
+    val expected = SingleTableConfig(tableName, inputPath)
 
     // When
     val result = SingleTableConfig.fromConfig(config)

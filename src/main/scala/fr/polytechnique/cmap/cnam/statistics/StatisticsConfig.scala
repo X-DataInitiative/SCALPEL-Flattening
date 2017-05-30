@@ -28,8 +28,8 @@ object StatisticsConfig {
   }
 
   val mainFlatConfig: List[FlatTableConfig] = {
-    if(conf.hasPath("main_flat")) {
-      conf.getConfigList("main_flat").asScala.toList.map(FlatTableConfig.fromConfig)
+    if(conf.hasPath("new_flat")) {
+      conf.getConfigList("new_flat").asScala.toList.map(FlatTableConfig.fromConfig)
     } else {
       List[FlatTableConfig]()
     }
