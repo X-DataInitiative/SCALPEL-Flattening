@@ -57,11 +57,6 @@ class DataFrameHelperSuite extends SharedContext {
     val result = inputDf.changeSchema(inputSchema, mainTableName, dateFormat)
 
     // Then
-    expectedResult.show
-    expectedResult.printSchema
-    result.show
-    result.printSchema
-
     import utilities.DFUtils.CSVDataFrame
     assert(inputDf.schema != result.schema)
     assert(result sameAs expectedResult)
@@ -92,12 +87,6 @@ class DataFrameHelperSuite extends SharedContext {
     val result = inputDf.changeSchema(schemaMap, mainTableName)
 
     // Then
-    inputDf.printSchema
-    inputDf.show
-    expectedResult.show
-    result.show
-    result.printSchema
-
     import utilities.DFUtils.CSVDataFrame
     assert(result sameAs expectedResult)
     assert(inputDf.schema != result.schema)
@@ -158,25 +147,4 @@ class DataFrameHelperSuite extends SharedContext {
     // Then
     assert(result == expectedResult)
   }
-
-  "writeStatistics" should "compute statistics on the input DF and write it in a given path" in {
-
-    // Given
-    val inputDfPath = "src/test/resources/statistics/flat_table/input/newMCO"
-    val expectedResultPath = "src/test/resources/statistics/flat_table/expected/newMCOStat"
-    val resultPath = "target/test/output/statistics/newMCO"
-    val inputDf = sqlContext.read.option("mergeSchema", "true").parquet(inputDfPath).drop("year")
-    val expectedResult = sqlContext.read.parquet(expectedResultPath)
-
-    // When
-    import DataFrameHelper.ImplicitDF
-    inputDf.writeStatistics(resultPath)
-    val result = sqlContext.read.parquet(resultPath)
-
-    // Then
-    import utilities.DFUtils.CSVDataFrame
-    assert(result sameAs expectedResult)
-
-  }
-
 }

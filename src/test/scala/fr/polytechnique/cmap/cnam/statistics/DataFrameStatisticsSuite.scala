@@ -25,24 +25,19 @@ class DataFrameStatisticsSuite extends SharedContext {
     val inputDf = getSampleDf
       .select("BEN_CDI_NIR", "BEN_DTE_MAJ", "BEN_SEX_COD", "MAX_TRT_DTD", "ORG_CLE_NEW", "NUM_ENQ")
     val expected: DataFrame = Seq(
-        ("0", "0", 2L, 1L, Some(0.0), Some(0.0), Some(0.0), "BEN_CDI_NIR"),
-        ("01/01/2006", "25/01/2006", 2L, 2L, null, null, null, "BEN_DTE_MAJ"),
-        ("1", "2", 2L, 2L, Some(3.0), Some(3.0), Some(1.5), "BEN_SEX_COD"),
-        ("07/03/2008", "07/03/2008", 1L, 1L, null, null, null, "MAX_TRT_DTD"),
-        ("CODE1234", "CODE1234", 2L, 1L, null, null, null, "ORG_CLE_NEW"),
-        ("Patient_01", "Patient_02", 2L, 2L, null, null, null, "NUM_ENQ")
-      ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName")
+        ("0", "0", 2L, 1L, Some(0.0), Some(0.0), Some(0.0), "BEN_CDI_NIR", "IntegerType"),
+        ("01/01/2006", "25/01/2006", 2L, 2L, null, null, null, "BEN_DTE_MAJ", "StringType"),
+        ("1", "2", 2L, 2L, Some(3.0), Some(3.0), Some(1.5), "BEN_SEX_COD", "IntegerType"),
+        ("07/03/2008", "07/03/2008", 1L, 1L, null, null, null, "MAX_TRT_DTD", "StringType"),
+        ("CODE1234", "CODE1234", 2L, 1L, null, null, null, "ORG_CLE_NEW", "StringType"),
+        ("Patient_01", "Patient_02", 2L, 2L, null, null, null, "NUM_ENQ", "StringType")
+      ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName", "ColType")
 
     // When
     import fr.polytechnique.cmap.cnam.statistics.DataFrameStatistics._
     val result = inputDf.customDescribe(inputDf.columns)
 
     // Then
-    result.show
-    result.printSchema
-    expected.show
-    expected.printSchema
-
     import utilities.DFUtils.CSVDataFrame
     assert(expected sameAs result)
   }
@@ -56,24 +51,19 @@ class DataFrameStatisticsSuite extends SharedContext {
     val inputDf = getSampleDf
       .select("BEN_CDI_NIR", "BEN_DTE_MAJ", "BEN_SEX_COD", "MAX_TRT_DTD", "ORG_CLE_NEW", "NUM_ENQ")
     val expected: DataFrame = Seq(
-      ("0", "0", 1L, Some(0.0), "BEN_CDI_NIR"),
-      ("01/01/2006", "25/01/2006", 2L, null, "BEN_DTE_MAJ"),
-      ("1", "2", 2L, Some(3.0), "BEN_SEX_COD"),
-      ("07/03/2008", "07/03/2008", 1L, null, "MAX_TRT_DTD"),
-      ("CODE1234", "CODE1234", 1L, null, "ORG_CLE_NEW"),
-      ("Patient_01", "Patient_02", 2L, null, "NUM_ENQ")
-    ).toDF("Min", "Max", "CountDistinct", "SumDistinct", "ColName")
+      ("0", "0", 1L, Some(0.0), "BEN_CDI_NIR", "IntegerType"),
+      ("01/01/2006", "25/01/2006", 2L, null, "BEN_DTE_MAJ", "StringType"),
+      ("1", "2", 2L, Some(3.0), "BEN_SEX_COD", "IntegerType"),
+      ("07/03/2008", "07/03/2008", 1L, null, "MAX_TRT_DTD", "StringType"),
+      ("CODE1234", "CODE1234", 1L, null, "ORG_CLE_NEW", "StringType"),
+      ("Patient_01", "Patient_02", 2L, null, "NUM_ENQ", "StringType")
+    ).toDF("Min", "Max", "CountDistinct", "SumDistinct", "ColName", "ColType")
 
     // When
     import fr.polytechnique.cmap.cnam.statistics.DataFrameStatistics._
     val result = inputDf.customDescribe(inputDf.columns, distinctOnly = true)
 
     // Then
-    result.show
-    result.printSchema
-    expected.show
-    expected.printSchema
-
     import utilities.DFUtils.CSVDataFrame
     assert(expected sameAs result)
   }
@@ -87,10 +77,10 @@ class DataFrameStatisticsSuite extends SharedContext {
     val inputDf = getSampleDf
     val inputColumns = Seq("BEN_TOP_CNS", "BEN_DCD_DTE", "NUM_ENQ")
     val expected = Seq(
-        ("1", "1", 2L, 1L, Some(2.0), Some(1.0), Some(1.0), "BEN_TOP_CNS"),
-        ("25/01/2008", "25/01/2008", 1L, 1L, null, null, null, "BEN_DCD_DTE"),
-        ("Patient_01", "Patient_02", 2L, 2L, null, null, null, "NUM_ENQ")
-      ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName")
+        ("1", "1", 2L, 1L, Some(2.0), Some(1.0), Some(1.0), "BEN_TOP_CNS", "IntegerType"),
+        ("25/01/2008", "25/01/2008", 1L, 1L, null, null, null, "BEN_DCD_DTE", "StringType"),
+        ("Patient_01", "Patient_02", 2L, 2L, null, null, null, "NUM_ENQ", "StringType")
+      ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName", "ColType")
 
     // When
     import fr.polytechnique.cmap.cnam.statistics.DataFrameStatistics._

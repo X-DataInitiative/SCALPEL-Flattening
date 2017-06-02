@@ -8,9 +8,6 @@ import org.apache.spark.SparkContext
 import org.apache.spark.sql.{SQLContext, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpecLike, Suite}
 
-/**
-  * Created by sathiya on 15/02/17.
-  */
 abstract class SharedContext extends FlatSpecLike with BeforeAndAfterAll with BeforeAndAfterEach {
   self: Suite =>
 

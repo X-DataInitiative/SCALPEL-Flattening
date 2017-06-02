@@ -23,8 +23,8 @@ class ColumnStatisticsSuite extends SharedContext {
     // Given
     val colName = "numeric"
     val expected = Seq(
-      ("1", "9", 3L, 2L, 11D, 10D, 3.6667D, "numeric")
-    ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName")
+      ("1", "9", 3L, 2L, 11D, 10D, 3.6667D, "numeric", "IntegerType")
+    ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName", "ColType")
 
     // When
     val result = ColumnStatistics.describeColumn(input, colName)
@@ -42,8 +42,8 @@ class ColumnStatisticsSuite extends SharedContext {
     // Given
     val colName = "non-numeric"
     val expected = Seq(
-      ("a", "b", 3L, 2L, None: Option[Double], None: Option[Double], None: Option[Double], "non-numeric")
-    ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName")
+      ("a", "b", 3L, 2L, None: Option[Double], None: Option[Double], None: Option[Double], "non-numeric", "StringType")
+    ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName", "ColType")
 
     // When
     val result = ColumnStatistics.describeColumn(input, colName)

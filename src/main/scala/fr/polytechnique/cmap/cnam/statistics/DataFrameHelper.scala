@@ -58,24 +58,10 @@ object DataFrameHelper {
       tableName + NewDelimiter + columnName
     }
 
-    import statistics.DataFrameStatistics._
-
-    def computeStatistics(distinctOnly: Boolean): DataFrame = {
-      df.customDescribe(df.columns, distinctOnly)
-    }
-
-    def writeStatistics(outputPath: String, distinctOnly: Boolean = false): Unit = {
-      df
-        .computeStatistics(distinctOnly)
-        .write
-        .parquet(outputPath)
-    }
-
     def prefixColumnNames(prefix: String, separator: String = "__"): DataFrame = {
       df.columns.foldLeft(df) {
         (currentDF, colName) => currentDF.withColumnRenamed(colName, prefix + separator + colName)
       }
     }
   }
-
 }

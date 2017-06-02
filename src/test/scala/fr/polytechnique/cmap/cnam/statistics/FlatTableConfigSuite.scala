@@ -7,6 +7,7 @@ class FlatTableConfigSuite extends SharedContext {
 
   val tableName = "A_TABLE"
   val centralTable = "CentralTable"
+  val joinKeys = List("COL")
   val dateFormat = "yyyy-MM-dd"
   val inputPath = "/path/to/input/"
   val outputStatPath = "/path/to/output/"
@@ -20,6 +21,7 @@ class FlatTableConfigSuite extends SharedContext {
     val expected = {
       s"tableName -> $tableName \n" +
       s"centralTable -> $centralTable \n" +
+      s"joinKeys -> $joinKeys \n" +
       s"dateFormat -> $dateFormat \n" +
       s"inputPath -> $inputPath \n" +
       s"outputStatPath -> $outputStatPath \n" +
@@ -28,6 +30,7 @@ class FlatTableConfigSuite extends SharedContext {
     val input = FlatTableConfig(
       tableName,
       centralTable,
+      joinKeys,
       dateFormat,
       inputPath,
       outputStatPath,
@@ -58,6 +61,7 @@ class FlatTableConfigSuite extends SharedContext {
     val expected = FlatTableConfig(
       tableName,
       centralTable,
+      List(),
       dateFormat,
       inputPath,
       outputStatPath,
