@@ -32,14 +32,10 @@ object DFUtils {
         val columnType = columnsType(columnName)
 
         if (columnType == "Date") {
-          to_date(
-            unix_timestamp(col(columnName), dateFormat)
-              .cast(TimestampType)
-          ).as(columnName)
+          // Currently we are using "parseDate", but later we should change it for "parseTimestamp"
+          UDFs.parseDate(dateFormat).apply(col(columnName)).as(columnName)
         } else {
-          col(columnName)
-            .cast(columnType)
-            .as(columnName)
+          col(columnName).cast(columnType).as(columnName)
         }
     }
 
