@@ -4,7 +4,7 @@ import java.sql.Date
 import org.apache.spark.sql.types.TimestampType
 import fr.polytechnique.cmap.cnam.{SharedContext, utilities}
 
-class DataFrameHelperSuite extends SharedContext {
+class OldFlatHelperSuite extends SharedContext {
 
   "changeColumnNameDelimiter" should "change the column tableName delimiters from dot to underscore " in {
 
@@ -21,7 +21,7 @@ class DataFrameHelperSuite extends SharedContext {
     ).toDF("key1", "noDelimiter", "key__delimiter1", "key__delimiter2")
 
     // When
-    import DataFrameHelper.ImplicitDF
+    import OldFlatHelper.ImplicitDF
     val result = inputDf.changeColumnNameDelimiter
 
     // Then
@@ -53,7 +53,7 @@ class DataFrameHelperSuite extends SharedContext {
     val dateFormat = "yyyy-MM-dd"
 
     // When
-    import DataFrameHelper.ImplicitDF
+    import OldFlatHelper.ImplicitDF
     val result = inputDf.changeSchema(inputSchema, mainTableName, dateFormat)
 
     // Then
@@ -83,7 +83,7 @@ class DataFrameHelperSuite extends SharedContext {
     val mainTableName = "ER_PRS_F"
 
     // When
-    import DataFrameHelper.ImplicitDF
+    import OldFlatHelper.ImplicitDF
     val result = inputDf.changeSchema(schemaMap, mainTableName)
 
     // Then
@@ -119,7 +119,7 @@ class DataFrameHelperSuite extends SharedContext {
     val sampleDf = Seq("dummyValue").toDF("Col_1")
 
     // When
-    import DataFrameHelper.ImplicitDF
+    import OldFlatHelper.ImplicitDF
     val testResult = testInput.map { testInput =>
       sampleDf.annotateJoiningTablesColumns(testInput, mainTableName)
     }
@@ -141,7 +141,7 @@ class DataFrameHelperSuite extends SharedContext {
     val sampleDf = Seq("dummyValue").toDF("Col_1")
 
     // When
-    import DataFrameHelper.ImplicitDF
+    import OldFlatHelper.ImplicitDF
     val result = sampleDf.prefixColName(tableName, columnName)
 
     // Then

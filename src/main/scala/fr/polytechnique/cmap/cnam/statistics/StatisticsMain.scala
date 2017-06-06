@@ -2,7 +2,7 @@ package fr.polytechnique.cmap.cnam.statistics
 
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Column, DataFrame, Dataset, SQLContext}
+import org.apache.spark.sql.{DataFrame, Dataset, SQLContext}
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig
 import fr.polytechnique.cmap.cnam.utilities.DFUtils.readParquet
@@ -22,8 +22,8 @@ object StatisticsMain extends Main {
     logger.info(s"Computing Statistics on the single table: ${singleConf.tableName}")
     println(singleConf)
 
-    import DataFrameHelper._
-    import DataFrameStatistics.Statistics
+    import CustomDescriber.CustomDescriberImplicits
+    import OldFlatHelper._
 
     val prefixedData = if(isCentral)
       singleTableData
@@ -38,7 +38,7 @@ object StatisticsMain extends Main {
 
   def describeFlatTable(data: DataFrame, flatConf: FlatTableConfig): Unit = {
 
-    import DataFrameStatistics.Statistics
+    import CustomDescriber.CustomDescriberImplicits
 
     logger.info(s"Computing Statistics on the flat table: ${flatConf.tableName}")
     println(flatConf)
@@ -82,7 +82,7 @@ object StatisticsMain extends Main {
     argsMap.get("conf").foreach(sqlContext.setConf("conf", _))
     argsMap.get("env").foreach(sqlContext.setConf("env", _))
 
-    import DataFrameHelper.ImplicitDF
+    import OldFlatHelper.ImplicitDF
     // Compute and save stats for the old flattening
     if(StatisticsConfig.describeOldFlatTable) {
 

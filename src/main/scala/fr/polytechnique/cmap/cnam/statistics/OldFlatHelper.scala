@@ -2,10 +2,9 @@ package fr.polytechnique.cmap.cnam.statistics
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
-import fr.polytechnique.cmap.cnam.statistics
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
 
-object DataFrameHelper {
+object OldFlatHelper {
 
   implicit class ImplicitDF(df: DataFrame) {
 

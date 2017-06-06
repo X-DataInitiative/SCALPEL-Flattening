@@ -33,7 +33,6 @@ object FlatTableConfig {
     else
       List[SingleTableConfig]()
 
-    val tableName = c.getString("name")
     import FlatteningConfig.JoinConfig
     // The next line gets the join keys from the Flattening Config. This is temporary until the
     // stats config is merged with the flattening config.
