@@ -2,18 +2,17 @@ package fr.polytechnique.cmap.cnam.statistics
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
-import fr.polytechnique.cmap.cnam.statistics
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
 
 object OldFlatHelper {
 
-  implicit class ImplicitDF(data: DataFrame) {
+  implicit class ImplicitDF(df: DataFrame) {
 
     final val OldDelimiter: String = "\\."
     final val NewDelimiter: String = "__"
 
     def changeColumnNameDelimiter: DataFrame = {
-      val renamedColumns = data.columns.map(columnName => {
+      val renamedColumns = df.columns.map(columnName => {
         val splittedColName = columnName.split(OldDelimiter)
         if (splittedColName.size == 2) {
           col("`" + columnName + "`").as(splittedColName(0) + NewDelimiter + splittedColName(1))
@@ -22,7 +21,7 @@ object OldFlatHelper {
         }
       })
 
-      data.select(renamedColumns: _*)
+      df.select(renamedColumns: _*)
     }
 
     def changeSchema(
@@ -36,7 +35,7 @@ object OldFlatHelper {
         annotateJoiningTablesColumns(tableSchema, mainTableName)
       ).reduce(_ ++ _) ++ unknownColumnNameType
 
-      DFUtils.applySchema(data, flatSchema, dateFormat)
+      DFUtils.applySchema(df, flatSchema, dateFormat)
     }
 
     def annotateJoiningTablesColumns(
@@ -58,16 +57,10 @@ object OldFlatHelper {
       tableName + NewDelimiter + columnName
     }
 
-    import statistics.CustomStatistics._
-
-    def computeStatistics: DataFrame = data.customDescribe(data.columns)
-
-    def writeStatistics(outputPath: String): Unit = {
-      data
-          .computeStatistics
-          .write
-          .parquet(outputPath)
+    def prefixColumnNames(prefix: String, separator: String = "__"): DataFrame = {
+      df.columns.foldLeft(df) {
+        (currentDF, colName) => currentDF.withColumnRenamed(colName, prefix + separator + colName)
+      }
     }
   }
-
 }

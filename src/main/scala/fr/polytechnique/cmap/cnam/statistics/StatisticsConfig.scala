@@ -17,43 +17,21 @@ object StatisticsConfig {
     newConfig.withFallback(defaultConfig).resolve()
   }
 
-  val oldFlatConfig: List[Config] = {
+  val describeOldFlatTable: Boolean = conf.getBoolean("describe_old")
+
+  val oldFlatConfig: List[FlatTableConfig] = {
     if(conf.hasPath("old_flat")) {
-      conf.getConfigList("old_flat").asScala.toList
+      conf.getConfigList("old_flat").asScala.toList.map(FlatTableConfig.fromConfig)
     } else {
-      List[Config]()
+      List[FlatTableConfig]()
     }
   }
 
-  val newFlatConfig: List[Config] = {
+  val mainFlatConfig: List[FlatTableConfig] = {
     if(conf.hasPath("new_flat")) {
-      conf.getConfigList("new_flat").asScala.toList
-    } else  {
-      List[Config]()
-    }
-  }
-
-  implicit class StatConfig(statConf: Config) {
-
-    val flatTableName: String = statConf.getString("name")
-    val mainTableName: String = statConf.getString("main_table")
-    val dateFormat: String = {
-      if(statConf.hasPath("date_format")) {
-        statConf.getString("date_format")
-      } else {
-        "dd/MM/yyyy"
-      }
-    }
-
-    val inputPath: String = statConf.getString("input_path")
-    val statOutputPath: String = statConf.getString("output_stat_path")
-
-    def prettyPrint: String = {
-      s"flatTableName -> $flatTableName \n" +
-        s"mainTableName -> $mainTableName \n" +
-        s"dateFormat -> $dateFormat \n" +
-        s"inputPath -> $inputPath \n" +
-        s"statOutputPath -> $statOutputPath"
+      conf.getConfigList("new_flat").asScala.toList.map(FlatTableConfig.fromConfig)
+    } else {
+      List[FlatTableConfig]()
     }
   }
 }

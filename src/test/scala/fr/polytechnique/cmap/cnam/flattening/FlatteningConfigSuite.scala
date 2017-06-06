@@ -64,7 +64,8 @@ class FlatteningConfigSuite extends SharedContext {
     // Given
     val tableConfig = ConfigFactory.parseString(
       """
-      { name = IR_BEN_R
+      {
+        name = IR_BEN_R
         partition_strategy = "none"
         partitions = [{path = [/shared/Observapur/raw_data/IR_BEN_R.CSV]}]
       }
