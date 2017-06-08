@@ -32,14 +32,9 @@ object DFUtils {
         val columnType = columnsType(columnName)
 
         if (columnType == "Date") {
-          to_date(
-            unix_timestamp(col(columnName), dateFormat)
-              .cast(TimestampType)
-          ).as(columnName)
+          UDFs.parseDate(dateFormat).apply(col(columnName)).as(columnName)
         } else {
-          col(columnName)
-            .cast(columnType)
-            .as(columnName)
+          col(columnName).cast(columnType).as(columnName)
         }
     }
 
@@ -79,5 +74,4 @@ object DFUtils {
         checkDuplicateRows
     }
   }
-
 }

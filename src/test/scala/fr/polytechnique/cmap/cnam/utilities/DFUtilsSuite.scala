@@ -65,8 +65,6 @@ class DFUtilsSuite extends SharedContext {
 
     val inputFormat = "dd/MM/yyyy"
 
-    val inputName = "TEST_TABLE"
-
     val expectedResult = StructType(Seq(
       StructField("NUM_ENQ", StringType, nullable),
       StructField("BEN_NAI_ANN", StringType, nullable),
@@ -102,11 +100,7 @@ class DFUtilsSuite extends SharedContext {
 
     val inputFormat = "dd/MM/yyyy"
 
-    val inputName = "TEST_TABLE"
-
-
-    //When
-    //Then
+    //WhenThen
     intercept[java.util.NoSuchElementException] {
       applySchema(inputDF, inputSchema, inputFormat)
     }

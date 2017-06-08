@@ -5,9 +5,6 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{Dataset, SQLContext, SparkSession}
 
-/**
-  * Created by sathiya on 15/02/17.
-  */
 trait Main {
   Logger.getRootLogger.setLevel(Level.ERROR)
   Logger.getLogger("org").setLevel(Level.ERROR)
