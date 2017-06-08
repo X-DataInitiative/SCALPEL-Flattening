@@ -1,8 +1,7 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import org.apache.spark.sql._
-import org.mockito.Mockito._
-import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.ConfigValueFactory
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
@@ -37,8 +36,6 @@ class FlatteningMainSuite extends SharedContext {
     import fr.polytechnique.cmap.cnam.utilities.DFUtils._
     expectedDfs.foreach{
       case(name, df) =>
-        df.show
-        result(name).show
         assert(df.sameAs(result(name)))
     }
   }
@@ -76,5 +73,4 @@ class FlatteningMainSuite extends SharedContext {
     //Then
     assert(joinedDF sameAs  expected)
   }
-
 }
