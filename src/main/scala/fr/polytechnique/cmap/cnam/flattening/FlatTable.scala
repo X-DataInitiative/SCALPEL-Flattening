@@ -3,6 +3,8 @@ package fr.polytechnique.cmap.cnam.flattening
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import com.typesafe.config.Config
 
+import scala.reflect.internal.util.TableDef.Column
+
 class FlatTable(sqlContext: SQLContext, config: Config) {
 
   import FlatteningConfig.JoinConfig

@@ -8,7 +8,8 @@ case class ConfigPartition(
     name: String,
     dateFormat: String,
     inputPaths: List[String],
-    output: String)
+    output: String,
+    monthPartitionColumn: String)
 
 object FlatteningConfig {
 
@@ -49,6 +50,7 @@ object FlatteningConfig {
         config.getString("date_format")
       else "dd/MM/yyyy"
     }
+    def monthPartitionColumn: String = config.getString("month_partition_column")
 
     def partitions: List[Config] = config.getConfigList("partitions").asScala.toList
 
@@ -94,7 +96,8 @@ object FlatteningConfig {
       name = tableConfig.name,
       dateFormat = tableConfig.dateFormat,
       inputPaths = partitionConfig.inputPaths,
-      output = partitionConfig.outputPath(tableConfig.strategy, tableConfig.name)
+      output = partitionConfig.outputPath(tableConfig.strategy, tableConfig.name),
+      monthPartitionColumn = tableConfig.monthPartitionColumn
     )
   }
 
