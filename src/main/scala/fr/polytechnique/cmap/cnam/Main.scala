@@ -27,7 +27,6 @@ trait Main {
       _spark = SparkSession
         .builder()
         .appName(this.appName)
-        .config("spark.sql.autoBroadcastJoinThreshold", "104857600")
         .getOrCreate()
     }
   }
