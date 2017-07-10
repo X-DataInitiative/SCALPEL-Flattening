@@ -43,7 +43,7 @@ class DrugPurchaseSuite extends SharedContext {
     val outputPathRoot = "target/test/output/statistics/distribution"
 
     // When
-    DrugPurchase.computeAndSaveByPatient(dcirCompact, mcoCompact, outputPathRoot)
+    NumberOfEvents.computeAndSaveByPatient(dcirCompact, mcoCompact, outputPathRoot)
 
     import utilities.DFUtils.readParquet
     val dcirOutput = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatient")
@@ -92,7 +92,7 @@ class DrugPurchaseSuite extends SharedContext {
     val outputPathRoot = "target/test/output/statistics/distribution"
 
     // When
-    DrugPurchase.computeAndSaveByPatientAndMonth(dcirCompactInput, mcoCompactInput, outputPathRoot)
+    NumberOfEvents.computeAndSaveByPatientAndMonth(dcirCompactInput, mcoCompactInput, outputPathRoot)
 
     import utilities.DFUtils.readParquet
     val dcirOutput = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatientAndMonth")
@@ -153,7 +153,7 @@ class DrugPurchaseSuite extends SharedContext {
     val outputPathRoot = "target/test/output/statistics/distribution"
 
     // When
-    DrugPurchase.evaluate(dcirCompact, mcoCompact, outputPathRoot)
+    NumberOfEvents.evaluate(dcirCompact, mcoCompact, outputPathRoot)
 
     import utilities.DFUtils.readParquet
     val dcirOutputByPatient = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatient")

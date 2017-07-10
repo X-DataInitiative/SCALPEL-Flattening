@@ -32,8 +32,8 @@ object StatisticsMain extends Main {
     val irImbCompact = Sources.irImbCompact(sqlContext, irImbPath).persist
 
     NumberOfLines.evaluate(dcir, mco, outputPathRoot)
-    DrugPurchase.evaluate(dcirCompact, mcoCompact, outputPathRoot)
-    CodeConsistency.evaluate(dcirCompact, irBenCompact, mcoCompact, irImbCompact)
+    NumberOfEvents.evaluate(dcirCompact, mcoCompact, outputPathRoot)
+    CodeConsistency.evaluate(dcirCompact, irBenCompact, mcoCompact, irImbCompact, outputPathRoot)
 
     dcirCompact.unpersist
     mcoCompact.unpersist

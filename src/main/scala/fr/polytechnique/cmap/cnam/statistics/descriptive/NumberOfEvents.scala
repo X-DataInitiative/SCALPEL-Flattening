@@ -3,7 +3,7 @@ package fr.polytechnique.cmap.cnam.statistics.descriptive
 import org.apache.log4j.Logger
 import org.apache.spark.sql.Dataset
 
-object DrugPurchase {
+object NumberOfEvents {
 
   val logger: Logger = Logger.getLogger(getClass)
 

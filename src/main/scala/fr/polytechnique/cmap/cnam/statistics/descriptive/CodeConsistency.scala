@@ -3,6 +3,8 @@ package fr.polytechnique.cmap.cnam.statistics.descriptive
 import org.apache.log4j.Logger
 import org.apache.spark.sql.Dataset
 
+case class OutputMetric(name: String, value: Long)
+
 object CodeConsistency {
 
   val logger: Logger = Logger.getLogger(getClass)
@@ -11,18 +13,23 @@ object CodeConsistency {
       dcirCompact: Dataset[DcirCompact],
       irbenCompact: Dataset[IrBenCompact],
       mcoCompact: Dataset[McoCompact],
-      irimbCompact: Dataset[IrImbCompact]): Seq[Long] = {
+      irimbCompact: Dataset[IrImbCompact],
+      outputPathRoot: String): Unit = {
 
-    val dcirIrben = printDcirIrBenConsistency(dcirCompact, irbenCompact)
-    val mcoIrimb = printMcoIrImbConsistency(mcoCompact, irimbCompact)
-    val dcirMco = printDcirMcoConsistency(dcirCompact, mcoCompact)
+    import dcirCompact.sqlContext.implicits._
 
-    dcirIrben ++ mcoIrimb ++ dcirMco
+    val codeConsistencyMetrics = Seq(
+        getDcirIrBenMetrics(dcirCompact, irbenCompact),
+        getMcoIrImbMetrics(mcoCompact, irimbCompact),
+        getDcirMcoMertic(dcirCompact, mcoCompact)
+    ).map(_.toDS).reduce(_ union _)
+
+    codeConsistencyMetrics.write.parquet(outputPathRoot + "/codeConsistency")
   }
 
-  def printDcirIrBenConsistency(
+  def getDcirIrBenMetrics(
       dcirCompact: Dataset[DcirCompact],
-      irBenCompact: Dataset[IrBenCompact]): Seq[Long] = {
+      irBenCompact: Dataset[IrBenCompact]): Seq[OutputMetric] = {
 
     val nbUniquePatientsInDcir = dcirCompact.select("DCIR_NUM_ENQ").distinct.count
     val nbUniquePatientsInIrben = irBenCompact.select("NUM_ENQ").distinct.count
@@ -61,12 +68,17 @@ object CodeConsistency {
     logger.info(s"Number of date of birth in common between DCIR and IR_BEN_R: $commonBirthYearsInDcirAndIrben")
     logger.info(s"Number of death dates in common between DCIR and IR_BEN_R: $commonDeathYearsInDcirAndIrben")
 
-    Seq(commonPatientIdsInDcirAndIrben, commonBirthYearsInDcirAndIrben, commonDeathYearsInDcirAndIrben)
+    Seq(
+      OutputMetric("Dcir_Irben_CommonPatientIds", commonPatientIdsInDcirAndIrben),
+      OutputMetric("Dcir_Irben_CommonBirthYears", commonBirthYearsInDcirAndIrben),
+      OutputMetric("Dcir_Irben_CommonDeathYears", commonDeathYearsInDcirAndIrben)
+    )
+
   }
 
-  def printMcoIrImbConsistency(
+  def getMcoIrImbMetrics(
       mcoCompact: Dataset[McoCompact],
-      irImbCompact: Dataset[IrImbCompact]): Seq[Long] = {
+      irImbCompact: Dataset[IrImbCompact]): Seq[OutputMetric] = {
 
     val nbUniquePatientsInMco = mcoCompact.select("MCO_NUM_ENQ").distinct.count
     val nbUniquePatientsInIrImb = irImbCompact.select("NUM_ENQ").distinct.count
@@ -83,7 +95,7 @@ object CodeConsistency {
               .distinct
         ).count
 
-    val commonDiagDateInMcoAndIrImb = irImbCompact
+    val commonDiagDatesInMcoAndIrImb = irImbCompact
         .select("NUM_ENQ", "IMB_ALD_DTD")
         .distinct
         .intersect(
@@ -93,13 +105,18 @@ object CodeConsistency {
         ).count
 
     logger.info(s"Number of patient id's in common between MCO and IR_IMB_R: $commonPatientIdsInMcoAndIrImb")
-    logger.info(s"Number of diagnosis dates in common between MCO and IR_IMB_R: $commonDiagDateInMcoAndIrImb")
-    Seq(commonPatientIdsInMcoAndIrImb, commonDiagDateInMcoAndIrImb)
+    logger.info(s"Number of diagnosis dates in common between MCO and IR_IMB_R: $commonDiagDatesInMcoAndIrImb")
+
+    Seq(
+      OutputMetric("Mco_Irimb_CommonPatientIds", commonPatientIdsInMcoAndIrImb),
+      OutputMetric("Mco_Irimb_CommonDiagDates", commonDiagDatesInMcoAndIrImb)
+    )
+
   }
 
-  def printDcirMcoConsistency(
+  def getDcirMcoMertic(
       dcirCompact: Dataset[DcirCompact],
-      mcoCompact: Dataset[McoCompact]): Seq[Long] = {
+      mcoCompact: Dataset[McoCompact]): Seq[OutputMetric] = {
 
     val commonPatientIdsInDcirAndMco = dcirCompact
         .select("DCIR_NUM_ENQ")
@@ -111,6 +128,10 @@ object CodeConsistency {
         ).count
 
     logger.info(s"Number of patient id's in common between DCIR and MCO: $commonPatientIdsInDcirAndMco")
-    Seq(commonPatientIdsInDcirAndMco)
+
+    Seq(
+      OutputMetric("Dcir_Mco_CommonPatientIds", commonPatientIdsInDcirAndMco)
+    )
+
   }
 }

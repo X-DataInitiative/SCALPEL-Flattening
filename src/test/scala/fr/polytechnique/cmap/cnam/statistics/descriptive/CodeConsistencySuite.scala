@@ -42,24 +42,26 @@ class CodeConsistencySuite extends SharedContext {
       IrImbCompact("Patient4", makeTS(1999, 10, 1))
     ).toDS
 
-    val commonPatientIdDcirIrben = 2L
-    val commonBirthYearDcirIrben = 1L
-    val commonDeathYearDcirIrben = 1L
+    val outputPathRoot = "target/test/output/statistics/distribution"
 
-    val commonPatientIdMcoIrimb = 3L
-    val commonDiagDateMcoIrimb = 1L
-
-    val commonPatientIdDcirMco = 3L
-
-    val expectedResult = Seq(commonPatientIdDcirIrben, commonBirthYearDcirIrben,
-      commonDeathYearDcirIrben, commonPatientIdMcoIrimb, commonDiagDateMcoIrimb,
-      commonPatientIdDcirMco)
+    val expectedResult = Seq(
+      OutputMetric("Dcir_Irben_CommonPatientIds", 2L),
+      OutputMetric("Dcir_Irben_CommonBirthYears", 1L),
+      OutputMetric("Dcir_Irben_CommonDeathYears", 1L),
+      OutputMetric("Mco_Irimb_CommonPatientIds", 3L),
+      OutputMetric("Mco_Irimb_CommonDiagDates", 1L),
+      OutputMetric("Dcir_Mco_CommonPatientIds", 3L)
+    ).toDS
 
     // When
-    val result = CodeConsistency.evaluate(dcirCompact, irBenCompact, mcoCompact, irImbCompact)
+    CodeConsistency.evaluate(dcirCompact, irBenCompact, mcoCompact, irImbCompact, outputPathRoot)
+
+    import utilities.DFUtils.readParquet
+    val result = readParquet(sqlCtx, outputPathRoot + "/codeConsistency").as[OutputMetric]
 
     // Then
-    assert(expectedResult === result)
+    assertDSs(expectedResult, result)
+
   }
 
 }
