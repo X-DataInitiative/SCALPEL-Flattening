@@ -29,7 +29,7 @@ class DFUtilsSuite extends SharedContext {
 
     //Given
     val sqlCtx = sqlContext
-    val inputPath = "src/test/resources/flattening/parquet-table/MCO_A"
+    val inputPath = "src/test/resources/flattening/parquet-table/single_table/MCO_A"
     val expectedResult = sqlCtx
       .read
       .option("mergeSchema", "true")

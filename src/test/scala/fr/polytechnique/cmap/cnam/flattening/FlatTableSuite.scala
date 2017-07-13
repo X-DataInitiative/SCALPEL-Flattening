@@ -56,8 +56,8 @@ class FlatTableSuite extends SharedContext {
 
     // Given
     val sqlCtx = sqlContext
-    val parquetTablesPath = "src/test/resources/flattening/parquet-table"
-    val expectedDfPath = "src/test/resources/flattening/MCO"
+    val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
+    val expectedDfPath = "src/test/resources/flattening/parquet-table/flat_table/MCO"
     val expectedDf = sqlCtx.read.parquet(expectedDfPath)
     val configTest = FlatteningConfig
       .joinTablesConfig
@@ -80,14 +80,14 @@ class FlatTableSuite extends SharedContext {
 
     // Given
     val sqlCtx = sqlContext
-    val parquetTablesPath = "src/test/resources/flattening/parquet-table"
+    val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
     val configTest = FlatteningConfig
       .joinTablesConfig
       .head
       .withValue("input_path", ConfigValueFactory.fromAnyRef(parquetTablesPath))
     val flattenedTableTest = new FlatTable(sqlCtx, configTest)
     val resultPath = "target/test/output/join"
-    val expectedDf = sqlCtx.read.parquet("src/test/resources/flattening/MCO")
+    val expectedDf = sqlCtx.read.parquet("src/test/resources/flattening/parquet-table/flat_table/MCO")
     // When
     flattenedTableTest.writeAsParquet
     val result =  sqlCtx.read.parquet(resultPath)

@@ -8,8 +8,8 @@ class CSVSchemaReaderSuite extends FlatSpecLike {
 
     //Given
     val csvPaths = List(
-      "flattening/raw-schema/fake_schema.csv",
-      "flattening/raw-schema/fake_schema_2.csv"
+      "flattening/schema/raw/fake_schema.csv",
+      "flattening/schema/raw/fake_schema_2.csv"
     )
 
     //When
@@ -22,7 +22,7 @@ class CSVSchemaReaderSuite extends FlatSpecLike {
   "readSchemaFile" should "look for the right file and parse it without nullPointerException" in {
 
     //Given
-    val csvPath = "flattening/raw-schema/fake_schema.csv"
+    val csvPath = "flattening/schema/raw/fake_schema.csv"
 
     //When
     val result: List[String] = CSVSchemaReader.readSchemaFile(csvPath)

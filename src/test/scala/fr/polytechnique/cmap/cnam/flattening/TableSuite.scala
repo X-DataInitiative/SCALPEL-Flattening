@@ -123,7 +123,7 @@ class TableSuite extends SharedContext {
 
     // Given
     val sqlCtx = sqlContext
-    val parquetTablesPath = "src/test/resources/flattening/parquet-table"
+    val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
     val tableName = "ER_CAM_F"
     val configTest = FlatteningConfig
       .joinTablesConfig
