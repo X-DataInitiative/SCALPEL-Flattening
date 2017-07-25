@@ -9,8 +9,7 @@ object FlatteningMain extends Main {
 
   def appName = "Flattening"
 
-  def saveCSVTablesAsParquet(sqlContext: SQLContext,
-                             saveMode: SaveMode = SaveMode.Overwrite): Unit = {
+  def saveCSVTablesAsParquet(sqlContext: SQLContext): Unit = {
 
     // Generate schemas from csv
     val columnsTypeMap: Map[String, List[(String, String)]] = FlatteningConfig.columnTypes
