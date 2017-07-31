@@ -1,4 +1,4 @@
-package fr.polytechnique.cmap.cnam.statistics.descriptive
+package fr.polytechnique.cmap.cnam.statistics.exploratory
 
 import org.apache.spark.sql.{Dataset, SQLContext}
 import fr.polytechnique.cmap.cnam.Main

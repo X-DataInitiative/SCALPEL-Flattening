@@ -1,4 +1,4 @@
-package fr.polytechnique.cmap.cnam.statistics.descriptive
+package fr.polytechnique.cmap.cnam.statistics.exploratory
 
 import org.apache.log4j.Logger
 import org.apache.spark.sql.Dataset
@@ -12,33 +12,33 @@ object NumberOfEvents {
       mcoCompact: Dataset[McoCompact],
       outputPathRoot: String): Unit = {
 
-    computeAndSaveByPatient(dcirCompact, mcoCompact, outputPathRoot)
+    computeAndSaveByMonth(dcirCompact, mcoCompact, outputPathRoot)
     computeAndSaveByPatientAndMonth(dcirCompact, mcoCompact, outputPathRoot)
   }
 
-  def computeAndSaveByPatient(
+  def computeAndSaveByMonth(
       dcirCompact: Dataset[DcirCompact],
       mcoCompact: Dataset[McoCompact],
       outputPathRoot: String): Unit = {
 
-    val dcirPurchaseCountByPatient = dcirCompact
-        .groupBy("Purchase_Date_trunc")
-        .count
-        .withColumnRenamed("count", "dcir_count")
+    val dcirPurchaseCountByMonth = dcirCompact
+      .groupBy("Purchase_Date_trunc")
+      .count
+      .withColumnRenamed("count", "dcir_count")
 
-    val mcoDiagCountByPatient = mcoCompact
-        .groupBy("Diagnosis_Date_trunc")
-        .count
-        .withColumnRenamed("count", "mco_count")
+    val mcoDiagCountByMonth = mcoCompact
+      .groupBy("Diagnosis_Date_trunc")
+      .count
+      .withColumnRenamed("count", "mco_count")
 
-    val dcirOutputPath = outputPathRoot + "/dcirPurchaseCountByPatient"
-    val mcoOutputPath = outputPathRoot + "/mcoDiagCountByPatient"
+    val dcirOutputPath = outputPathRoot + "/dcirPurchaseCountByMonth"
+    val mcoOutputPath = outputPathRoot + "/mcoDiagCountByMonth"
 
     logger.info(s"Saving number of lines in DCIR by patients under: $dcirOutputPath")
-    dcirPurchaseCountByPatient.write.parquet(dcirOutputPath)
+    dcirPurchaseCountByMonth.write.parquet(dcirOutputPath)
 
     logger.info(s"Saving number of lines in MCO by patients under: $mcoOutputPath")
-    mcoDiagCountByPatient.write.parquet(mcoOutputPath)
+    mcoDiagCountByMonth.write.parquet(mcoOutputPath)
   }
 
   def computeAndSaveByPatientAndMonth(
@@ -49,14 +49,14 @@ object NumberOfEvents {
     val outputPath = outputPathRoot + "/nbDrugPurchaseVsDiagByMonthByPatients"
 
     val dcirPurchaseCountByPatientAndMonth = dcirCompact
-        .groupBy("DCIR_NUM_ENQ", "Purchase_Date_trunc")
-        .count
-        .withColumnRenamed("count", "dcir_count")
+      .groupBy("DCIR_NUM_ENQ", "Purchase_Date_trunc")
+      .count
+      .withColumnRenamed("count", "dcir_count")
 
     val mcoMonthCountByPatientAndMonth = mcoCompact
-        .groupBy("MCO_NUM_ENQ", "Diagnosis_Date_trunc")
-        .count
-        .withColumnRenamed("count", "mco_count")
+      .groupBy("MCO_NUM_ENQ", "Diagnosis_Date_trunc")
+      .count
+      .withColumnRenamed("count", "mco_count")
 
     val dcirOutputPath = outputPathRoot + "/dcirPurchaseCountByPatientAndMonth"
     val mcoOutputPath = outputPathRoot + "/mcoDiagCountByPatientAndMonth"

@@ -1,4 +1,4 @@
-package fr.polytechnique.cmap.cnam.statistics.descriptive
+package fr.polytechnique.cmap.cnam.statistics.exploratory
 
 import org.apache.spark.sql.SQLContext
 import fr.polytechnique.cmap.cnam.SharedContext
@@ -69,8 +69,8 @@ class StatisticsMainSuite extends SharedContext {
     val nbLinesDcirCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/dcirCountByPatientAndMonth")
     val nbLinesMcoCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/mcoCountByPatientAndMonth")
 
-    val dcirPurchaseCountByPatient = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatient")
-    val mcoDiagCountByPatient = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByPatient")
+    val dcirPurchaseCountByPatient = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByMonth")
+    val mcoDiagCountByPatient = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByMonth")
     val dcirPurchaseCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatientAndMonth")
     val mcoDiagCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByPatientAndMonth")
 

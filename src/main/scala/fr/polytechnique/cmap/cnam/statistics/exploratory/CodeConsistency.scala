@@ -1,4 +1,4 @@
-package fr.polytechnique.cmap.cnam.statistics.descriptive
+package fr.polytechnique.cmap.cnam.statistics.exploratory
 
 import org.apache.log4j.Logger
 import org.apache.spark.sql.Dataset
@@ -19,9 +19,9 @@ object CodeConsistency {
     import dcirCompact.sqlContext.implicits._
 
     val codeConsistencyMetrics = Seq(
-        getDcirIrBenMetrics(dcirCompact, irbenCompact),
-        getMcoIrImbMetrics(mcoCompact, irimbCompact),
-        getDcirMcoMertic(dcirCompact, mcoCompact)
+      getDcirIrBenMetrics(dcirCompact, irbenCompact),
+      getMcoIrImbMetrics(mcoCompact, irimbCompact),
+      getDcirMcoMertic(dcirCompact, mcoCompact)
     ).map(_.toDS).reduce(_ union _)
 
     codeConsistencyMetrics.write.parquet(outputPathRoot + "/codeConsistency")
@@ -38,31 +38,31 @@ object CodeConsistency {
     logger.info(s"Number of unique patient id's in IR_BEN_R: $nbUniquePatientsInIrben")
 
     val commonPatientIdsInDcirAndIrben = dcirCompact
-        .select("DCIR_NUM_ENQ")
-        .distinct
-        .intersect(
+      .select("DCIR_NUM_ENQ")
+      .distinct
+      .intersect(
           irBenCompact
-              .select("NUM_ENQ")
-              .distinct
-        ).count
+            .select("NUM_ENQ")
+            .distinct
+      ).count
 
     val commonBirthYearsInDcirAndIrben = irBenCompact
-        .select("NUM_ENQ", "BEN_NAI_ANN")
-        .distinct
-        .intersect(
+      .select("NUM_ENQ", "BEN_NAI_ANN")
+      .distinct
+      .intersect(
           dcirCompact
-              .select("DCIR_NUM_ENQ", "BEN_NAI_ANN")
-              .distinct
-        ).count
+            .select("DCIR_NUM_ENQ", "BEN_NAI_ANN")
+            .distinct
+      ).count
 
     val commonDeathYearsInDcirAndIrben = irBenCompact
-        .select("NUM_ENQ", "BEN_DCD_DTE")
-        .distinct
-        .intersect(
+      .select("NUM_ENQ", "BEN_DCD_DTE")
+      .distinct
+      .intersect(
           dcirCompact
-              .select("DCIR_NUM_ENQ", "BEN_DCD_DTE")
-              .distinct
-        ).count
+            .select("DCIR_NUM_ENQ", "BEN_DCD_DTE")
+            .distinct
+      ).count
 
     logger.info(s"Number of patient id's in common between DCIR and IR_BEN_R: $commonPatientIdsInDcirAndIrben")
     logger.info(s"Number of date of birth in common between DCIR and IR_BEN_R: $commonBirthYearsInDcirAndIrben")
@@ -87,22 +87,22 @@ object CodeConsistency {
     logger.info(s"Number of unique patient id's in IR_BEN_R: $nbUniquePatientsInIrImb")
 
     val commonPatientIdsInMcoAndIrImb = irImbCompact
-        .select("NUM_ENQ")
-        .distinct
-        .intersect(
+      .select("NUM_ENQ")
+      .distinct
+      .intersect(
           mcoCompact
-              .select("MCO_NUM_ENQ")
-              .distinct
-        ).count
+            .select("MCO_NUM_ENQ")
+            .distinct
+      ).count
 
     val commonDiagDatesInMcoAndIrImb = irImbCompact
-        .select("NUM_ENQ", "IMB_ALD_DTD")
-        .distinct
-        .intersect(
+      .select("NUM_ENQ", "IMB_ALD_DTD")
+      .distinct
+      .intersect(
           mcoCompact
-              .select("MCO_NUM_ENQ", "ENT_DAT")
-              .distinct
-        ).count
+            .select("MCO_NUM_ENQ", "ENT_DAT")
+            .distinct
+      ).count
 
     logger.info(s"Number of patient id's in common between MCO and IR_IMB_R: $commonPatientIdsInMcoAndIrImb")
     logger.info(s"Number of diagnosis dates in common between MCO and IR_IMB_R: $commonDiagDatesInMcoAndIrImb")
@@ -119,13 +119,13 @@ object CodeConsistency {
       mcoCompact: Dataset[McoCompact]): Seq[OutputMetric] = {
 
     val commonPatientIdsInDcirAndMco = dcirCompact
-        .select("DCIR_NUM_ENQ")
-        .distinct
-        .intersect(
+      .select("DCIR_NUM_ENQ")
+      .distinct
+      .intersect(
           mcoCompact
-              .select("MCO_NUM_ENQ")
-              .distinct
-        ).count
+            .select("MCO_NUM_ENQ")
+            .distinct
+      ).count
 
     logger.info(s"Number of patient id's in common between DCIR and MCO: $commonPatientIdsInDcirAndMco")
 

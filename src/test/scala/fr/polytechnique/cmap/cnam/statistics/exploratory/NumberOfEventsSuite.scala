@@ -1,9 +1,9 @@
-package fr.polytechnique.cmap.cnam.statistics.descriptive
+package fr.polytechnique.cmap.cnam.statistics.exploratory
 
 import org.apache.spark.sql.{Dataset, SQLContext}
 import fr.polytechnique.cmap.cnam.{SharedContext, utilities}
 
-class DrugPurchaseSuite extends SharedContext {
+class NumberOfEventsSuite extends SharedContext {
 
   lazy val sqlCtx: SQLContext = sqlContext
 
@@ -43,11 +43,11 @@ class DrugPurchaseSuite extends SharedContext {
     val outputPathRoot = "target/test/output/statistics/distribution"
 
     // When
-    NumberOfEvents.computeAndSaveByPatient(dcirCompact, mcoCompact, outputPathRoot)
+    NumberOfEvents.computeAndSaveByMonth(dcirCompact, mcoCompact, outputPathRoot)
 
     import utilities.DFUtils.readParquet
-    val dcirOutput = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatient")
-    val mcoOutput = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByPatient")
+    val dcirOutput = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByMonth")
+    val mcoOutput = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByMonth")
 
     // Then
     assertDFs(dcirOutput, expectedDcirOutput, true)
@@ -156,8 +156,8 @@ class DrugPurchaseSuite extends SharedContext {
     NumberOfEvents.evaluate(dcirCompact, mcoCompact, outputPathRoot)
 
     import utilities.DFUtils.readParquet
-    val dcirOutputByPatient = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatient")
-    val mcoOutputByPatient = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByPatient")
+    val dcirOutputByPatient = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByMonth")
+    val mcoOutputByPatient = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByMonth")
 
     val dcirOutputByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatientAndMonth")
     val mcoOutputByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByPatientAndMonth")
