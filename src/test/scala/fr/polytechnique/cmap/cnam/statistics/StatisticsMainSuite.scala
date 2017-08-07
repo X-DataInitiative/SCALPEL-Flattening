@@ -116,17 +116,32 @@ class StatisticsMainSuite extends SharedContext {
   "run" should "run the overall pipeline correctly without any error" in {
 
     // Given
-    val expectedResultPath = "src/test/resources/statistics/flat_table/expected/newMCOStat"
-    val expected = sqlContext.read.parquet(expectedResultPath)
+    val mcoExpectedResultPath = "src/test/resources/statistics/flat_table/expected/newMCOStat"
+    val dcirExpectedResultPath = "src/test/resources/statistics/flat_table/expected/newDCIRStat"
+    val mcoExpectedResult = sqlContext.read.parquet(mcoExpectedResultPath)
+    val dcirExpectedResult = sqlContext.read.parquet(dcirExpectedResultPath)
+    val outputRootPath = "target/test/output/stats"
 
     // When
     StatisticsMain.run(sqlContext, Map("conf" -> "src/main/resources/statistics/test.conf"))
-    val resultOld = spark.read.parquet("target/test/output/stats/oldMCO/flat_table")
-    val resultNew = spark.read.parquet("target/test/output/stats/newMCO/flat_table")
+
+    val oldDcirFlatTableStat = spark.read.parquet(outputRootPath + "/oldDCIR/flat_table")
+    val oldMcoFlatTableStat = spark.read.parquet(outputRootPath + "/oldMCO/flat_table")
+
+    val newDcirFlatTableStat = spark.read.parquet(outputRootPath + "/newDCIR/flat_table")
+    val newDcirSingleTablesStat = spark.read.parquet(outputRootPath + "/newDCIR/single_tables")
+    val newDcirDiff = spark.read.parquet(outputRootPath + "/newDCIR/diff")
+
+    val newMcoFlatTableStat = spark.read.parquet(outputRootPath + "/newMCO/flat_table")
+    val newMcoSingleTablesStat = spark.read.parquet(outputRootPath + "/newMCO/single_tables")
+    val newMcoDiff = spark.read.parquet(outputRootPath + "/newMCO/diff")
 
     // Then
     import utilities.DFUtils.CSVDataFrame
-    assert(resultOld sameAs expected)
-    assert(resultNew sameAs expected)
+    // We validate only oldFlat stat with expected output. For other outputs we only check
+    // whether the needed output are generated under right output and are readable as parquet
+    assert(oldMcoFlatTableStat sameAs mcoExpectedResult)
+    assert(oldDcirFlatTableStat sameAs dcirExpectedResult)
+
   }
 }

@@ -17,7 +17,7 @@ class FlatteningMainSuite extends SharedContext {
       name =>
         name -> sqlContext.read
           .option("mergeSchema", "true")
-          .load("src/test/resources/flattening/parquet-table/" + name)
+          .load("src/test/resources/flattening/parquet-table/single_table/" + name)
           .toDF
     }.toMap
 
@@ -44,10 +44,10 @@ class FlatteningMainSuite extends SharedContext {
 
     //Given
     val sqlCtx = sqlContext
-    val expected: DataFrame = sqlCtx.read.option("mergeSchema","true").parquet("src/test/resources/flattening/MCO/")
+    val expected: DataFrame = sqlCtx.read.option("mergeSchema","true").parquet("src/test/resources/flattening/parquet-table/flat_table/MCO/")
     val configTest = FlatteningConfig.joinTablesConfig.map(
       x =>
-        x.withValue("input_path", ConfigValueFactory.fromAnyRef("src/test/resources/flattening/parquet-table"))
+        x.withValue("input_path", ConfigValueFactory.fromAnyRef("src/test/resources/flattening/parquet-table/single_table"))
     )
 
     //When
@@ -64,7 +64,7 @@ class FlatteningMainSuite extends SharedContext {
     //Given
     val sqlCtx = sqlContext
     val path = "target/test/output/join/MCO"
-    val expected: DataFrame = sqlContext.read.parquet("src/test/resources/flattening/MCO")
+    val expected: DataFrame = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/MCO")
 
     //When
     FlatteningMain.run(sqlCtx, Map())
