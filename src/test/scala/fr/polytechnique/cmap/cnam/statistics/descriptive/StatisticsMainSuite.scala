@@ -1,4 +1,4 @@
-package fr.polytechnique.cmap.cnam.statistics
+package fr.polytechnique.cmap.cnam.statistics.descriptive
 
 import org.apache.spark.sql.Row
 import fr.polytechnique.cmap.cnam.{SharedContext, utilities}
@@ -128,18 +128,19 @@ class StatisticsMainSuite extends SharedContext {
     val oldDcirFlatTableStat = spark.read.parquet(outputRootPath + "/oldDCIR/flat_table")
     val oldMcoFlatTableStat = spark.read.parquet(outputRootPath + "/oldMCO/flat_table")
 
-    val newDcirFlatTableStat = spark.read.parquet(outputRootPath + "/newDCIR/flat_table")
-    val newDcirSingleTablesStat = spark.read.parquet(outputRootPath + "/newDCIR/single_tables")
-    val newDcirDiff = spark.read.parquet(outputRootPath + "/newDCIR/diff")
-
-    val newMcoFlatTableStat = spark.read.parquet(outputRootPath + "/newMCO/flat_table")
-    val newMcoSingleTablesStat = spark.read.parquet(outputRootPath + "/newMCO/single_tables")
-    val newMcoDiff = spark.read.parquet(outputRootPath + "/newMCO/diff")
-
     // Then
-    import utilities.DFUtils.CSVDataFrame
+
     // We validate only oldFlat stat with expected output. For other outputs we only check
-    // whether the needed output are generated under right output and are readable as parquet
+    // whether the needed output are generated under right output path and are readable as parquet
+    spark.read.parquet(outputRootPath + "/newDCIR/flat_table")
+    spark.read.parquet(outputRootPath + "/newDCIR/single_tables")
+    spark.read.parquet(outputRootPath + "/newDCIR/diff")
+
+    spark.read.parquet(outputRootPath + "/newMCO/flat_table")
+    spark.read.parquet(outputRootPath + "/newMCO/single_tables")
+    spark.read.parquet(outputRootPath + "/newMCO/diff")
+
+    import utilities.DFUtils.CSVDataFrame
     assert(oldMcoFlatTableStat sameAs mcoExpectedResult)
     assert(oldDcirFlatTableStat sameAs dcirExpectedResult)
 

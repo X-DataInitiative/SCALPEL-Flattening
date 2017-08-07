@@ -1,4 +1,4 @@
-package fr.polytechnique.cmap.cnam.statistics
+package fr.polytechnique.cmap.cnam.statistics.descriptive
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
