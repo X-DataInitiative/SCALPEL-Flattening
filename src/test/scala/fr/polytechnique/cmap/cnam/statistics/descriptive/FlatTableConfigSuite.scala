@@ -1,4 +1,4 @@
-package fr.polytechnique.cmap.cnam.statistics
+package fr.polytechnique.cmap.cnam.statistics.descriptive
 
 import com.typesafe.config.ConfigFactory
 import fr.polytechnique.cmap.cnam.SharedContext

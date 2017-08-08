@@ -1,4 +1,4 @@
-package fr.polytechnique.cmap.cnam.statistics
+package fr.polytechnique.cmap.cnam.statistics.descriptive
 
 import org.apache.spark.sql.DataFrame
 import fr.polytechnique.cmap.cnam.{SharedContext, utilities}
@@ -83,7 +83,7 @@ class CustomDescriberSuite extends SharedContext {
     ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName", "ColType")
 
     // When
-    import fr.polytechnique.cmap.cnam.statistics.CustomDescriber._
+    import CustomDescriber._
     val result = inputDf.customDescribe(inputDf.columns)
 
     // Then
@@ -109,7 +109,7 @@ class CustomDescriberSuite extends SharedContext {
     ).toDF("Min", "Max", "CountDistinct", "SumDistinct", "ColName", "ColType")
 
     // When
-    import fr.polytechnique.cmap.cnam.statistics.CustomDescriber._
+    import CustomDescriber._
     val result = inputDf.customDescribe(inputDf.columns, distinctOnly = true)
 
     // Then
@@ -132,7 +132,7 @@ class CustomDescriberSuite extends SharedContext {
     ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName", "ColType")
 
     // When
-    import fr.polytechnique.cmap.cnam.statistics.CustomDescriber._
+    import CustomDescriber._
     val resultColumns = inputDf.customDescribe(inputColumns)
 
     // Then
@@ -147,7 +147,7 @@ class CustomDescriberSuite extends SharedContext {
     val invalidCols = Seq("NUM_ENQ", "INVALID_COLUMN")
 
     // When
-    import fr.polytechnique.cmap.cnam.statistics.CustomDescriber._
+    import CustomDescriber._
     val thrown = intercept[java.lang.IllegalArgumentException] {
       givenDF.customDescribe(invalidCols).count
     }

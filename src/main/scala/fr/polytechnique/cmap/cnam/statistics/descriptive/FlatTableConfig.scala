@@ -1,4 +1,4 @@
-package fr.polytechnique.cmap.cnam.statistics
+package fr.polytechnique.cmap.cnam.statistics.descriptive
 
 import scala.collection.JavaConverters._
 import com.typesafe.config.Config

@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.com/X-DataInitiative/SNIIRAM-flattening.svg?token=zoL7KzND7NxhwpowXftL&branch=master)](https://travis-ci.com/X-DataInitiative/SNIIRAM-flattening)
+[![codecov](https://codecov.io/gh/X-DataInitiative/SNIIRAM-flattening/branch/master/graph/badge.svg?token=GWYM6JLi0z)](https://codecov.io/gh/X-DataInitiative/SNIIRAM-flattening)
+
 # Flattening
 
 C'est une étape de dénormalisation de la donnée initiale qui provient d'une base de donnée SQL. C'est une jointure entre les différentes table. Par exemple, DCIR contient plusieurs tables comme ER_PHA_F ou ER_PRS_F que nous recevons dans des fichiers CSV distincts. L'aplatissement va produire une seule table à partir de ces fichiers. le résultat est sauvegardé sur HDFS au format parquet. L'avantage d'une telle approche est de nous permettre d'utiliser la donnée beaucoup plus rapidement par la suite. En effet, faire des filtres avec Spark est beaucoup plus rapide que de faire des jointures.
@@ -38,7 +41,7 @@ The repository also contains a module for computing statistics on the flat data 
  
 **Configuration**
 
-A configuration file is needed for indicating the paths for the input and the output. The format and default values for each environment can be found in [this directory](https://github.com/X-DataInitiative/SNIIRAM-flattening-2.0/tree/master/src/main/resources/statistics).
+A configuration file is needed for indicating the paths for the input and the output. The format and default values for each environment can be found in [this directory](https://github.com/X-DataInitiative/SNIIRAM-flattening/tree/master/src/main/resources/statistics).
 
 **Usage**
 
@@ -48,7 +51,7 @@ The statistics main contains a main class called `StatisticsMain` which can be i
 spark-submit \
   --executor-memory 100G \
   --class fr.polytechnique.cmap.cnam.statistics.StatisticsMain \
-  /path/to/SNIIRAM-flattening-2.0-assembly-1.0.jar env=cmap conf=config_file.conf
+  /path/to/SNIIRAM-flattening-assembly-1.0.jar env=cmap conf=config_file.conf
 ```
 
 Please note that the items in the file `config_file.conf` will override the default ones for the given environment.
