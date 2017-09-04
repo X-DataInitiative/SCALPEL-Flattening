@@ -35,9 +35,15 @@ Les tables actuellement dénormalisées sont les suivantes :
 
 ---
 
-# Validation Statistics
+# Statistics
+This repository contains two types of statistics.
+* Descriptive - That helps to validate the flattening process.
+* Exploratory - That helps to validate the correctness of the data itself by understanding the distribution of data in the flat table per patientId and per month-year.
 
-The repository also contains a module for computing statistics on the flat data in order to validate its results. This module can be run to compare the result of the newest flattening with the old one, as well as to compare statistics of the result of the flattening with the individual tables.
+## Descriptive/Validation Statistics
+
+It compares column values between two tables using custom describe method that incorporates statistics such min, max, count, count_distinct, sum, sum_distinct and avg.
+This statistics can be run to compare the results of the newest flattening with the old one, as well as to compare statistics of the result of the flattening with the individual tables.
  
 **Configuration**
 
@@ -45,12 +51,13 @@ A configuration file is needed for indicating the paths for the input and the ou
 
 **Usage**
 
-The statistics main contains a main class called `StatisticsMain` which can be invoked via spark-submit. An example of code that can be used is shown below.
+The run method in the `*statistics.descriptive.StatisticsMain` class orchestrate the descriptive statistics process, which can be invoked via spark-submit. 
+An example of code that can be used is shown below.
 
 ```bash
 spark-submit \
   --executor-memory 100G \
-  --class fr.polytechnique.cmap.cnam.statistics.StatisticsMain \
+  --class fr.polytechnique.cmap.cnam.statistics.descriptive.StatisticsMain \
   /path/to/SNIIRAM-flattening-assembly-1.0.jar env=cmap conf=config_file.conf
 ```
 
@@ -63,3 +70,52 @@ For each flat table present in the configuration file, the results will be writt
 * `${output_stat_path}/flat_table`: Contains the statistics for the flat table
 * `${output_stat_path}/single_tables`: Contains the statistics for the columns of all listed single tables
 * `${output_stat_path}/diff`: Contains the rows from the flat table statistics which have different values in the single_tables statistics (ideally it has to be empty).
+
+## Exploratory Statistics
+
+It provides some useful numbers on the flattened table such as the number of lines and events (distinct on the event date, patient Id) per patient per month-year. 
+It also verifies the consistency of columns values between different tables such as patient Ids, birth and death dates on DCIR, MCO, IR_BEN_R and IR_IMB_R.
+
+**Configuration**
+
+The `*statistics.exploratory.StatisticsMain` class takes values of the input and output path root as command-line arguments and extracts the needed path as follows.
+
+
+| Input Table         | Derived path                                      |
+|---------------------|---------------------------------------------------|
+| DCIR                | inputPathRoot + "/flat_table/DCIR"                |
+| PMSI_MCO            | inputPathRoot + "/flat_table/MCO"                 |
+| IR_BEN_R            | inputPathRoot + "/single_table/IR_BEN_R"          |
+| IR_IMB_R            | inputPathRoot + "/single_table/IR_IMB_R"          |
+
+
+| Output Table                            | Derived path                                          |
+|-----------------------------------------|-------------------------------------------------------|
+| code consistency                        | outputPathRoot + "/codeConsistency"                   |
+| dcir count by patient                   | outputPathRoot + "/dcirCountByPatient"                |
+| dcir count by patient and month         | outputPathRoot + "/dcirCountByPatientAndMonth"        |
+| dcir purchase count by month            | outputPathRoot + "/dcirPurchaseCountByMonth"          |
+| dcir purchase count by patient and month| outputPathRoot + "/dcirPurchaseCountByPatientAndMonth"|
+| mco count by patient                    | outputPathRoot + "/mcoCountByPatient"                 |
+| mco count by patient and month          | outputPathRoot + "/mcoCountByPatientAndMonth"         |
+| mco diag count by month                 | outputPathRoot + "/mcoDiagCountByMonth"               |
+| mco diag count by patient and month     | outputPathRoot + "/mcoDiagCountByPatientAndMonth"     |
+
+
+**Usage**
+
+The snippet below shows a sample invocation
+
+```bash
+spark-submit \
+  --executor-memory 100G \
+  --class fr.polytechnique.cmap.cnam.statistics.exploratory.StatisticsMain \
+  /path/to/SNIIRAM-flattening-assembly-1.0.jar inputPathRoot=/shared/Observapur/staging/Flattening \
+  outputPathRoot=/shared/Observapur/staging/Flattening/statistics/exploratory
+```
+
+Note that it is not useful to pass the variables `env` and `conf`.
+
+**Results**
+
+The results of the exploratory statistics can be visualized using the python notebook under `scripts/descriptiveStatistics.ipynb`
