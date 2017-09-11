@@ -8,8 +8,6 @@ object StatisticsMain extends Main {
   override def appName = "DistributionStat"
 
   def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
-    argsMap.get("conf").foreach(sqlContext.setConf("conf", _))
-    argsMap.get("env").foreach(sqlContext.setConf("env", _))
 
     val inputPathRoot = argsMap.get("inputPathRoot").get
     val outputPathRoot = argsMap.get("outputPathRoot").get
