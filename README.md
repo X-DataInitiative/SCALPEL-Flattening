@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/X-DataInitiative/SNIIRAM-flattening.svg?token=zoL7KzND7NxhwpowXftL&branch=master)](https://travis-ci.com/X-DataInitiative/SNIIRAM-flattening)
+[![CircleCI](https://circleci.com/gh/X-DataInitiative/SNIIRAM-flattening.svg?style=shield&circle-token=1c2d54e464ad11d11d5515221b75f644d1c6fb5a)](https://circleci.com/gh/X-DataInitiative/SNIIRAM-flattening)
 [![codecov](https://codecov.io/gh/X-DataInitiative/SNIIRAM-flattening/branch/master/graph/badge.svg?token=GWYM6JLi0z)](https://codecov.io/gh/X-DataInitiative/SNIIRAM-flattening)
 
 # Flattening
