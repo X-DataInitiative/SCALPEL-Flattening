@@ -46,30 +46,48 @@ object DFUtils {
 
     override def toString: String = dataFrame.toString
 
+
+    /**
+      *  This method reorders the dataframe with the alphabetical order of its columns
+      */
+    def reorder(): DataFrame = {
+      val columns: Array[String] = dataFrame.columns
+      val reorderedColumnNames: Array[String] = columns.sorted
+      dataFrame.select(reorderedColumnNames.head, reorderedColumnNames.tail:_*)
+    }
+
     /**
       * This method compares the equality of two data frames. To qualify equality, the rows
       * can be in different order but the columns should be in the right order.
       */
     //TODO: This implementation may not be efficient, we should use Karau method from this link:
     // https://github.com/holdenk/spark-testing-base/blob/master/src/main/pre-2.0/scala/com/holdenkarau/spark/testing/DataFrameSuiteBase.scala
-    def sameAs(other: DataFrame): Boolean = {
+    def sameAs(other: DataFrame, weakComparaison: Boolean = false): Boolean = {
 
       def checkDuplicateRows: Boolean = {
-        val dataFrameGroupedByRows = dataFrame.groupBy(
-          dataFrame.columns.head,
-          dataFrame.columns.tail: _*).count()
-        val otherGroupedByRows = other.groupBy(
-          other.columns.head,
-          other.columns.tail: _*).count()
+
+        val dataFrameOrdered = if(weakComparaison) dataFrame.reorder else dataFrame
+        val otherOrdered = if(weakComparaison) other.reorder else other
+
+        val dataFrameGroupedByRows = dataFrameOrdered.groupBy(
+            dataFrameOrdered.columns.head,
+            dataFrameOrdered.columns.tail: _*).count()
+        val otherGroupedByRows = otherOrdered.groupBy(
+            otherOrdered.columns.head,
+            otherOrdered.columns.tail: _*).count()
 
         dataFrameGroupedByRows.except(otherGroupedByRows).count() == 0 &&
           otherGroupedByRows.except(dataFrameGroupedByRows).count == 0
       }
 
       def columnNameType(schema: StructType): Seq[(String, DataType)] = {
-        schema.fields.map((field: StructField) => (field.name, field.dataType))
+        if(weakComparaison)
+          schema.fields.sortBy(_.name).map((field: StructField) => (field.name, field.dataType))
+        else
+          schema.fields.map((field: StructField) => (field.name, field.dataType))
       }
-
+      val type1 = columnNameType(dataFrame.schema)
+      val type2 = columnNameType(other.schema)
       columnNameType(dataFrame.schema) == columnNameType(other.schema) &&
         checkDuplicateRows
     }

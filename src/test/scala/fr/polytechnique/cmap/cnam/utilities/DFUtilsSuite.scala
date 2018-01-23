@@ -151,4 +151,25 @@ class DFUtilsSuite extends SharedContext {
     // Then
     assert(!result)
   }
+
+  "reorder" should "order correctly a dataframe" in {
+
+    //Given
+    val sqlctx = sqlContext
+    import sqlctx.implicits._
+
+    val df = Seq(("p1", 1, "hiver"),
+      ("p2", 2, "hiver"))
+      .toDF("patient", "key", "saison")
+    val expected =  Seq((1, "p1", "hiver"),
+      (2, "p2", "hiver"))
+      .toDF("key", "patient", "saison")
+
+    //when
+    val result = df.reorder
+
+    //Then
+    assert(result sameAs expected)
+
+  }
 }
