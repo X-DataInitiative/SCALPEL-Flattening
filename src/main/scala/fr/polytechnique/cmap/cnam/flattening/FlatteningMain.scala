@@ -1,6 +1,6 @@
 package fr.polytechnique.cmap.cnam.flattening
 
-import org.apache.spark.sql.{Dataset, SQLContext, SaveMode}
+import org.apache.spark.sql.{Dataset, SQLContext}
 import com.typesafe.config.Config
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
@@ -14,7 +14,6 @@ object FlatteningMain extends Main {
     // Generate schemas from csv
     val columnsTypeMap: Map[String, List[(String, String)]] = FlatteningConfig.columnTypes
 
-
     FlatteningConfig.partitionsList.foreach {
       config: ConfigPartition =>
         val t0 = System.nanoTime()
@@ -24,7 +23,11 @@ object FlatteningMain extends Main {
         val rawTable = DFUtils.readCSV(sqlContext, config.inputPaths)
         val typedTable = DFUtils.applySchema(rawTable, columnsType, config.dateFormat)
 
-        typedTable.write.parquet(config.output)
+        if(config.partitionColumn != None)
+          typedTable.write.mode("append").partitionBy(config.partitionColumn.get).parquet(config.output)
+        else
+          typedTable.write.parquet(config.output)
+
         val t1 = System.nanoTime()
         logger.info("Duration  " + (t1 - t0)/Math.pow(10,9) + " sec")
 
@@ -45,6 +48,7 @@ object FlatteningMain extends Main {
     saveCSVTablesAsParquet(sqlContext)
 
     logger.info("begin flattening")
+    logger.info(sqlContext.getConf("spark.sql.shuffle.partitions"))
     val t0 = System.nanoTime()
     computeFlattenedFiles(sqlContext, FlatteningConfig.joinTablesConfig)
 

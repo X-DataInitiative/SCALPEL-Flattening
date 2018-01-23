@@ -4,8 +4,11 @@ import org.apache.spark.sql._
 import com.typesafe.config.ConfigValueFactory
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
+import org.apache.spark.sql
+import org.apache.spark.sql.functions.col
 
 class FlatteningMainSuite extends SharedContext {
+
 
   "saveCSVTablesAsParquet" should "read all dummy csv tables and save as parquet files" in {
     import FlatteningConfig.SingleTableConfig
@@ -27,7 +30,7 @@ class FlatteningMainSuite extends SharedContext {
       name =>
         name -> sqlContext.read
           .option("mergeSchema", "true")
-          .load(resultPath + "/" + name)
+          .load(resultPath + "/" + name )
           .toDF
     }.toMap
 
@@ -36,7 +39,7 @@ class FlatteningMainSuite extends SharedContext {
     import fr.polytechnique.cmap.cnam.utilities.DFUtils._
     expectedDfs.foreach{
       case(name, df) =>
-        assert(df.sameAs(result(name)))
+        assert(df.sameAs(result(name), true))
     }
   }
 
@@ -68,9 +71,9 @@ class FlatteningMainSuite extends SharedContext {
 
     //When
     FlatteningMain.run(sqlCtx, Map())
-    val joinedDF = sqlContext.read.parquet(path)
+    val joinedDF = sqlContext.read.parquet(path).withColumn("ETA_NUM", col("ETA_NUM").cast(sql.types.StringType))
 
     //Then
-    assert(joinedDF sameAs  expected)
+    assert(joinedDF.sameAs(expected, true))
   }
 }

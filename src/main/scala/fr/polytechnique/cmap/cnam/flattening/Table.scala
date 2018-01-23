@@ -1,7 +1,8 @@
 package fr.polytechnique.cmap.cnam.flattening
 
+import fr.polytechnique.cmap.cnam.flattening.FlatteningMain.logger
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, functions}
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
 
 class Table(val name: String, val df: DataFrame) {
@@ -22,10 +23,24 @@ class Table(val name: String, val df: DataFrame) {
 
   def filterByYear(year: Int): DataFrame = df.filter(col("year") === year)
 
+  def filterByYearAndMonth(year: Int, month: Int, colDate: String): DataFrame = df.filter(col("year") === year).filter(functions.month(col(colDate)) === month)
+
   def filterByYearAndAnnotate(year: Int, ignoreAnnotateColumns: List[String]): DataFrame = {
     filterByYear(year)
       .drop("year")
       .addPrefix(name, ignoreAnnotateColumns)
+  }
+
+  def filterByYearMonthAndAnnotate(year: Int, month: Int, ignoreAnnotateColumns: List[String], dateCol: String): DataFrame = {
+    //logger.info("count table : " + df.count())
+    val df1 = filterByYear(year)
+      .drop("year")
+    //logger.info("df1: " + df1.count())
+    df1.withColumn("month", functions.month(col(dateCol)))
+      .filter(col("month") === month)
+      .drop("month")
+      .addPrefix(name, ignoreAnnotateColumns)
+
   }
 }
 

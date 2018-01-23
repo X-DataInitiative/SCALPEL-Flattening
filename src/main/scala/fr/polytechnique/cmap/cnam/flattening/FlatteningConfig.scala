@@ -8,7 +8,8 @@ case class ConfigPartition(
     name: String,
     dateFormat: String,
     inputPaths: List[String],
-    output: String)
+    output: String,
+    partitionColumn: Option[String] = null)
 
 object FlatteningConfig {
 
@@ -38,6 +39,7 @@ object FlatteningConfig {
   private lazy val csvSchema = CSVSchemaReader.readSchemaFiles(schemaFilePath)
   lazy val columnTypes: Map[String, List[(String, String)]] = CSVSchemaReader.readColumnsType(csvSchema)
 
+
   implicit class SingleTableConfig(config: Config) {
 
     def name: String = config.getString("name")
@@ -53,6 +55,12 @@ object FlatteningConfig {
     def partitions: List[Config] = config.getConfigList("partitions").asScala.toList
 
     def inputPaths: List[String] = config.getStringList("path").asScala.toList
+
+    def partitionColumn: String = {
+      if (config.hasPath("partition_column"))
+        config.getString("partition_column")
+      else null
+    }
 
   }
 
@@ -80,6 +88,9 @@ object FlatteningConfig {
     def mainTableName: String = config.getString("main_table_name")
 
     def outputJoinPath: String = config.getString("flat_output_path")
+
+    def monthlyPartitionColumn: Option[String] = if(config.hasPath("monthly_partition_column")) Some(config.getString("monthly_partition_column"))
+    else None
   }
 
   def getPartitionList(tableConfigs: List[Config]): List[ConfigPartition] = {
@@ -94,7 +105,8 @@ object FlatteningConfig {
       name = tableConfig.name,
       dateFormat = tableConfig.dateFormat,
       inputPaths = partitionConfig.inputPaths,
-      output = partitionConfig.outputPath(tableConfig.strategy, tableConfig.name)
+      output = partitionConfig.outputPath(tableConfig.strategy, tableConfig.name),
+      partitionColumn = Option(tableConfig.partitionColumn)
     )
   }
 
