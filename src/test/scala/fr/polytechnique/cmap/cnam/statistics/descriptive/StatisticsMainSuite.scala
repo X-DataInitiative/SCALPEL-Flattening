@@ -152,14 +152,18 @@ class StatisticsMainSuite extends SharedContext {
     import sqlCtx.implicits._
 
     // Given
-    val left = spark.read
-      .option("header", true)
-      .option("delimiter", ";")
-      .csv("./src/test/resources/flattening/csv-table/left.csv")
-    val right = spark.read
-      .option("header", true)
-      .option("delimiter", ";")
-      .csv("./src/test/resources/flattening/csv-table/right.csv")
+    val left = Seq(
+      (1, "mohamed", 30),
+      (2, "jhon", 15),
+      (3, "laure", 25)
+    ).toDF("id", "name", "age")
+
+    val right = Seq(
+      (1,100),
+      (2,250),
+      (2,300),
+      (4,110)
+    ).toDF("id", "achat")
 
     left.write.parquet("target/test/output/left")
     right.write.parquet("target/test/output/right")
