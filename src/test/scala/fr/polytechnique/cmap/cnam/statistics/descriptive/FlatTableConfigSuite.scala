@@ -1,9 +1,11 @@
 package fr.polytechnique.cmap.cnam.statistics.descriptive
 
 import com.typesafe.config.ConfigFactory
+import pureconfig._
 import fr.polytechnique.cmap.cnam.SharedContext
+import fr.polytechnique.cmap.cnam.config.ConfigLoader
 
-class FlatTableConfigSuite extends SharedContext {
+class FlatTableConfigSuite extends SharedContext with ConfigLoader {
 
   val tableName = "A_TABLE"
   val centralTable = "CentralTable"
@@ -20,12 +22,12 @@ class FlatTableConfigSuite extends SharedContext {
     // Given
     val expected = {
       s"tableName -> $tableName \n" +
-      s"centralTable -> $centralTable \n" +
-      s"joinKeys -> $joinKeys \n" +
-      s"dateFormat -> $dateFormat \n" +
-      s"inputPath -> $inputPath \n" +
-      s"outputStatPath -> $outputStatPath \n" +
-      s"singleTableCount -> ${singleTables.size}"
+        s"centralTable -> $centralTable \n" +
+        s"joinKeys -> $joinKeys \n" +
+        s"dateFormat -> $dateFormat \n" +
+        s"inputPath -> $inputPath \n" +
+        s"outputStatPath -> $outputStatPath \n" +
+        s"singleTableCount -> ${singleTables.size}"
     }
     val input = FlatTableConfig(
       tableName,
@@ -44,7 +46,7 @@ class FlatTableConfigSuite extends SharedContext {
     assert(result == expected)
   }
 
-  "fromConfig" should "create a FlatTableConfig from a com.typesafe.config.Config instance" in {
+  "fromConfig" should "create a FlatTableConfig from a PureConfig instance" in {
 
     // Given
     val config = ConfigFactory.parseString(
@@ -69,8 +71,7 @@ class FlatTableConfigSuite extends SharedContext {
     )
 
     // When
-    val result = FlatTableConfig.fromConfig(config)
-
+    val result = loadConfig[FlatTableConfig](config).right.get
     // Then
     assert(result == expected)
   }

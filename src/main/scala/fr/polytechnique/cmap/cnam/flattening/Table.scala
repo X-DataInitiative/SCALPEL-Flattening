@@ -1,6 +1,5 @@
 package fr.polytechnique.cmap.cnam.flattening
 
-import fr.polytechnique.cmap.cnam.flattening.FlatteningMain.logger
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SQLContext, functions}
 import fr.polytechnique.cmap.cnam.utilities.DFUtils

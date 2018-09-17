@@ -1,114 +1,98 @@
 package fr.polytechnique.cmap.cnam.flattening
 
-import scala.collection.JavaConverters._
-import org.apache.spark.sql.SparkSession
-import com.typesafe.config.{Config, ConfigFactory}
+import fr.polytechnique.cmap.cnam.config.{Config, ConfigLoader}
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.{JoinTableConfig, TableConfig, TablesConfig, toConfigPartition}
 
 case class ConfigPartition(
-    name: String,
-    dateFormat: String,
-    inputPaths: List[String],
-    output: String,
-    partitionColumn: Option[String] = null)
+  name: String,
+  dateFormat: String,
+  inputPaths: List[String],
+  output: String,
+  partitionColumn: Option[String] = None)
 
-object FlatteningConfig {
-
-  private lazy val conf: Config = {
-    //TODO: Find a cleaner way to do the same
-    val sqlContext = SparkSession.builder().getOrCreate().sqlContext
-    val configPath: String = sqlContext.getConf("conf", "")
-    val environment: String = sqlContext.getConf("env", "test")
-
-    val defaultConfig = ConfigFactory.parseResources("flattening/config/main.conf").resolve().getConfig(environment)
-    val newConfig = ConfigFactory.parseFile(new java.io.File(configPath)).resolve()
-
-    newConfig.withFallback(defaultConfig).resolve()
-  }
-
-  lazy val schemaFilePath: List[String] = conf.getStringList("schema_file_path").asScala.toList
-
-  lazy val outputBasePath: String = conf.getString("single_table_path")
-
-  lazy val tablesConfigList: List[Config] = conf.getConfigList("tables_config").asScala.toList
-    .map(_.getConfigList("tables").asScala.toList)
-    .reduce(_ ::: _)
-
-  lazy val partitionsList: List[ConfigPartition] = getPartitionList(tablesConfigList)
-  lazy val joinTablesConfig: List[Config] = conf.getConfigList("join").asScala.toList
+case class FlatteningConfig(
+  singleTablePath: String,
+  schemaFilePath: List[String] = List.empty[String],
+  join: List[JoinTableConfig] = List.empty[JoinTableConfig],
+  tablesConfig: List[TablesConfig] = List.empty[TablesConfig]
+) extends Config {
 
   private lazy val csvSchema = CSVSchemaReader.readSchemaFiles(schemaFilePath)
+
   lazy val columnTypes: Map[String, List[(String, String)]] = CSVSchemaReader.readColumnsType(csvSchema)
 
-
-  implicit class SingleTableConfig(config: Config) {
-
-    def name: String = config.getString("name")
-
-    def strategy: String = config.getString("partition_strategy")
-
-    def dateFormat: String = {
-      if (config.hasPath("date_format"))
-        config.getString("date_format")
-      else "dd/MM/yyyy"
-    }
-
-    def partitions: List[Config] = config.getConfigList("partitions").asScala.toList
-
-    def inputPaths: List[String] = config.getStringList("path").asScala.toList
-
-    def partitionColumn: String = {
-      if (config.hasPath("partition_column"))
-        config.getString("partition_column")
-      else null
-    }
-
+  def partitions: List[ConfigPartition] = {
+    for (table <- tables;
+         partition <- table.partitions)
+      yield toConfigPartition(singleTablePath, table, partition)
   }
 
-  implicit class SinglePartitionConfig(config: Config) {
-
-    def outputPath(strategy: String, name: String): String = {
-      if (strategy == "year")
-        outputBasePath + "/" + name + "/year=" + config.getString("year")
-      else
-        outputBasePath + "/" + name
-    }
+  def tables: List[TableConfig] = {
+    for (
+      allTables <- tablesConfig;
+      table <- allTables.tables)
+      yield table
   }
 
-  implicit class JoinConfig(config: Config) {
+}
 
-    def nameFlatTable: String = config.getString("name")
+object FlatteningConfig extends ConfigLoader {
 
-    def inputPath: String = if (config.hasPath("input_path")) config.getString("input_path")
-    else outputBasePath
-
-    def tablesToJoin: List[String] = config.getStringList("tables_to_join").asScala.toList
-
-    def foreignKeys: List[String] = config.getStringList("join_keys").asScala.toList
-
-    def mainTableName: String = config.getString("main_table_name")
-
-    def outputJoinPath: String = config.getString("flat_output_path")
-
-    def monthlyPartitionColumn: Option[String] = if(config.hasPath("monthly_partition_column")) Some(config.getString("monthly_partition_column"))
-    else None
+  /**
+    * Reads a configuration file and merges it with the default file.
+    *
+    * @param path The path of the given file.
+    * @param env  The environment in the config file (usually can be "cmap", "cnam" or "test").
+    * @return An instance of FlatteningConfig containing all parameters.
+    */
+  def load(path: String, env: String): FlatteningConfig = {
+    val defaultPath = "flattening/config/main.conf"
+    loadConfigWithDefaults[FlatteningConfig](path, defaultPath, env)
   }
 
-  def getPartitionList(tableConfigs: List[Config]): List[ConfigPartition] = {
-    tableConfigs.flatMap {
-      tableConfig =>
-        tableConfig.partitions.map(toConfigPartition(tableConfig, _))
-    }
-  }
-
-  def toConfigPartition(tableConfig: Config, partitionConfig: Config): ConfigPartition = {
+  def toConfigPartition(
+    rootPath: String,
+    tableConfig: TableConfig,
+    partitionConfig: PartitionConfig): ConfigPartition = {
     ConfigPartition(
       name = tableConfig.name,
       dateFormat = tableConfig.dateFormat,
-      inputPaths = partitionConfig.inputPaths,
-      output = partitionConfig.outputPath(tableConfig.strategy, tableConfig.name),
-      partitionColumn = Option(tableConfig.partitionColumn)
+      inputPaths = partitionConfig.path,
+      output = partitionConfig.outputPath(rootPath, tableConfig.partitionStrategy, tableConfig.name),
+      partitionColumn = tableConfig.partitionColumn
     )
   }
 
+  case class JoinTableConfig(
+    name: String,
+    inputPath: String,
+    joinKeys: List[String] = List.empty[String],
+    tablesToJoin: List[String] = List.empty[String],
+    mainTableName: String,
+    flatOutputPath: String,
+    monthlyPartitionColumn: Option[String] = None)
+
+  case class PartitionConfig(
+    year: Option[String] = None,
+    path: List[String] = List.empty[String]) {
+
+    def outputPath(root: String, strategy: String, name: String): String = {
+      if (strategy == "year")
+        root + "/" + name + "/year=" + year.get
+      else
+        root + "/" + name
+    }
+
+  }
+
+  case class TableConfig(
+    name: String,
+    partitionStrategy: String,
+    dateFormat: String = "dd/MM/yyyy",
+    partitions: List[PartitionConfig] = List.empty[PartitionConfig],
+    partitionColumn: Option[String] = None
+  )
+
+  case class TablesConfig(tables: List[TableConfig])
 
 }
