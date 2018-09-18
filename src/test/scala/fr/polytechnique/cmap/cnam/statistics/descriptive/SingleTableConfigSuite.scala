@@ -1,9 +1,11 @@
 package fr.polytechnique.cmap.cnam.statistics.descriptive
 
 import com.typesafe.config.ConfigFactory
+import pureconfig._
 import fr.polytechnique.cmap.cnam.SharedContext
+import fr.polytechnique.cmap.cnam.config.ConfigLoader
 
-class SingleTableConfigSuite extends SharedContext {
+class SingleTableConfigSuite extends SharedContext with ConfigLoader {
 
   val tableName = "A_TABLE"
   val inputPath = "/path/to/parquet/"
@@ -13,7 +15,7 @@ class SingleTableConfigSuite extends SharedContext {
     // Given
     val expected = {
       s"tableName -> $tableName \n" +
-      s"inputPath -> $inputPath"
+        s"inputPath -> $inputPath"
     }
 
     // When
@@ -23,7 +25,7 @@ class SingleTableConfigSuite extends SharedContext {
     assert(result == expected)
   }
 
-  "fromConfig" should "create a SingleTableConfig from a com.typesafe.config.Config instance" in {
+  "fromConfig" should "create a SingleTableConfig from a PureConfig instance" in {
 
     // Given
     val config = ConfigFactory.parseString(
@@ -37,7 +39,7 @@ class SingleTableConfigSuite extends SharedContext {
     val expected = SingleTableConfig(tableName, inputPath)
 
     // When
-    val result = SingleTableConfig.fromConfig(config)
+    val result = loadConfig[SingleTableConfig](config).right.get
 
     // Then
     assert(result == expected)

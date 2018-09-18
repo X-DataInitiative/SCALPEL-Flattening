@@ -1,6 +1,5 @@
 package fr.polytechnique.cmap.cnam.flattening
 import org.apache.spark.sql.DataFrame
-import com.typesafe.config.ConfigValueFactory
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
@@ -122,18 +121,12 @@ class TableSuite extends SharedContext {
   "build" should "given a tableName extract the right table from the config" in {
 
     // Given
-    val sqlCtx = sqlContext
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
     val tableName = "ER_CAM_F"
-    val configTest = FlatteningConfig
-      .joinTablesConfig
-      .head
-      .withValue("input_path", ConfigValueFactory.fromAnyRef(parquetTablesPath))
-    val flattenedTableTest = new FlatTable(sqlCtx, configTest)
-    val expectedDf = sqlCtx.read.parquet(s"$parquetTablesPath/$tableName")
+    val expectedDf = sqlContext.read.parquet(s"$parquetTablesPath/$tableName")
 
     // When
-    val result = Table.build(sqlCtx, parquetTablesPath, tableName)
+    val result = Table.build(sqlContext, parquetTablesPath, tableName)
     // Then
     assert(result.df sameAs expectedDf)
     assert(result.name === tableName)

@@ -1,37 +1,32 @@
 package fr.polytechnique.cmap.cnam.statistics.descriptive
 
-import scala.collection.JavaConverters._
-import org.apache.spark.sql.SparkSession
-import com.typesafe.config.{Config, ConfigFactory}
+import fr.polytechnique.cmap.cnam.config.{Config, ConfigLoader}
+import fr.polytechnique.cmap.cnam.flattening.CSVSchemaReader
 
-object StatisticsConfig {
+case class StatisticsConfig(
+  describeOld: Boolean = true,
+  schemaFilePath: List[String] = List.empty[String],
+  oldFlat: List[FlatTableConfig] = List.empty[FlatTableConfig],
+  newFlat: List[FlatTableConfig] = List.empty[FlatTableConfig]
+) extends Config {
 
-  private lazy val conf: Config = {
-    val sqlContext = SparkSession.builder().getOrCreate().sqlContext
-    val configPath: String = sqlContext.getConf("conf", "")
-    val environment: String = sqlContext.getConf("env", "test")
+  private lazy val csvSchema = CSVSchemaReader.readSchemaFiles(schemaFilePath)
 
-    val defaultConfig = ConfigFactory.parseResources("statistics/main.conf").resolve().getConfig(environment)
-    val newConfig = ConfigFactory.parseFile(new java.io.File(configPath)).resolve()
+  lazy val columnTypes: Map[String, List[(String, String)]] = CSVSchemaReader.readColumnsType(csvSchema)
+}
 
-    newConfig.withFallback(defaultConfig).resolve()
+object StatisticsConfig extends ConfigLoader {
+
+  /**
+    * Reads a configuration file and merges it with the default file.
+    *
+    * @param path The path of the given file.
+    * @param env  The environment in the config file (usually can be "cmap", "cnam" or "test").
+    * @return An instance of StatisticsConfig containing all parameters.
+    */
+  def load(path: String, env: String): StatisticsConfig = {
+    val defaultPath = "statistics/main.conf"
+    loadConfigWithDefaults[StatisticsConfig](path, defaultPath, env)
   }
 
-  val describeOldFlatTable: Boolean = conf.getBoolean("describe_old")
-
-  val oldFlatConfig: List[FlatTableConfig] = {
-    if(conf.hasPath("old_flat")) {
-      conf.getConfigList("old_flat").asScala.toList.map(FlatTableConfig.fromConfig)
-    } else {
-      List[FlatTableConfig]()
-    }
-  }
-
-  val mainFlatConfig: List[FlatTableConfig] = {
-    if(conf.hasPath("new_flat")) {
-      conf.getConfigList("new_flat").asScala.toList.map(FlatTableConfig.fromConfig)
-    } else {
-      List[FlatTableConfig]()
-    }
-  }
 }

@@ -1,12 +1,10 @@
 package fr.polytechnique.cmap.cnam.flattening
 
-import com.typesafe.config.Config
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
 
-class FlatTable(sqlContext: SQLContext, config: Config) {
-
-  import FlatteningConfig.JoinConfig
+class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
   val inputBasePath: String = config.inputPath
   val mainTable: Table = Table.build(sqlContext, inputBasePath, config.mainTableName)
@@ -14,9 +12,9 @@ class FlatTable(sqlContext: SQLContext, config: Config) {
     tableName =>
       Table.build(sqlContext, inputBasePath, tableName)
   )
-  val outputBasePath: String = config.outputJoinPath
-  val foreignKeys: List[String] = config.foreignKeys
-  val tableName: String = config.nameFlatTable
+  val outputBasePath: String = config.flatOutputPath
+  val foreignKeys: List[String] = config.joinKeys
+  val tableName: String = config.name
   val monthlyPartitionColumn: Option[String] = config.monthlyPartitionColumn
 
   def flatTablePerYear: Array[Int] = mainTable.getYears
@@ -40,14 +38,15 @@ class FlatTable(sqlContext: SQLContext, config: Config) {
   }
 
   val joinFunction: (DataFrame, DataFrame) => DataFrame = (accumulator, tableToJoin) => {
-      val result = accumulator.join((tableToJoin), foreignKeys, "left_outer").persist()
-      Logger.getLogger(getClass).info(s"Joined table count: ${result.count()}")
-      accumulator.unpersist()
-      result
+    val result = accumulator.join(tableToJoin, foreignKeys, "left_outer").persist()
+    Logger.getLogger(getClass).info(s"Joined table count: ${result.count()}")
+    accumulator.unpersist()
+    result
   }
+
   def logger: Logger = Logger.getLogger(getClass)
 
-  def writeTable(table: Table) = {
+  def writeTable(table: Table): Unit = {
 
     Logger.getRootLogger.setLevel(Level.ERROR)
     val t0 = System.nanoTime()
@@ -67,26 +66,25 @@ class FlatTable(sqlContext: SQLContext, config: Config) {
     logger.info("   writing duration " + table.name + (t2 - t1) / Math.pow(10, 9) + " sec")
   }
 
-  def writeAsParquet: Unit = {
+  def writeAsParquet(): Unit = {
     flatTablePerYear
       .foreach {
         year =>
-          if(monthlyPartitionColumn != None) {
+          if (monthlyPartitionColumn.isDefined) {
             logger.info("Join by year and month: " + year)
-            Range(1, 13).map {
+            Range(1, 13).foreach {
               month =>
                 logger.info("Month: " + month)
                 val joinedTable = joinByYearAndDate(year, month, monthlyPartitionColumn.get)
                 writeTable(joinedTable)
             }
           }
-          else
-          {
+          else {
             logger.info("Join by year : " + year)
             val joinedTable = joinByYear(year)
             writeTable(joinedTable)
           }
       }
-    }
+  }
 
 }

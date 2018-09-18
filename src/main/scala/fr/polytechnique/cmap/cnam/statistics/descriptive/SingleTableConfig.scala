@@ -1,24 +1,12 @@
 package fr.polytechnique.cmap.cnam.statistics.descriptive
 
-import com.typesafe.config.Config
-
 case class SingleTableConfig(
-    tableName: String,
-    inputPath: String) {
+  name: String,
+  inputPath: String) {
 
   override def toString: String = {
-    s"tableName -> $tableName \n" +
-    s"inputPath -> $inputPath"
-  }
-}
-
-object SingleTableConfig {
-
-  def fromConfig(c: Config): SingleTableConfig = {
-    SingleTableConfig(
-      tableName = c.getString("name"),
-      inputPath = c.getString("input_path")
-    )
+    s"tableName -> $name \n" +
+      s"inputPath -> $inputPath"
   }
 }
 

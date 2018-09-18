@@ -37,7 +37,7 @@ class StatisticsMainSuite extends SharedContext {
 
     // Given
     val flatConf = FlatTableConfig(
-      tableName = "FLAT",
+      name = "FLAT",
       centralTable = "CENTRAL",
       joinKeys = List("NUM_ENQ", "NUMERIC_COL"),
       dateFormat = "yyyy-MM-dd",
@@ -56,7 +56,7 @@ class StatisticsMainSuite extends SharedContext {
     val expectedFlat = Seq(
       ("1", "2", 3L, 2L, None, None, None, "NUM_ENQ", "StringType", "FLAT"),
       ("10", "20", 3L, 2L, Some(50D), Some(30D), Some(16.6667D), "NUMERIC_COL", "IntegerType", "FLAT"),
-      ("1", "10", 3L, 2L, None, None, None,  "OTHER__STRING_COL", "StringType", "FLAT")
+      ("1", "10", 3L, 2L, None, None, None, "OTHER__STRING_COL", "StringType", "FLAT")
     ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName", "ColType", "TableName")
     val expectedSingle = Seq(
       ("1", "2", 2L, None, "NUM_ENQ", "StringType", "CENTRAL"),
@@ -123,7 +123,7 @@ class StatisticsMainSuite extends SharedContext {
     val outputRootPath = "target/test/output/stats"
 
     // When
-    StatisticsMain.run(sqlContext, Map("conf" -> "src/main/resources/statistics/test.conf"))
+    StatisticsMain.run(sqlContext, Map("conf" -> "src/main/resources/statistics/test.conf", "env" -> "test"))
 
     val oldDcirFlatTableStat = spark.read.parquet(outputRootPath + "/oldDCIR/flat_table")
     val oldMcoFlatTableStat = spark.read.parquet(outputRootPath + "/oldMCO/flat_table")

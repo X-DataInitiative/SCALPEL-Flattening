@@ -1,11 +1,10 @@
 package fr.polytechnique.cmap.cnam.flattening
 
-import com.typesafe.config.ConfigValueFactory
+import org.mockito.Mockito._
+import org.apache.spark.sql.DataFrame
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 import fr.polytechnique.cmap.cnam.utilities.Functions._
-import org.apache.spark.sql.DataFrame
-import org.mockito.Mockito._
 
 class FlatTableSuite extends SharedContext {
 
@@ -44,7 +43,7 @@ class FlatTableSuite extends SharedContext {
     when(mockTable.foreignKeys).thenReturn(List("key"))
     when(mockTable.joinByYear(2015)).thenCallRealMethod()
     when(mockTable.joinFunction).thenReturn(
-      (acc: DataFrame, toJoin:DataFrame) =>
+      (acc: DataFrame, toJoin: DataFrame) =>
         acc.join(toJoin, mockTable.foreignKeys, "left_outer"))
 
     // Then
@@ -60,17 +59,17 @@ class FlatTableSuite extends SharedContext {
 
     val mockTable = mock(classOf[FlatTable])
     val central: DataFrame = Seq(
-      (1, Some("hello1"), 2014, makeTS(2014, 2 , 5)),
-      (2, Some("hello2"), 2015,  makeTS(2015, 1 , 15))
+      (1, Some("hello1"), 2014, makeTS(2014, 2, 5)),
+      (2, Some("hello2"), 2015, makeTS(2015, 1, 15))
     ).toDF("key", "value", "year", "date")
     val tableName: String = "central"
     val other1: DataFrame = Seq(
-      (1, Some("world1"), 2014, makeTS(2014, 2 , 5)),
-      (2, Some("world2"), 2015, makeTS(2015, 1 , 15))
+      (1, Some("world1"), 2014, makeTS(2014, 2, 5)),
+      (2, Some("world2"), 2015, makeTS(2015, 1, 15))
     ).toDF("key", "valueOther1", "year", "date")
     val other2: DataFrame = Seq(
-      (1, Some("other1"), 2014, makeTS(2014, 2 , 5)),
-      (2, Some("other2"), 2015, makeTS(2015, 1 , 15))
+      (1, Some("other1"), 2014, makeTS(2014, 2, 5)),
+      (2, Some("other2"), 2015, makeTS(2015, 1, 15))
     ).toDF("key", "valueOther2", "year", "date")
 
     val simpleTable = new Table(tableName, central)
@@ -78,7 +77,7 @@ class FlatTableSuite extends SharedContext {
     val otherTable2 = new Table("other2", other2)
 
     val expectedJoin = Seq(
-      (2, makeTS(2015, 1 , 15), Some("hello2"), 2015, Some("world2"), Some("other2"))
+      (2, makeTS(2015, 1, 15), Some("hello2"), 2015, Some("world2"), Some("other2"))
     ).toDF("key", "date", "value", "year", "other1__valueOther1", "other2__valueOther2")
 
     // When
@@ -87,7 +86,7 @@ class FlatTableSuite extends SharedContext {
     when(mockTable.foreignKeys).thenReturn(List("key", "date"))
     when(mockTable.joinByYearAndDate(2015, 1, "date")).thenCallRealMethod()
     when(mockTable.joinFunction).thenReturn(
-      (acc: DataFrame, toJoin:DataFrame) =>
+      (acc: DataFrame, toJoin: DataFrame) =>
         acc.join(toJoin, mockTable.foreignKeys, "left_outer"))
 
     // Then
@@ -98,15 +97,11 @@ class FlatTableSuite extends SharedContext {
   "flatTablePerYear" should "return correct list of years" in {
 
     // Given
-    val sqlCtx = sqlContext
+    val conf = FlatteningConfig.load("", "test")
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
-    val expectedDfPath = "src/test/resources/flattening/parquet-table/flat_table/MCO"
     val expected = Array(2008, 2007, 2006)
-    val configTest = FlatteningConfig
-      .joinTablesConfig
-      .head
-      .withValue("input_path", ConfigValueFactory.fromAnyRef(parquetTablesPath))
-    val flattenedTableTest = new FlatTable(sqlCtx, configTest)
+    val configTest = conf.join.head.copy(inputPath = parquetTablesPath)
+    val flattenedTableTest = new FlatTable(sqlContext, configTest)
 
     // When
     val result = flattenedTableTest.flatTablePerYear
@@ -118,20 +113,17 @@ class FlatTableSuite extends SharedContext {
   "WriteAsParquet" should "flatten MCO and write it in the correct path" in {
 
     // Given
-    val sqlCtx = sqlContext
+    val conf = FlatteningConfig.load("", "test")
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
-    val configTest = FlatteningConfig
-      .joinTablesConfig
-      .head
-      .withValue("input_path", ConfigValueFactory.fromAnyRef(parquetTablesPath))
-    val flattenedTableTest = new FlatTable(sqlCtx, configTest)
+    val configTest = conf.join.head.copy(inputPath = parquetTablesPath)
+    val flattenedTableTest = new FlatTable(sqlContext, configTest)
     val resultPath = "target/test/output/join"
-    val expectedDf = sqlCtx.read.parquet("src/test/resources/flattening/parquet-table/flat_table/MCO")
+    val expectedDf = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/MCO")
 
 
     // When
-    flattenedTableTest.writeAsParquet
-    val result =  sqlCtx.read.parquet(resultPath)
+    flattenedTableTest.writeAsParquet()
+    val result = sqlContext.read.parquet(resultPath)
 
     // Then
     assert(resultPath == flattenedTableTest.outputBasePath)
@@ -141,18 +133,15 @@ class FlatTableSuite extends SharedContext {
   "WriteAsParquet" should "flatten DCIR and write it in the correct path" in {
 
     // Given
-    val sqlCtx = sqlContext
+    val conf = FlatteningConfig.load("", "test")
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
-    val configTest = FlatteningConfig
-      .joinTablesConfig
-      .tail.head
-      .withValue("input_path", ConfigValueFactory.fromAnyRef(parquetTablesPath))
-    val flattenedTableTest = new FlatTable(sqlCtx, configTest)
+    val configTest = conf.join.tail.head.copy(inputPath = parquetTablesPath)
+    val flattenedTableTest = new FlatTable(sqlContext, configTest)
     val resultPath = "target/test/output/join"
-    val expectedDf = sqlCtx.read.parquet("src/test/resources/flattening/parquet-table/flat_table/DCIR")
+    val expectedDf = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/DCIR")
     // When
-    flattenedTableTest.writeAsParquet
-    val result =  sqlCtx.read.parquet(resultPath)
+    flattenedTableTest.writeAsParquet()
+    val result = sqlContext.read.parquet(resultPath)
     // Then
     assert(resultPath == flattenedTableTest.outputBasePath)
     assert(result sameAs expectedDf)
@@ -166,8 +155,8 @@ class FlatTableSuite extends SharedContext {
 
     val mockTable = mock(classOf[FlatTable])
     val central: DataFrame = Seq(
-      (1, Some("hello1"), 2014, makeTS(2014, 2 , 5)),
-      (2, Some("hello2"), 2015,  makeTS(2015, 1 , 15))
+      (1, Some("hello1"), 2014, makeTS(2014, 2, 5)),
+      (2, Some("hello2"), 2015, makeTS(2015, 1, 15))
     ).toDF("key", "value", "year", "date")
     val tableName: String = "central"
     val simpleTable = new Table(tableName, central)
