@@ -13,13 +13,22 @@ class FunctionsSuite extends FlatSpec {
     val pattern2 = "dd/MM/yy HH:mm"
     val expected = Some(Timestamp.valueOf("1991-03-15 18:21:00"))
 
+    import java.util.Locale
+    val usLocale = new Locale("en", "US")
+    Locale.setDefault(usLocale)
+    val input3 = "15FEB2014:00:00:00"
+    val pattern3 = "ddMMMyyyy"
+    val expected3 = Some(java.sql.Date.valueOf("2014-02-15"))
+
     // When
     val result1 = Functions.parseTimestamp(input1)
     val result2 = Functions.parseTimestamp(input2, pattern2)
+    val result3 = Functions.parseDate(input3, pattern3)
 
     // Then
     assert(result1 == expected)
     assert(result2 == expected)
+    assert(result3 == expected3)
   }
 
   it should "return None if the input string is empty or null" in {
