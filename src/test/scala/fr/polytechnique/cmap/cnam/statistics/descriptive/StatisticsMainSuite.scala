@@ -145,4 +145,53 @@ class StatisticsMainSuite extends SharedContext {
     assert(oldDcirFlatTableStat sameAs dcirExpectedResult)
 
   }
+
+  "describeFlatTable" should "should get difference between flat table and single table stats" in {
+
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    // Given
+    val left = Seq(
+      (1, "mohamed", 30),
+      (2, "jhon", 15),
+      (3, "laure", 25)
+    ).toDF("id", "name", "age")
+
+    val right = Seq(
+      (1,100),
+      (2,250),
+      (2,300),
+      (4,110)
+    ).toDF("id", "achat")
+
+    left.write.parquet("target/test/output/left")
+    right.write.parquet("target/test/output/right")
+
+    import org.apache.spark.sql.functions.col
+
+    val flat = left.join(right, List("id"), "left")
+
+    val flatConf = FlatTableConfig(
+      tableName = "FLAT",
+      centralTable = "CENTRAL",
+      joinKeys = List("id"),
+      dateFormat = "yyyy-MM-dd",
+      inputPath = "/path/to/something/",
+      outputStatPath = "target/test/output/stats",
+      singleTables = List(
+        SingleTableConfig("CENTRAL", "target/test/output/left"),
+        SingleTableConfig("OTHER", "target/test/output/right")
+      )
+    )
+    // When
+    StatisticsMain.describeFlatTable(flat, flatConf)
+    val resultFlat = spark.read.parquet("target/test/output/stats/flat_table")
+    val resultSingle = spark.read.parquet("target/test/output/stats/single_tables")
+    val diff = spark.read.parquet("target/test/output/stats/diff")
+
+    // Then
+    assert(diff.count() > 0)
+
+  }
 }
