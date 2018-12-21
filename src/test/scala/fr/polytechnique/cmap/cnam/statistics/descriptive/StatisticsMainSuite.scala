@@ -1,6 +1,5 @@
 package fr.polytechnique.cmap.cnam.statistics.descriptive
 
-import org.apache.spark.sql.Row
 import fr.polytechnique.cmap.cnam.{SharedContext, utilities}
 
 class StatisticsMainSuite extends SharedContext {
@@ -32,54 +31,47 @@ class StatisticsMainSuite extends SharedContext {
 
   "describeFlatTable" should "write the statistics for a given flat table" in {
 
-    val sqlCtx = sqlContext
-    import sqlCtx.implicits._
-
     // Given
+    val left = spark.read
+      .option("header", true)
+      .option("delimiter", ";")
+      .csv("./src/test/resources/flattening/csv-table/left.csv")
+
+    val right = spark.read
+      .option("header", true)
+      .option("delimiter", ";")
+      .csv("./src/test/resources/flattening/csv-table/right.csv")
+    left.write.parquet("target/test/output/left")
+    right.write.parquet("target/test/output/right")
+
+    val flat = left.join(right, List("id"), "left")
+    flat.write.parquet("target/test/output/flat")
+
+
     val flatConf = FlatTableConfig(
       name = "FLAT",
       centralTable = "CENTRAL",
-      joinKeys = List("NUM_ENQ", "NUMERIC_COL"),
+      joinKeys = List("id"),
       dateFormat = "yyyy-MM-dd",
-      inputPath = "/path/to/something/",
+      inputPath = "target/test/output/flat",
       outputStatPath = "target/test/output/stats",
       singleTables = List(
-        SingleTableConfig("CENTRAL", "src/test/resources/statistics/single-tables/CENTRAL"),
-        SingleTableConfig("OTHER", "src/test/resources/statistics/single-tables/OTHER")
+        SingleTableConfig("CENTRAL", "target/test/output/left"),
+        SingleTableConfig("OTHER", "target/test/output/right")
       )
     )
-    val input = Seq(
-      ("1", 10, "1"),
-      ("2", 20, "10"),
-      ("2", 20, "10")
-    ).toDF("NUM_ENQ", "NUMERIC_COL", "OTHER__STRING_COL")
-    val expectedFlat = Seq(
-      ("1", "2", 3L, 2L, None, None, None, "NUM_ENQ", "StringType", "FLAT"),
-      ("10", "20", 3L, 2L, Some(50D), Some(30D), Some(16.6667D), "NUMERIC_COL", "IntegerType", "FLAT"),
-      ("1", "10", 3L, 2L, None, None, None, "OTHER__STRING_COL", "StringType", "FLAT")
-    ).toDF("Min", "Max", "Count", "CountDistinct", "Sum", "SumDistinct", "Avg", "ColName", "ColType", "TableName")
-    val expectedSingle = Seq(
-      ("1", "2", 2L, None, "NUM_ENQ", "StringType", "CENTRAL"),
-      ("10", "20", 2L, Some(30D), "NUMERIC_COL", "IntegerType", "CENTRAL"),
-      ("1", "10", 2L, None, "OTHER__STRING_COL", "StringType", "OTHER")
-    ).toDF("Min", "Max", "CountDistinct", "SumDistinct", "ColName", "ColType", "TableName")
-    val expectedDiff = sqlContext.createDataFrame(sc.parallelize(List[Row]()), expectedSingle.schema)
-
 
     // When
-    StatisticsMain.describeFlatTable(input, flatConf)
-    val resultFlat = spark.read.parquet("target/test/output/stats/flat_table")
-    val resultSingle = spark.read.parquet("target/test/output/stats/single_tables")
+    StatisticsMain.describeFlatTable(flat, flatConf)
     val diff = spark.read.parquet("target/test/output/stats/diff")
+    val keys = spark.read.parquet("target/test/output/stats/diff_join_keys")
 
     // Then
-    import utilities.DFUtils.CSVDataFrame
-    assert(resultFlat sameAs expectedFlat)
-    assert(resultSingle sameAs expectedSingle)
-    assert(diff sameAs expectedDiff)
+    assert(diff.count() > 0)
+    assert(keys.count() == 1)
   }
 
-  "diff" should "compute the diff between flat_table stats and single_tables stats" in {
+  "exceptOnColumns" should "compute the diff between flat_table stats and single_tables stats" in {
 
     val sqlCtx = sqlContext
     import sqlCtx.implicits._
@@ -112,6 +104,40 @@ class StatisticsMainSuite extends SharedContext {
     import utilities.DFUtils.CSVDataFrame
     assert(result sameAs expected)
   }
+
+  "exceptOnJoinKeys" should "compute the diff join keys between flat_table stats and single_tables" in {
+
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    // Given
+    val colNames = List("key1", "key2", "key3")
+
+    val flat = Seq(
+      ("1", "2", 2L),
+      ("10", "20", 4L),
+      ("100", "200", 6L)
+    ).toDF(colNames: _*)
+
+    val single = Seq(
+      ("1", "2", 2L),
+      ("10", "20", 4L),
+      ("100", "200", 6L),
+      ("1000", "2000", 8L)
+    ).toDF(colNames: _*)
+
+    val expected = Seq(
+      ("1000", "2000", 8L, "flat")
+    ).toDF("key1", "key2", "key3", "TableName")
+
+    //When
+    val result = StatisticsMain.exceptOnJoinKeys(flat, Map("flat" -> single))
+
+    // Then
+    import utilities.DFUtils.CSVDataFrame
+    assert(result sameAs expected)
+  }
+
 
   "run" should "run the overall pipeline correctly without any error" in {
 
