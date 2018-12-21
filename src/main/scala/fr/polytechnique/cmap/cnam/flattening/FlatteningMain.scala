@@ -3,7 +3,7 @@ package fr.polytechnique.cmap.cnam.flattening
 import org.apache.spark.sql.{Dataset, SQLContext}
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
-import fr.polytechnique.cmap.cnam.utilities.DFUtils
+import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
 object FlatteningMain extends Main {
 
@@ -20,13 +20,13 @@ object FlatteningMain extends Main {
         logger.info("converting table " + config.name)
         val columnsType = columnsTypeMap(config.name).toMap
 
-        val rawTable = DFUtils.readCSV(sqlContext, config.inputPaths)
-        val typedTable = DFUtils.applySchema(rawTable, columnsType, config.dateFormat)
+        val rawTable = readCSV(sqlContext, config.inputPaths)
+        val typedTable = applySchema(rawTable, columnsType, config.dateFormat)
 
         if (config.partitionColumn.isDefined)
-          typedTable.write.mode("append").partitionBy(config.partitionColumn.get).parquet(config.output)
+          typedTable.writeParquet(config.output, config.partitionColumn.get)(conf.singleTableSaveMode)
         else
-          typedTable.write.parquet(config.output)
+          typedTable.writeParquet(config.output)(conf.singleTableSaveMode)
 
         val t1 = System.nanoTime()
         logger.info("Duration  " + (t1 - t0) / Math.pow(10, 9) + " sec")
@@ -35,7 +35,7 @@ object FlatteningMain extends Main {
   }
 
   def computeFlattenedFiles(sqlContext: SQLContext, conf: FlatteningConfig): Unit = {
-    conf.join.foreach { config =>
+    conf.joinTableConfigs.foreach { config =>
       logger.info("begin flattening " + config.name)
       new FlatTable(sqlContext, config).writeAsParquet()
     }

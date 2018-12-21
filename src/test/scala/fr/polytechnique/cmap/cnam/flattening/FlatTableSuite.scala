@@ -100,7 +100,7 @@ class FlatTableSuite extends SharedContext {
     val conf = FlatteningConfig.load("", "test")
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
     val expected = Array(2008, 2007, 2006)
-    val configTest = conf.join.head.copy(inputPath = parquetTablesPath)
+    val configTest = conf.joinTableConfigs.head.copy(inputPath = Some(parquetTablesPath))
     val flattenedTableTest = new FlatTable(sqlContext, configTest)
 
     // When
@@ -115,9 +115,9 @@ class FlatTableSuite extends SharedContext {
     // Given
     val conf = FlatteningConfig.load("", "test")
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
-    val configTest = conf.join.head.copy(inputPath = parquetTablesPath)
+    val configTest = conf.joinTableConfigs.head.copy(inputPath = Some(parquetTablesPath))
     val flattenedTableTest = new FlatTable(sqlContext, configTest)
-    val resultPath = "target/test/output/join"
+    val resultPath = conf.flatTablePath
     val expectedDf = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/MCO")
 
 
@@ -135,9 +135,9 @@ class FlatTableSuite extends SharedContext {
     // Given
     val conf = FlatteningConfig.load("", "test")
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
-    val configTest = conf.join.tail.head.copy(inputPath = parquetTablesPath)
+    val configTest = conf.joinTableConfigs.tail.head.copy(inputPath = Some(parquetTablesPath))
     val flattenedTableTest = new FlatTable(sqlContext, configTest)
-    val resultPath = "target/test/output/join"
+    val resultPath = conf.flatTablePath
     val expectedDf = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/DCIR")
     // When
     flattenedTableTest.writeAsParquet()

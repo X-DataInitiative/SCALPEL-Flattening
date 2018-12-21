@@ -38,6 +38,7 @@ object StatisticsMain extends Main {
   def describeFlatTable(data: DataFrame, flatConf: FlatTableConfig): Unit = {
 
     import CustomDescriber.CustomDescriberImplicits
+    import fr.polytechnique.cmap.cnam.utilities.DFUtils.CSVDataFrame
 
     logger.info(s"Computing Statistics on the flat table: ${flatConf.name}")
     println(flatConf)
@@ -48,7 +49,7 @@ object StatisticsMain extends Main {
       .withColumn("TableName", lit(flatConf.name))
       .persist()
 
-    flatTableStats.write.parquet(flatConf.outputStatPath + "/flat_table")
+    flatTableStats.writeParquet(flatConf.output + "/flat_table")(flatConf.saveMode)
 
     if (flatConf.singleTables.nonEmpty) {
       val singleTablesStats = flatConf.singleTables.map {
@@ -58,12 +59,12 @@ object StatisticsMain extends Main {
           computeSingleTableStats(singleTableData, isCentral, singleTableConf, flatConf.joinKeys)
       }.reduce(_.union(_)).persist()
 
-      singleTablesStats.write.parquet(flatConf.outputStatPath + "/single_tables")
+      singleTablesStats.writeParquet(flatConf.output + "/single_tables")(flatConf.saveMode)
       exceptOnColumns(
         flatTableStats.select(singleTablesStats.columns.map(col): _*),
         singleTablesStats,
         (singleTablesStats.columns.toSet - "TableName").toList
-      ).write.parquet(flatConf.outputStatPath + "/diff")
+      ).writeParquet(flatConf.output + "/diff")(flatConf.saveMode)
     }
   }
 

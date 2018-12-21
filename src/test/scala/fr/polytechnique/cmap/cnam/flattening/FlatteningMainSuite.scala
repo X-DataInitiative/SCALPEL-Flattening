@@ -42,19 +42,22 @@ class FlatteningMainSuite extends SharedContext {
     }
   }
 
-  "computeFlattenedTable" should "flatten the dcir tables correctly" in {
+  "computeFlattenedTable" should "flatten the tables correctly" in {
 
     //Given
     val conf = FlatteningConfig.load("", "test")
-    val expected: DataFrame = sqlContext.read.option("mergeSchema", "true").parquet("src/test/resources/flattening/parquet-table/flat_table/MCO/")
-    val configTest = conf.copy(join = conf.join.map(_.copy(inputPath = "src/test/resources/flattening/parquet-table/single_table")))
+    val expectedMCO: DataFrame = sqlContext.read.option("mergeSchema", "true").parquet("src/test/resources/flattening/parquet-table/flat_table/MCO/")
+    val expectedDCIR: DataFrame = sqlContext.read.option("mergeSchema", "true").parquet("src/test/resources/flattening/parquet-table/flat_table/DCIR/")
+    val configTest = conf.copy(join = conf.join.map(_.copy(inputPath = Some("src/test/resources/flattening/parquet-table/single_table"))))
 
     //When
     FlatteningMain.computeFlattenedFiles(sqlContext, configTest)
-    val result = sqlContext.read.option("mergeSchema", "true").parquet("target/test/output/join/MCO*")
+    val resultMCO = sqlContext.read.option("mergeSchema", "true").parquet(conf.flatTablePath + "/MCO*")
+    val resultDCIR = sqlContext.read.option("mergeSchema", "true").parquet(conf.flatTablePath + "/DCIR*")
 
     //Then
-    assert(expected sameAs result)
+    assert(expectedMCO sameAs resultMCO)
+    assert(expectedDCIR sameAs resultDCIR)
 
   }
 
@@ -62,7 +65,7 @@ class FlatteningMainSuite extends SharedContext {
 
     //Given
     val sqlCtx = sqlContext
-    val path = "target/test/output/join/MCO"
+    val path = "target/test/output/flat_table/MCO"
     val expected: DataFrame = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/MCO")
 
     //When

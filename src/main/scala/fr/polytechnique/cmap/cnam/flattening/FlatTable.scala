@@ -1,18 +1,19 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
+import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
 class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
-  val inputBasePath: String = config.inputPath
+  val inputBasePath: String = config.inputPath.get
   val mainTable: Table = Table.build(sqlContext, inputBasePath, config.mainTableName)
   val tablesToJoin: List[Table] = config.tablesToJoin.map(
     tableName =>
       Table.build(sqlContext, inputBasePath, tableName)
   )
-  val outputBasePath: String = config.flatOutputPath
+  val outputBasePath: String = config.flatOutputPath.get
   val foreignKeys: List[String] = config.joinKeys
   val tableName: String = config.name
   val monthlyPartitionColumn: Option[String] = config.monthlyPartitionColumn
@@ -58,10 +59,9 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
     val t1 = System.nanoTime()
     logger.info("   Flattening Duration " + (t1 - t0) / Math.pow(10, 9) + " sec")
 
-    flatTable.write
-      .mode(SaveMode.Append)
-      .parquet(outputBasePath + "/" + table.name)
+    flatTable.writeParquet(outputBasePath + "/" + table.name)("append")
     flatTable.unpersist()
+
     val t2 = System.nanoTime()
     logger.info("   writing duration " + table.name + (t2 - t1) / Math.pow(10, 9) + " sec")
   }

@@ -16,6 +16,7 @@ class FlatTableConfigSuite extends SharedContext with ConfigLoader {
   val singleTables = List(
     SingleTableConfig("A_SINGLE_TABLE", "/path/to/input/single_table")
   )
+  val saveMode = "withTimestamp"
 
   "toString" should "print the class members" in {
 
@@ -27,6 +28,7 @@ class FlatTableConfigSuite extends SharedContext with ConfigLoader {
         s"dateFormat -> $dateFormat \n" +
         s"inputPath -> $inputPath \n" +
         s"outputStatPath -> $outputStatPath \n" +
+        s"saveMode -> $saveMode \n" +
         s"singleTableCount -> ${singleTables.size}"
     }
     val input = FlatTableConfig(
@@ -36,14 +38,15 @@ class FlatTableConfigSuite extends SharedContext with ConfigLoader {
       dateFormat,
       inputPath,
       outputStatPath,
-      singleTables
+      singleTables,
+      "withTimestamp"
     )
 
     // When
     val result = input.toString
-
     // Then
     assert(result == expected)
+
   }
 
   "fromConfig" should "create a FlatTableConfig from a PureConfig instance" in {

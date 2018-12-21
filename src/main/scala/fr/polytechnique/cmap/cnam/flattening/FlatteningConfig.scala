@@ -11,15 +11,31 @@ case class ConfigPartition(
   partitionColumn: Option[String] = None)
 
 case class FlatteningConfig(
-  singleTablePath: String,
+  basePath: String,
+  singleTableSaveMode: String = "append",
   schemaFilePath: List[String] = List.empty[String],
   join: List[JoinTableConfig] = List.empty[JoinTableConfig],
   tablesConfig: List[TablesConfig] = List.empty[TablesConfig]
 ) extends Config {
 
+  import fr.polytechnique.cmap.cnam.utilities.DFUtils.StringPath
+
   private lazy val csvSchema = CSVSchemaReader.readSchemaFiles(schemaFilePath)
 
+  private lazy val root = if (singleTableSaveMode == "withTimestamp") basePath.withTimestampSuffix() else basePath
+
   lazy val columnTypes: Map[String, List[(String, String)]] = CSVSchemaReader.readColumnsType(csvSchema)
+
+  lazy val singleTablePath: String = root + "/single_table"
+
+  lazy val flatTablePath: String = root + "/flat_table"
+
+  lazy val joinTableConfigs: Seq[JoinTableConfig] = join.map(config => {
+    val input = if (config.inputPath.isDefined) config.inputPath.get else singleTablePath
+    val output = if (config.flatOutputPath.isDefined) config.flatOutputPath.get else flatTablePath
+    config.copy(inputPath = Some(input), flatOutputPath = Some(output))
+  })
+
 
   def partitions: List[ConfigPartition] = {
     for (table <- tables;
@@ -65,11 +81,11 @@ object FlatteningConfig extends ConfigLoader {
 
   case class JoinTableConfig(
     name: String,
-    inputPath: String,
+    inputPath: Option[String] = None,
     joinKeys: List[String] = List.empty[String],
     tablesToJoin: List[String] = List.empty[String],
     mainTableName: String,
-    flatOutputPath: String,
+    flatOutputPath: Option[String] = None,
     monthlyPartitionColumn: Option[String] = None)
 
   case class PartitionConfig(

@@ -1,13 +1,16 @@
 package fr.polytechnique.cmap.cnam.utilities
 
+import java.text.SimpleDateFormat
+import java.util.Date
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 
 object DFUtils {
 
-  def readCSV(sqlContext: SQLContext,
-              inputPath: Seq[String]): DataFrame = {
+  def readCSV(
+    sqlContext: SQLContext,
+    inputPath: Seq[String]): DataFrame = {
     sqlContext
       .read
       .option("header", "true")
@@ -15,8 +18,9 @@ object DFUtils {
       .csv(inputPath: _*)
   }
 
-  def readParquet(sqlContext: SQLContext,
-                  inputPath: String): DataFrame = {
+  def readParquet(
+    sqlContext: SQLContext,
+    inputPath: String): DataFrame = {
     sqlContext
       .read
       .option("mergeSchema", "true")
@@ -48,12 +52,12 @@ object DFUtils {
 
 
     /**
-      *  This method reorders the dataframe with the alphabetical order of its columns
+      * This method reorders the dataframe with the alphabetical order of its columns
       */
-    def reorder(): DataFrame = {
+    def reorder: DataFrame = {
       val columns: Array[String] = dataFrame.columns
       val reorderedColumnNames: Array[String] = columns.sorted
-      dataFrame.select(reorderedColumnNames.head, reorderedColumnNames.tail:_*)
+      dataFrame.select(reorderedColumnNames.head, reorderedColumnNames.tail: _*)
     }
 
     /**
@@ -66,30 +70,74 @@ object DFUtils {
 
       def checkDuplicateRows: Boolean = {
 
-        val dataFrameOrdered = if(weakComparaison) dataFrame.reorder else dataFrame
-        val otherOrdered = if(weakComparaison) other.reorder else other
+        val dataFrameOrdered = if (weakComparaison) dataFrame.reorder else dataFrame
+        val otherOrdered = if (weakComparaison) other.reorder else other
 
         val dataFrameGroupedByRows = dataFrameOrdered.groupBy(
-            dataFrameOrdered.columns.head,
-            dataFrameOrdered.columns.tail: _*).count()
+          dataFrameOrdered.columns.head,
+          dataFrameOrdered.columns.tail: _*).count()
         val otherGroupedByRows = otherOrdered.groupBy(
-            otherOrdered.columns.head,
-            otherOrdered.columns.tail: _*).count()
+          otherOrdered.columns.head,
+          otherOrdered.columns.tail: _*).count()
 
         dataFrameGroupedByRows.except(otherGroupedByRows).count() == 0 &&
           otherGroupedByRows.except(dataFrameGroupedByRows).count == 0
       }
 
       def columnNameType(schema: StructType): Seq[(String, DataType)] = {
-        if(weakComparaison)
+        if (weakComparaison)
           schema.fields.sortBy(_.name).map((field: StructField) => (field.name, field.dataType))
         else
           schema.fields.map((field: StructField) => (field.name, field.dataType))
       }
-      val type1 = columnNameType(dataFrame.schema)
-      val type2 = columnNameType(other.schema)
+
       columnNameType(dataFrame.schema) == columnNameType(other.schema) &&
         checkDuplicateRows
     }
+
+    private def saveMode(mode: String): SaveMode = mode match {
+      case "overwrite" => SaveMode.Overwrite
+      case "append" => SaveMode.Append
+      case "errorIfExists" => SaveMode.ErrorIfExists
+      case "withTimestamp" => SaveMode.Overwrite
+    }
+
+    @scala.annotation.varargs
+    def writeCSV(path: String, partitionColumns: String*)(mode: String): Unit = {
+      val writer = dataFrame.coalesce(1)
+        .write
+        .mode(saveMode(mode))
+        .option("delimiter", ",")
+        .option("header", "true")
+      if (partitionColumns.nonEmpty)
+        writer.partitionBy(partitionColumns: _*).csv(path)
+      else
+        writer.csv(path)
+    }
+
+    @scala.annotation.varargs
+    def writeParquet(path: String, partitionColumns: String*)(mode: String): Unit = {
+      val writer = dataFrame.write
+        .mode(saveMode(mode))
+      if (partitionColumns.nonEmpty)
+        writer.partitionBy(partitionColumns: _*).parquet(path)
+      else
+        writer.parquet(path)
+    }
+
   }
+
+  implicit class StringPath(path: String) {
+
+    def withTimestampSuffix(
+      date: Date = new Date(),
+      format: String = "_yyyy_MM_dd_HH_mm_ss",
+      oldSuffix: String = "/"): String = {
+      path
+        .stripSuffix(oldSuffix)
+        .concat(new SimpleDateFormat(format).format(date))
+    }
+
+  }
+
 }

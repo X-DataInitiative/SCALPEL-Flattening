@@ -14,12 +14,12 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
 
   "load" should "loads the correct config file" in {
     val defaultConf = FlatteningConfig.load("", "test")
-    val expected = defaultConf.copy(singleTablePath = "/path/base/output", schemaFilePath = List("/path/schema"),
-      join = List(JoinTableConfig(name = "MCO", inputPath = "/path/to/input", joinKeys = List("ETA_NUM", "RSA_NUM"), mainTableName = "MCO_C",
-        tablesToJoin = List("MCO_B", "MCO_A", "MCO_D", "MCO_UM"), flatOutputPath = "/path/to/flat_table")))
+    val expected = defaultConf.copy(basePath = "/path/base/output", schemaFilePath = List("/path/schema"),
+      join = List(JoinTableConfig(name = "MCO", inputPath = Some("/path/to/input"), joinKeys = List("ETA_NUM", "RSA_NUM"), mainTableName = "MCO_C",
+        tablesToJoin = List("MCO_B", "MCO_A", "MCO_D", "MCO_UM"), flatOutputPath = Some("/path/to/flat_table"))))
     val stringConfig =
       """
-        |single_table_path = "/path/base/output"
+        |base_path = "/path/base/output"
         |
         |schema_file_path = [
         |  "/path/schema"
@@ -52,41 +52,41 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
 
     val expected = List(
       ConfigPartition("IR_BEN_R", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/DCIR/IR_BEN_R.csv"),
-        "target/test/output/IR_BEN_R", None),
+        "target/test/output/single_table/IR_BEN_R", None),
       ConfigPartition("IR_IMB_R", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/DCIR/IR_IMB_R.csv"),
-        "target/test/output/IR_IMB_R", None),
+        "target/test/output/single_table/IR_IMB_R", None),
       ConfigPartition("ER_PRS_F", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/DCIR/ER_PRS_F.csv"),
-        "target/test/output/ER_PRS_F/year=2006", Some("FLX_DIS_DTD")),
+        "target/test/output/single_table/ER_PRS_F/year=2006", Some("FLX_DIS_DTD")),
       ConfigPartition("ER_PHA_F", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/DCIR/ER_PHA_F.csv"),
-        "target/test/output/ER_PHA_F/year=2006", None),
+        "target/test/output/single_table/ER_PHA_F/year=2006", None),
       ConfigPartition("ER_CAM_F", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/DCIR/ER_CAM_F.csv"),
-        "target/test/output/ER_CAM_F/year=2006", None),
+        "target/test/output/single_table/ER_CAM_F/year=2006", None),
       ConfigPartition("MCO_UM", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO08UM.csv"),
-        "target/test/output/MCO_UM/year=2008", None),
+        "target/test/output/single_table/MCO_UM/year=2008", None),
       ConfigPartition("MCO_A", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO06A.csv"),
-        "target/test/output/MCO_A/year=2006", None),
+        "target/test/output/single_table/MCO_A/year=2006", None),
       ConfigPartition("MCO_A", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO07A.csv"),
-        "target/test/output/MCO_A/year=2007", None),
+        "target/test/output/single_table/MCO_A/year=2007", None),
       ConfigPartition("MCO_A", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO08A.csv"),
-        "target/test/output/MCO_A/year=2008", None),
+        "target/test/output/single_table/MCO_A/year=2008", None),
       ConfigPartition("MCO_B", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO06B.csv"),
-        "target/test/output/MCO_B/year=2006", None),
+        "target/test/output/single_table/MCO_B/year=2006", None),
       ConfigPartition("MCO_B", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO07B.csv"),
-        "target/test/output/MCO_B/year=2007", None),
+        "target/test/output/single_table/MCO_B/year=2007", None),
       ConfigPartition("MCO_B", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO08B.csv"),
-        "target/test/output/MCO_B/year=2008", None),
+        "target/test/output/single_table/MCO_B/year=2008", None),
       ConfigPartition("MCO_C", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO06C.csv"),
-        "target/test/output/MCO_C/year=2006", Some("NUM_ENQ")),
+        "target/test/output/single_table/MCO_C/year=2006", Some("NUM_ENQ")),
       ConfigPartition("MCO_C", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO07C.csv"),
-        "target/test/output/MCO_C/year=2007", Some("NUM_ENQ")),
+        "target/test/output/single_table/MCO_C/year=2007", Some("NUM_ENQ")),
       ConfigPartition("MCO_C", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO08C.csv"),
-        "target/test/output/MCO_C/year=2008", Some("NUM_ENQ")),
+        "target/test/output/single_table/MCO_C/year=2008", Some("NUM_ENQ")),
       ConfigPartition("MCO_D", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO06D.csv"),
-        "target/test/output/MCO_D/year=2006", None),
+        "target/test/output/single_table/MCO_D/year=2006", None),
       ConfigPartition("MCO_D", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO07D.csv"),
-        "target/test/output/MCO_D/year=2007", None),
+        "target/test/output/single_table/MCO_D/year=2007", None),
       ConfigPartition("MCO_D", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO08D.csv"),
-        "target/test/output/MCO_D/year=2008", None)
+        "target/test/output/single_table/MCO_D/year=2008", None)
 
     )
     // When
