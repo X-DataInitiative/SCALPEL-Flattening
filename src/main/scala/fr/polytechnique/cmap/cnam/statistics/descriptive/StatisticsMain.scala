@@ -60,11 +60,41 @@ object StatisticsMain extends Main {
       }.reduce(_.union(_)).persist()
 
       singleTablesStats.writeParquet(flatConf.output + "/single_tables")(flatConf.saveMode)
-      exceptOnColumns(
+      val diff = exceptOnColumns(
         flatTableStats.select(singleTablesStats.columns.map(col): _*),
         singleTablesStats,
         (singleTablesStats.columns.toSet - "TableName").toList
-      ).writeParquet(flatConf.output + "/diff")(flatConf.saveMode)
+      ).persist()
+      diff.writeParquet(flatConf.output + "/diff")(flatConf.saveMode)
+
+      import diff.sparkSession.implicits._
+
+      val tableNames = diff
+        .select("TableName")
+        .where(col("TableName") =!= flatConf.name)
+        .distinct()
+        .map(_.getString(0))
+        .collect()
+      if (tableNames.nonEmpty) {
+        val flatTable = readParquet(diff.sqlContext, flatConf.inputPath)
+          .select(flatConf.joinKeys.map(col): _*)
+          .distinct()
+          .persist()
+
+        val singleTables: Map[String, DataFrame] = flatConf.singleTables.filter {
+          config => tableNames.contains(config.name)
+        }.map {
+          config =>
+            config.name -> readParquet(diff.sqlContext, config.inputPath)
+              .select(flatConf.joinKeys.map(col): _*)
+              .distinct()
+        }.toMap
+
+        exceptOnJoinKeys(flatTable, singleTables)
+          .writeParquet(flatConf.output + "/diff_join_keys")(flatConf.saveMode)
+
+      }
+
     }
   }
 
@@ -75,6 +105,12 @@ object StatisticsMain extends Main {
       .withColumn("count", count("*").over(window))
       .where(col("count") < 2)
       .drop("count")
+  }
+
+  def exceptOnJoinKeys(left: DataFrame, right: Map[String, DataFrame]): DataFrame = {
+    right.map {
+      case (name, df) => df.except(left).withColumn("TableName", lit(name))
+    }.reduce(_.union(_))
   }
 
   override def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
