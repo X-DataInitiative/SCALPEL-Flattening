@@ -39,10 +39,11 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
   }
 
   val joinFunction: (DataFrame, DataFrame) => DataFrame = (accumulator, tableToJoin) => {
-    val result = accumulator.join(tableToJoin, foreignKeys, "left_outer").persist()
-    Logger.getLogger(getClass).info(s"Joined table count: ${result.count()}")
-    accumulator.unpersist()
-    result
+    // val result = accumulator.join(tableToJoin, foreignKeys, "left_outer").persist()
+    // Logger.getLogger(getClass).info(s"Joined table count: ${result.count()}")
+    // accumulator.unpersist()
+    // result
+    accumulator.join(tableToJoin, foreignKeys, joinType="left_outer")
   }
 
   def logger: Logger = Logger.getLogger(getClass)
@@ -52,18 +53,18 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
     Logger.getRootLogger.setLevel(Level.ERROR)
     val t0 = System.nanoTime()
 
-    val flatTable = table.df.persist()
-    val nbLinesFlatTable = flatTable.count()
-    logger.info("   Number of lines : " + nbLinesFlatTable)
+    // val flatTable = table.df.persist()
+    // val nbLinesFlatTable = flatTable.count()
+    // logger.info("   Number of lines : " + nbLinesFlatTable)
 
-    val t1 = System.nanoTime()
-    logger.info("   Flattening Duration " + (t1 - t0) / Math.pow(10, 9) + " sec")
+    // val t1 = System.nanoTime()
+    // logger.info("   Flattening Duration " + (t1 - t0) / Math.pow(10, 9) + " sec")
 
-    flatTable.writeParquet(outputBasePath + "/" + table.name)("append")
-    flatTable.unpersist()
+    table.df.writeParquet(outputBasePath + "/" + table.name)(mode = "append")
+    // flatTable.unpersist()
 
     val t2 = System.nanoTime()
-    logger.info("   writing duration " + table.name + (t2 - t1) / Math.pow(10, 9) + " sec")
+    logger.info("   writing duration " + table.name + (t2 - t0) / Math.pow(10, 9) + " sec")
   }
 
   def writeAsParquet(): Unit = {
