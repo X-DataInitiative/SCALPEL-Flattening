@@ -1,9 +1,14 @@
 package fr.polytechnique.cmap.cnam.flattening
 
-import org.apache.spark.sql.{Dataset, SQLContext}
+import java.io.PrintWriter
+
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
+import fr.polytechnique.cmap.cnam.utilities.reporting._
+import org.apache.spark.sql.{Dataset, SQLContext}
+
+import scala.collection.mutable
 
 object FlatteningMain extends Main {
 
@@ -46,6 +51,57 @@ object FlatteningMain extends Main {
     argsMap.get("env").foreach(sqlContext.setConf("env", _))
 
     val conf: FlatteningConfig = load(argsMap.getOrElse("conf", ""), argsMap("env"))
+
+
+
+
+
+
+
+    var operationsMetadata = mutable.Buffer[OperationMetadata]()
+    val startTimestamp = new java.util.Date()
+    val format = new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss")
+
+
+    conf.partitions.foreach {
+      config: ConfigPartition =>
+
+        println("Main - ConfigPartition name :"+config.name)
+
+        for( x <- config.inputPaths) {
+          println("Main - ConfigPartition path :"+x)
+        }
+
+        println("Main - ConfigPartition output :"+config.output)
+
+    }
+
+    println("Main - Sortie conf partitions foreach")
+
+
+    /*operationsMetadata += {
+      OperationReporter.report("flattening",
+        List("DCIR", "MCO", "IR_BEN_R"),
+        OperationTypes.AnyEvents,
+        Path(conf.output.outputSavePath),
+        conf.output.saveMode
+      )
+    }*/
+
+    // Write Metadata
+    val metadata = MainMetadata(this.getClass.getName, startTimestamp, new java.util.Date(), operationsMetadata.toList)
+    val metadataJson: String = metadata.toJsonString()
+
+    new PrintWriter("metadata_flattening_" + format.format(startTimestamp) + ".json") {
+      write(metadataJson)
+      close()
+    }
+
+
+
+
+
+
 
 
     logger.info("begin converting csv to parquet")

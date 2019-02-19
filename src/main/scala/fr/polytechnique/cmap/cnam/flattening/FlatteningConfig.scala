@@ -66,17 +66,28 @@ object FlatteningConfig extends ConfigLoader {
     loadConfigWithDefaults[FlatteningConfig](path, defaultPath, env)
   }
 
-  def toConfigPartition(
-    rootPath: String,
-    tableConfig: TableConfig,
-    partitionConfig: PartitionConfig): ConfigPartition = {
-    ConfigPartition(
+  def toConfigPartition(rootPath: String, tableConfig: TableConfig, partitionConfig: PartitionConfig): ConfigPartition = {
+    val configpart = ConfigPartition(
       name = tableConfig.name,
       dateFormat = tableConfig.dateFormat,
       inputPaths = partitionConfig.path,
       output = partitionConfig.outputPath(rootPath, tableConfig.partitionStrategy, tableConfig.name),
       partitionColumn = tableConfig.partitionColumn
     )
+
+    /*Nom des tables en entrée,
+     chemins des tables en entrée,
+     nom de la table en sortie,
+     chemin de la table en sortie*/
+
+    println("Config - ConfigPartition name :"+configpart.name)
+    println("Config - ConfigPartition output :"+configpart.output)
+    println("Config - TableConfig name :"+tableConfig.name)
+    for( x <- partitionConfig.path) {
+      println("Config - ConfigPartition path :"+x)
+    }
+    println("Config - Sortie toConfigPartition")
+    return  configpart
   }
 
   case class JoinTableConfig(
