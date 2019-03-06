@@ -148,10 +148,19 @@ object FlatteningMain extends Main {
       }
     }
 
+    var NamesTables = new ListBuffer[String]()
+    var PartitionTables = new ListBuffer[String]()
+    var DateTables = new ListBuffer[String]()
+
     /*PARCOURS DE CHAQUE TABLE*/
     conf.partitions.foreach {
       config: ConfigPartition =>
         logger.info("Main - ConfigPartition name :" + config.name)
+        logger.info("Main - ConfigPartition partitionColumn :" + config.partitionColumn)
+        logger.info("Main - ConfigPartition dateformat :" + config.dateFormat)
+        NamesTables += config.name
+        PartitionTables += config.partitionColumn
+        DateTables += config.dateFormat
 
         /*RECUPERATION DES CHEMINS DE TABLE EN ENTREE*/
         for (x <- config.inputPaths) {
