@@ -1,8 +1,8 @@
 package fr.polytechnique.cmap.cnam.utilities.reporting
 
-import fr.polytechnique.cmap.cnam.util.Path
 import fr.polytechnique.cmap.cnam.utilities.Path
 import org.apache.log4j.Logger
+import org.apache.spark.sql.DataFrame
 
 /**
   * Singleton responsible for reporting an operation execution.
@@ -21,31 +21,31 @@ object OperationReporter {
   /**
     * The main method for generating the report for the given operation
     *
-    * @param operationName    The unique name (ex: "diagnoses")
-    * @param operationInputs  The unique names of the previous operations on which this one depends
-    * @param outputType       The type of the operation output
-    * @param basePath         The base path where the data and patients will be written
+    * @param TablesNameInput  Name of tables input
+    * @param TablesPathInput  Path where tables input are
+    * @param TableNameOutput  Name of tables output
+    * @param TablePathOutput  Path where table output is
+    * @param data             The output data
     * @param saveMode         The strategy of output data(default = overwrite)
     * @return an instance of OperationMetadata
     */
   def report(
-    operationName: String,
-    operationInputs: List[String],
-    outputType: OperationType,
-    basePath: Path,
-    saveMode: String = "errorIfExists"): OperationMetadata = {
+              TablesNameInput: List[String],
+              TablesPathInput: List[String],
+              TableNameOutput: List[String],
+              TablePathOutput: Path,
+              data: DataFrame,
+              saveMode: String = "errorIfExists"): OperationMetadata = {
 
-    logger.info(s"""=> Reporting operation "$operationName" of output type "$outputType"""")
+    logger.info(s"""=> Reporting operation "$TableNameOutput" of output path "$TablePathOutput"""")
 
-    val dataPath: Path = Path(basePath, operationName, "data")
+    val dataPath: Path = Path(TablePathOutput, "data")
 
-    val baseMetadata = OperationMetadata(operationName, operationInputs, outputType, None, None)
+    val baseMetadata = OperationMetadata(TablesNameInput, TablesPathInput, TableNameOutput, TablePathOutput.toString)
 
-    outputType match {
-      case OperationTypes.AnyEvents =>
-        baseMetadata.copy(
-          outputPath = Some(dataPath.toString)
-        )
-      }
+    data.write.mode(saveMode).parquet(dataPath.toString)
+    baseMetadata.copy(
+      outputPath = dataPath.toString
+    )
   }
 }

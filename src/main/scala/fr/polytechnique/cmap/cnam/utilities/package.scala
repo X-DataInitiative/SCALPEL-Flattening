@@ -3,9 +3,7 @@ package fr.polytechnique.cmap.cnam
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import fr.polytechnique.cmap.cnam.utilities.Path
-
-package object util {
+package object utilities {
   /**
     * Type alias to avoid the need for importing Path from the hadoop java API
     */
@@ -14,9 +12,9 @@ package object util {
   implicit class RichPath(path: Path) {
 
     def withTimestampSuffix(
-      date: Date = new Date(),
-      format: String = "_yyyy_MM_dd_HH_mm_ss",
-      oldSuffix: String = "/"): Path = {
+                             date: Date = new Date(),
+                             format: String = "_yyyy_MM_dd_HH_mm_ss",
+                             oldSuffix: String = "/"): Path = {
       Path(
         path.toString
           .stripSuffix(oldSuffix)
@@ -24,5 +22,4 @@ package object util {
       )
     }
   }
-
 }

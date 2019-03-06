@@ -5,6 +5,7 @@ import java.io.PrintWriter
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
+import fr.polytechnique.cmap.cnam.utilities.Path
 import fr.polytechnique.cmap.cnam.utilities.reporting._
 import org.apache.spark.sql.{Dataset, SQLContext}
 
@@ -52,58 +53,6 @@ object FlatteningMain extends Main {
 
     val conf: FlatteningConfig = load(argsMap.getOrElse("conf", ""), argsMap("env"))
 
-
-
-
-
-
-
-    var operationsMetadata = mutable.Buffer[OperationMetadata]()
-    val startTimestamp = new java.util.Date()
-    val format = new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss")
-
-
-    conf.partitions.foreach {
-      config: ConfigPartition =>
-
-        println("Main - ConfigPartition name :"+config.name)
-
-        for( x <- config.inputPaths) {
-          println("Main - ConfigPartition path :"+x)
-        }
-
-        println("Main - ConfigPartition output :"+config.output)
-
-    }
-
-    println("Main - Sortie conf partitions foreach")
-
-
-    /*operationsMetadata += {
-      OperationReporter.report("flattening",
-        List("DCIR", "MCO", "IR_BEN_R"),
-        OperationTypes.AnyEvents,
-        Path(conf.output.outputSavePath),
-        conf.output.saveMode
-      )
-    }*/
-
-    // Write Metadata
-    val metadata = MainMetadata(this.getClass.getName, startTimestamp, new java.util.Date(), operationsMetadata.toList)
-    val metadataJson: String = metadata.toJsonString()
-
-    new PrintWriter("metadata_flattening_" + format.format(startTimestamp) + ".json") {
-      write(metadataJson)
-      close()
-    }
-
-
-
-
-
-
-
-
     logger.info("begin converting csv to parquet")
     saveCSVTablesAsParquet(sqlContext, conf)
 
@@ -116,6 +65,129 @@ object FlatteningMain extends Main {
     val t1 = System.nanoTime()
     logger.info("Flattening Duration  " + (t1 - t0) / Math.pow(10, 9) + " sec")
 
+    logger.info("begin report")
+    report(conf)
+    logger.info("finished report")
+
     None
+  }
+
+
+  def report (conf: FlatteningConfig): Unit = {
+    val operationsMetadata = mutable.Buffer[OperationMetadata]()
+    val startTimestamp = new java.util.Date()
+    val format = new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss")
+    import scala.collection.mutable.ListBuffer
+    var NamesInputTables = new ListBuffer[String]()
+    var PathsInputTables = new ListBuffer[String]()
+    var NamesOutputTables = new ListBuffer[String]()
+    val PathOutput = conf.flatTablePath
+
+    /*
+    conf.flattablepath = /shared/FALL/staging/flattening/2014_2016/flat_table
+
+    "chemin = /shared/FALL/staging/flattening/2014_2016/flat_table/mco_ce
+    "conf.singleTableSaveMode=append"
+    "x.name=MCO_CE"
+    "x.monthlyPartitionColumn=None"
+    "x.mainTableName=MCO_CSTC"
+    "x.tablesToJoin=MCO_FMSTC     ET       MCO_FASTC"
+    "x.joinKeys=ETA_NUM           ET       SEQ_NUM"
+
+
+    "config.name=MCO_FMSTC"
+    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO14FMSTC.CSV"
+    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_FMSTC/year=2014"
+
+    "config.name=MCO_FMSTC"
+    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO16FMSTC.CSV"
+    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_FMSTC/year=2016"
+
+    "config.name=MCO_CSTC"
+    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO14CSTC.CSV"
+    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_CSTC/year=2014"
+
+    "config.name=MCO_CSTC"
+    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO16CSTC.CSV"
+    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_CSTC/year=2016"
+
+    "config.name=MCO_FASTC"
+    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO14FASTC.CSV"
+    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_FASTC/year=2014"
+
+    "config.name=MCO_FASTC"
+    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO16FASTC.CSV"
+    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_FASTC/year=2016"
+    */
+
+    logger.info("Main - FlatteningConfig flattablepath :" + conf.flatTablePath)
+    val chemin = PathOutput.concat("/mco_ce")
+    logger.info("Main - FlatteningConfig chemin :" + chemin)
+    logger.info("Main - FlatteningConfig save :" + conf.singleTableSaveMode)
+
+
+    for (x <- conf.joinTableConfigs) {
+      /*RECUPERATION DES NOMS DE TABLE EN SORTIE*/
+      logger.info("Main - JoinTableConfig Noms de table en sortie :" + x.name)
+      NamesOutputTables += x.name
+
+      /*RECUPERATION DE LA STRATEGIE DE PARTITION*/
+      logger.info("Main - JoinTableConfig partition :" + x.monthlyPartitionColumn)
+
+      /*RECUPERATION DES NOMS DE TABLE EN ENTREE*/
+      logger.info("Main - JoinTableConfig input :" + x.mainTableName)
+      NamesInputTables += x.mainTableName
+      for (y <- x.tablesToJoin) {
+        logger.info("Main - JoinTableConfig inputtojoin :" + y)
+        NamesInputTables += y
+      }
+
+      /*RECUPERATION DES CLES DE JOINTURES*/
+      for (z <- x.joinKeys) {
+        logger.info("Main - JoinTableConfig keysjoin :" + z)
+      }
+    }
+
+    /*PARCOURS DE CHAQUE TABLE*/
+    conf.partitions.foreach {
+      config: ConfigPartition =>
+        logger.info("Main - ConfigPartition name :" + config.name)
+
+        /*RECUPERATION DES CHEMINS DE TABLE EN ENTREE*/
+        for (x <- config.inputPaths) {
+          logger.info("Main - ConfigPartition path :" + x)
+          PathsInputTables += x
+        }
+        /*RECUPERATION DU CHEMIN DE TABLE APLATIE*/
+        logger.info("Main - ConfigPartition output :" + config.output)
+    }
+    logger.info("Main - Sortie conf partitions foreach")
+
+
+    for (z <- NamesOutputTables.toList) {
+
+      val sources = sqlContext.read.parquet(conf.flatTablePath.concat("/"+z.toLowerCase))
+
+      logger.info("Ecriture metadata")
+
+      operationsMetadata += {
+        OperationReporter.report(NamesInputTables.toList,
+          PathsInputTables.toList,
+          NamesOutputTables.toList,
+          Path(PathOutput),
+          sources,
+          conf.singleTableSaveMode
+        )
+      }
+    }
+
+    // Write Metadata
+    val metadata = MainMetadata(this.getClass.getName, startTimestamp, new java.util.Date(), operationsMetadata.toList)
+    val metadataJson: String = metadata.toJsonString()
+
+    new PrintWriter("metadata_flattening_" + format.format(startTimestamp) + ".json") {
+      write(metadataJson)
+      close()
+    }
   }
 }

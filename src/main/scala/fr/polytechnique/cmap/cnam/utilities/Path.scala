@@ -1,7 +1,5 @@
 package fr.polytechnique.cmap.cnam.utilities
 
-import fr.polytechnique.cmap.cnam.util.Path
-
 /**
   * Utility object for creating HDFS Paths (org.apache.hadoop.fs.Path)
   * It allows the creation of Paths without the "new" keyword ands add some new signatures
