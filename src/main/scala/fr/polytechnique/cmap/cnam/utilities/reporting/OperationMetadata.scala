@@ -7,9 +7,11 @@ package fr.polytechnique.cmap.cnam.utilities.reporting
   *   extractors, transformers and filters.
   */
 case class OperationMetadata(
-                              inputsTable: List[String],
-                              inputsPath: List[String],
-                              outputTable: List[String],
-                              outputPath: String)
+    inputsTable: List[String],
+    PartitionColumn: List[String],
+    FormatDateInput: List[String],
+    inputsPath: List[String],
+    outputTable: List[String],
+    outputPath: String)
   extends JsonSerializable
 

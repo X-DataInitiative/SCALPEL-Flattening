@@ -18,13 +18,16 @@ class OperationReporterSuite extends SharedContext {
 
     val expected = OperationMetadata(
       List("mcoce","mco"),
+      List("ETA_NUM"),
+      List("ddMMMyyyy"),
       List("/test/input/mco","/test/input/mcoce"),
       List("dcir"),
       path.toString
     )
 
     // When
-    val result: OperationMetadata = OperationReporter.report(List("mcoce","mco"), List("/test/input/mco","/test/input/mcoce"), List("dcir"), path, data)
+    val result: OperationMetadata = OperationReporter.report(List("mcoce","mco"),  List("ETA_NUM"),
+      List("ddMMMyyyy"), List("/test/input/mco","/test/input/mcoce"), List("dcir"), path/*, data*/)
 
     // Then
     assert(result == expected)
@@ -41,12 +44,15 @@ class OperationReporterSuite extends SharedContext {
     val expectedAppend = data.union(databis)
 
     // When
-    var meta = OperationReporter.report(List("dcir","mco"), List("/target/input"), List("dcir"), path, data.toDF, "overwrite")
+    var meta = OperationReporter.report(List("dcir","mco"),List("ETA_NUM"),
+      List("ddMMMyyyy"), List("/target/input"), List("dcir"), path, /*data.toDF,*/ "overwrite")
     val result = spark.read.parquet(meta.outputPath)
     val exception = intercept[Exception] {
-      OperationReporter.report(List("dcir","mco"), List("/target/input"), List("dcir"), path, data.toDF)
+      OperationReporter.report(List("dcir","mco"),List("ETA_NUM"),
+        List("ddMMMyyyy"), List("/target/input"), List("dcir"), path/*, data.toDF*/)
     }
-    meta = OperationReporter.report(List("dcir","mco"), List("/target/input"), List("dcir"), path, data.toDF,  "append")
+    meta = OperationReporter.report(List("dcir","mco"),List("ETA_NUM"),
+      List("ddMMMyyyy"), List("/target/input"), List("dcir"), path, /*data.toDF,*/  "append")
     val resultAppend = spark.read.parquet(meta.outputPath)
 
 

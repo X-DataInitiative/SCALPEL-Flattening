@@ -2,7 +2,6 @@ package fr.polytechnique.cmap.cnam.utilities.reporting
 
 import fr.polytechnique.cmap.cnam.utilities.Path
 import org.apache.log4j.Logger
-import org.apache.spark.sql.DataFrame
 
 /**
   * Singleton responsible for reporting an operation execution.
@@ -22,28 +21,29 @@ object OperationReporter {
     * The main method for generating the report for the given operation
     *
     * @param TablesNameInput  Name of tables input
+    * @param PartitionColumnInput  Partition Column of tables input
+    * @param FormatDateInput  Date format of tables input
     * @param TablesPathInput  Path where tables input are
     * @param TableNameOutput  Name of tables output
     * @param TablePathOutput  Path where table output is
-    * @param data             The output data
     * @param saveMode         The strategy of output data(default = overwrite)
     * @return an instance of OperationMetadata
     */
   def report(
               TablesNameInput: List[String],
+              PartitionColumnInput: List[String],
+              FormatDateInput: List[String],
               TablesPathInput: List[String],
               TableNameOutput: List[String],
               TablePathOutput: Path,
-              data: DataFrame,
               saveMode: String = "errorIfExists"): OperationMetadata = {
 
     logger.info(s"""=> Reporting operation "$TableNameOutput" of output path "$TablePathOutput"""")
 
-    val dataPath: Path = Path(TablePathOutput, "data")
+    val dataPath: Path = Path(TablePathOutput)
 
-    val baseMetadata = OperationMetadata(TablesNameInput, TablesPathInput, TableNameOutput, TablePathOutput.toString)
+    val baseMetadata = OperationMetadata(TablesNameInput, PartitionColumnInput, FormatDateInput, TablesPathInput, TableNameOutput, TablePathOutput.toString)
 
-    data.write.mode(saveMode).parquet(dataPath.toString)
     baseMetadata.copy(
       outputPath = dataPath.toString
     )

@@ -72,57 +72,28 @@ object FlatteningMain extends Main {
     None
   }
 
-
+  //Création du metadata du flattening
   def report (conf: FlatteningConfig): Unit = {
     val operationsMetadata = mutable.Buffer[OperationMetadata]()
     val startTimestamp = new java.util.Date()
     val format = new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss")
+
+
     import scala.collection.mutable.ListBuffer
+    //Nom des tables en entrée
     var NamesInputTables = new ListBuffer[String]()
+    //Chemin des tables en entrée
     var PathsInputTables = new ListBuffer[String]()
+    //Nom des tables en sortie
     var NamesOutputTables = new ListBuffer[String]()
+    //Chemin de sortie
     val PathOutput = conf.flatTablePath
-
-    /*
-    conf.flattablepath = /shared/FALL/staging/flattening/2014_2016/flat_table
-
-    "chemin = /shared/FALL/staging/flattening/2014_2016/flat_table/mco_ce
-    "conf.singleTableSaveMode=append"
-    "x.name=MCO_CE"
-    "x.monthlyPartitionColumn=None"
-    "x.mainTableName=MCO_CSTC"
-    "x.tablesToJoin=MCO_FMSTC     ET       MCO_FASTC"
-    "x.joinKeys=ETA_NUM           ET       SEQ_NUM"
-
-
-    "config.name=MCO_FMSTC"
-    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO14FMSTC.CSV"
-    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_FMSTC/year=2014"
-
-    "config.name=MCO_FMSTC"
-    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO16FMSTC.CSV"
-    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_FMSTC/year=2016"
-
-    "config.name=MCO_CSTC"
-    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO14CSTC.CSV"
-    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_CSTC/year=2014"
-
-    "config.name=MCO_CSTC"
-    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO16CSTC.CSV"
-    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_CSTC/year=2016"
-
-    "config.name=MCO_FASTC"
-    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO14FASTC.CSV"
-    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_FASTC/year=2014"
-
-    "config.name=MCO_FASTC"
-    "config.inputPaths=/shared/FALL/raw/2014_2016/T_MCO16FASTC.CSV"
-    "config.output=/shared/FALL/staging/flattening/2014_2016/single_table/MCO_FASTC/year=2016"
-    */
+    //Partition des tables
+    var PartitionTables = new ListBuffer[String]()
+    //Format des dates des tables
+    var DateTables = new ListBuffer[String]()
 
     logger.info("Main - FlatteningConfig flattablepath :" + conf.flatTablePath)
-    val chemin = PathOutput.concat("/mco_ce")
-    logger.info("Main - FlatteningConfig chemin :" + chemin)
     logger.info("Main - FlatteningConfig save :" + conf.singleTableSaveMode)
 
 
@@ -131,7 +102,7 @@ object FlatteningMain extends Main {
       logger.info("Main - JoinTableConfig Noms de table en sortie :" + x.name)
       NamesOutputTables += x.name
 
-      /*RECUPERATION DE LA STRATEGIE DE PARTITION*/
+      /*Affichage DE LA STRATEGIE DE PARTITION*/
       logger.info("Main - JoinTableConfig partition :" + x.monthlyPartitionColumn)
 
       /*RECUPERATION DES NOMS DE TABLE EN ENTREE*/
@@ -142,15 +113,12 @@ object FlatteningMain extends Main {
         NamesInputTables += y
       }
 
-      /*RECUPERATION DES CLES DE JOINTURES*/
+      /*Affichage DES CLES DE JOINTURES*/
       for (z <- x.joinKeys) {
         logger.info("Main - JoinTableConfig keysjoin :" + z)
       }
     }
 
-    var NamesTables = new ListBuffer[String]()
-    var PartitionTables = new ListBuffer[String]()
-    var DateTables = new ListBuffer[String]()
 
     /*PARCOURS DE CHAQUE TABLE*/
     conf.partitions.foreach {
@@ -158,8 +126,7 @@ object FlatteningMain extends Main {
         logger.info("Main - ConfigPartition name :" + config.name)
         logger.info("Main - ConfigPartition partitionColumn :" + config.partitionColumn)
         logger.info("Main - ConfigPartition dateformat :" + config.dateFormat)
-        NamesTables += config.name
-        PartitionTables += config.partitionColumn
+        PartitionTables += config.partitionColumn.toString
         DateTables += config.dateFormat
 
         /*RECUPERATION DES CHEMINS DE TABLE EN ENTREE*/
@@ -170,24 +137,19 @@ object FlatteningMain extends Main {
         /*RECUPERATION DU CHEMIN DE TABLE APLATIE*/
         logger.info("Main - ConfigPartition output :" + config.output)
     }
-    logger.info("Main - Sortie conf partitions foreach")
+    logger.info("Main - Sortie du parcours")
 
-
-    for (z <- NamesOutputTables.toList) {
-
-      val sources = sqlContext.read.parquet(conf.flatTablePath.concat("/"+z.toLowerCase))
-
-      logger.info("Ecriture metadata")
-
-      operationsMetadata += {
-        OperationReporter.report(NamesInputTables.toList,
-          PathsInputTables.toList,
-          NamesOutputTables.toList,
-          Path(PathOutput),
-          sources,
-          conf.singleTableSaveMode
-        )
-      }
+    logger.info("Ecriture metadata")
+    operationsMetadata += {
+      OperationReporter.report(
+        NamesInputTables.toList,
+        PartitionTables.toList,
+        DateTables.toList,
+        PathsInputTables.toList,
+        NamesOutputTables.toList,
+        Path(PathOutput),
+        conf.singleTableSaveMode
+      )
     }
 
     // Write Metadata
@@ -198,5 +160,6 @@ object FlatteningMain extends Main {
       write(metadataJson)
       close()
     }
+    logger.info("Fin ecriture metadata")
   }
 }
