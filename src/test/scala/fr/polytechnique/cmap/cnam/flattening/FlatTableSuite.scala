@@ -3,6 +3,7 @@ package fr.polytechnique.cmap.cnam.flattening
 import org.mockito.Mockito._
 import org.apache.spark.sql.DataFrame
 import fr.polytechnique.cmap.cnam.SharedContext
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.YearAndMonths
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 import fr.polytechnique.cmap.cnam.utilities.Functions._
 
@@ -138,7 +139,7 @@ class FlatTableSuite extends SharedContext {
     val configTest = conf.joinTableConfigs.tail.head.copy(inputPath = Some(parquetTablesPath))
     val flattenedTableTest = new FlatTable(sqlContext, configTest)
     val resultPath = conf.flatTablePath
-    val expectedDf = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/DCIR")
+    val expectedDf = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/by_month/DCIR")
     // When
     flattenedTableTest.writeAsParquet()
     val result = sqlContext.read.parquet(resultPath)
@@ -147,7 +148,28 @@ class FlatTableSuite extends SharedContext {
     assert(result sameAs expectedDf)
   }
 
-  "writetable" should "write the df in the correct path" in {
+  "writeAsParquet in particular month" should "flatten DCIR and write some months of data specified in conf" in {
+    // Given
+    val conf = FlatteningConfig.load("", "test")
+    val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
+    val dcirConf = conf.joinTableConfigs.tail.head.copy(inputPath = Some(parquetTablesPath))
+    val configTest = dcirConf.copy(onlyOutput = List(YearAndMonths(2006, List(3))))
+    val flattenedTableTest = new FlatTable(sqlContext, configTest)
+    val resultPath = conf.flatTablePath
+    val expectedDf = sqlContext.read
+      .parquet("src/test/resources/flattening/parquet-table/flat_table/by_month/DCIR")
+      .filter("month=3")
+    // When
+    flattenedTableTest.writeAsParquet()
+    val result = sqlContext.read.parquet(resultPath)
+    // Then
+    assert(resultPath == flattenedTableTest.outputBasePath)
+    assert(result sameAs expectedDf)
+
+  }
+
+  "write table" should "write the df in the correct path" in {
+
 
     // Given
     val sqlCtx = sqlContext
@@ -167,6 +189,7 @@ class FlatTableSuite extends SharedContext {
     when(mockTable.logger).thenCallRealMethod()
     when(mockTable.writeTable(simpleTable)).thenCallRealMethod()
     when(mockTable.outputBasePath).thenReturn(path)
+    when(mockTable.saveMode).thenReturn("append")
     mockTable.writeTable(simpleTable)
 
     // Then

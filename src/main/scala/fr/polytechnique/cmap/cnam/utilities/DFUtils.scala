@@ -131,7 +131,7 @@ object DFUtils {
 
     def withTimestampSuffix(
       date: Date = new Date(),
-      format: String = "_yyyy_MM_dd_HH_mm_ss",
+      format: String = "/yyyy_MM_dd",
       oldSuffix: String = "/"): String = {
       path
         .stripSuffix(oldSuffix)
