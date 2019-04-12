@@ -16,9 +16,6 @@ package object functions {
   def makeTS(timestampParam: List[Integer]): Timestamp = timestampParam match {
 
     case List(year, month, day) => makeTS(year, month, day)
-    case List(year, month, day, hour) => makeTS(year, month, day, hour)
-    case List(year, month, day, hour, minute) => makeTS(year, month, day, hour, minute)
-    case List(year, month, day, hour, minute, second) => makeTS(year, month, day, hour, minute, second)
     case _ => throw new IllegalArgumentException("Illegal Argument List for makeTS function")
   }
 
