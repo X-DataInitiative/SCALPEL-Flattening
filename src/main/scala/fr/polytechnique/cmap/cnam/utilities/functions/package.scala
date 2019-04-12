@@ -5,8 +5,6 @@ import java.sql.Timestamp
 
 package object functions {
 
-  class DateParseException(val msg: String) extends Exception(msg)
-
   def makeTS(year: Int, month: Int, day: Int, hour: Int = 0, minute: Int = 0, second: Int = 0): Timestamp = {
     if(!year.between(1000, 3000) || !month.between(1, 12) || !day.between(1,31) ||
       !hour.between(0, 23) || !minute.between(0, 59) || !second.between(0,59))
