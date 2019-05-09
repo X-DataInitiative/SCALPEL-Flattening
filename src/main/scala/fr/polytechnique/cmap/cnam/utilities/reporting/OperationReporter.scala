@@ -20,29 +20,25 @@ object OperationReporter {
   /**
     * The main method for generating the report for the given operation
     *
-    * @param TablesNameInput  Name of tables input
-    * @param PartitionColumnInput  Partition Column of tables input
-    * @param FormatDateInput  Date format of tables input
-    * @param TablesPathInput  Path where tables input are
-    * @param TableNameOutput  Name of tables output
-    * @param TablePathOutput  Path where table output is
-    * @param saveMode         The strategy of output data(default = overwrite)
+    * @param TableNameOutput      Name of tables output
+    * @param TablePathOutput      Path where table output is
+    * @param singleTables         Tables input
+    * @param joinKeys             Path where tables input are
+    * @param saveMode             The strategy of output data(default = overwrite)
     * @return an instance of OperationMetadata
     */
   def report(
-              TablesNameInput: List[String],
-              PartitionColumnInput: List[String],
-              FormatDateInput: List[String],
-              TablesPathInput: List[String],
-              TableNameOutput: List[String],
+              TableNameOutput: String,
               TablePathOutput: Path,
+              singleTables: List[InputTable],
+              joinKeys: List[String],
               saveMode: String = "errorIfExists"): OperationMetadata = {
 
     logger.info(s"""=> Reporting operation "$TableNameOutput" of output path "$TablePathOutput"""")
 
     val dataPath: Path = Path(TablePathOutput)
 
-    val baseMetadata = OperationMetadata(TablesNameInput, PartitionColumnInput, FormatDateInput, TablesPathInput, TableNameOutput, TablePathOutput.toString)
+    val baseMetadata = OperationMetadata(TableNameOutput, TablePathOutput.toString, singleTables, joinKeys)
 
     baseMetadata.copy(
       outputPath = dataPath.toString

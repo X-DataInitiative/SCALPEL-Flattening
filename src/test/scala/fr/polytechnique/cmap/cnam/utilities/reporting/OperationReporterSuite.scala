@@ -14,17 +14,24 @@ class OperationReporterSuite extends SharedContext {
     val path = Path("target/test/output")
 
     val expected = OperationMetadata(
-      List("mcoce","mco"),
-      List("ETA_NUM"),
-      List("ddMMMyyyy"),
-      List("/test/input/mco","/test/input/mcoce"),
-      List("dcir"),
-      path.toString
+      "mcoce",
+      path.toString,
+      List(new InputTable("mco_fmstc",
+                  "ETA_NUM",
+                  "ddMMMyyyy",
+                  List("/test/input/mco_fmstc2014","/test/input/mco_fmstc2016"))),
+      List("ETA_NUM","SEQ_NUM")
     )
 
     // When
-    val result: OperationMetadata = OperationReporter.report(List("mcoce","mco"),  List("ETA_NUM"),
-      List("ddMMMyyyy"), List("/test/input/mco","/test/input/mcoce"), List("dcir"), path)
+    val result: OperationMetadata = OperationReporter.report("mcoce",
+                                                              path,
+                                                              List(new InputTable("mco_fmstc",
+                                                                                  "ETA_NUM",
+                                                                                  "ddMMMyyyy",
+                                                                                  List("/test/input/mco_fmstc2014","/test/input/mco_fmstc2016"))),
+                                                              List("ETA_NUM","SEQ_NUM")
+      )
 
     // Then
     assert(result == expected)
