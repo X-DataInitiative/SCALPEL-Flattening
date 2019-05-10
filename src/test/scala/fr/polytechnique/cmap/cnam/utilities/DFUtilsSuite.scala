@@ -242,7 +242,7 @@ class DFUtilsSuite extends SharedContext {
   "withTimestampSuffix" should "add a timestamp at the end of the path" in {
     //Given
     val path = "/first/second/third/"
-    val format = new SimpleDateFormat("_yyyy_MM_dd_HH_mm_ss")
+    val format = new SimpleDateFormat("/yyyy_MM_dd")
     val now = new Date()
     val expected = s"/first/second/third${format.format(now)}"
     //When

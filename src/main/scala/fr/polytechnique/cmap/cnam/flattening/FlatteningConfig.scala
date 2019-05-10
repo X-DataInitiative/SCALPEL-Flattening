@@ -8,11 +8,14 @@ case class ConfigPartition(
   dateFormat: String,
   inputPaths: List[String],
   output: String,
-  partitionColumn: Option[String] = None)
+  partitionColumn: Option[String] = None,
+  saveSingleTable: Boolean = true,
+  singleTableSaveMode: String = "append")
 
 case class FlatteningConfig(
   basePath: String,
-  singleTableSaveMode: String = "append",
+  withTimestamp: Boolean = false,
+  timestampFormat: String = "/yyyy_MM_dd",
   schemaFilePath: List[String] = List.empty[String],
   join: List[JoinTableConfig] = List.empty[JoinTableConfig],
   tablesConfig: List[TablesConfig] = List.empty[TablesConfig]
@@ -22,7 +25,7 @@ case class FlatteningConfig(
 
   private lazy val csvSchema = CSVSchemaReader.readSchemaFiles(schemaFilePath)
 
-  private lazy val root = if (singleTableSaveMode == "withTimestamp") basePath.withTimestampSuffix() else basePath
+  private lazy val root = if (withTimestamp) basePath.withTimestampSuffix(format = timestampFormat) else basePath
 
   lazy val columnTypes: Map[String, List[(String, String)]] = CSVSchemaReader.readColumnsType(csvSchema)
 
@@ -72,9 +75,12 @@ object FlatteningConfig extends ConfigLoader {
       dateFormat = tableConfig.dateFormat,
       inputPaths = partitionConfig.path,
       output = partitionConfig.outputPath(rootPath, tableConfig.partitionStrategy, tableConfig.name),
-      partitionColumn = tableConfig.partitionColumn
-    )
+      partitionColumn = tableConfig.partitionColumn,
+      saveSingleTable = partitionConfig.saveSingleTable,
+      singleTableSaveMode = partitionConfig.singleTableSaveMode)
   }
+
+  case class YearAndMonths(year: Int, months: List[Int] = List.empty[Int])
 
   case class JoinTableConfig(
     name: String,
@@ -83,12 +89,21 @@ object FlatteningConfig extends ConfigLoader {
     tablesToJoin: List[String] = List.empty[String],
     mainTableName: String,
     flatOutputPath: Option[String] = None,
-    monthlyPartitionColumn: Option[String] = None)
+    monthlyPartitionColumn: Option[String] = None,
+    saveFlatTable: Boolean = true,
+    flatTableSaveMode: String = "append",
+    onlyOutput: List[YearAndMonths] = List.empty[YearAndMonths])
 
   case class PartitionConfig(
     year: Option[String] = None,
-    path: List[String] = List.empty[String]) {
+    path: List[String] = List.empty[String],
+    saveSingleTable: Boolean = true,
+    singleTableSaveMode: String = "append") {
 
+    /*
+     * value table transforms to parquet files with the same table name
+     * normal table transforms to parquet files with table name and year
+     */
     def outputPath(root: String, strategy: String, name: String): String = {
       if (strategy == "year")
         root + "/" + name + "/year=" + year.get

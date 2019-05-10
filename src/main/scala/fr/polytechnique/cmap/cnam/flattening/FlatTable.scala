@@ -17,8 +17,11 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
   val foreignKeys: List[String] = config.joinKeys
   val tableName: String = config.name
   val monthlyPartitionColumn: Option[String] = config.monthlyPartitionColumn
+  val saveMode: String = config.flatTableSaveMode
 
-  def flatTablePerYear: Array[Int] = mainTable.getYears
+  def flatTablePerYear: Array[Int] = mainTable.getYears.filter {
+    year => config.onlyOutput.isEmpty || config.onlyOutput.exists(_.year == year)
+  }
 
   def joinByYear(year: Int): Table = {
     val name = s"$tableName/year=$year"
@@ -30,7 +33,7 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
   }
 
   def joinByYearAndDate(year: Int, month: Int, monthCol: String): Table = {
-    val name = s"$tableName/year=$year"
+    val name = s"$tableName/year=$year/month=$month"
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
       .foldLeft(mainTable.filterByYearAndMonth(year, month, monthCol))(joinFunction)
@@ -38,12 +41,8 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
     new Table(name, joinedDF)
   }
 
-  val joinFunction: (DataFrame, DataFrame) => DataFrame = (accumulator, tableToJoin) => {
-    val result = accumulator.join(tableToJoin, foreignKeys, "left_outer").persist()
-    Logger.getLogger(getClass).info(s"Joined table count: ${result.count()}")
-    accumulator.unpersist()
-    result
-  }
+  val joinFunction: (DataFrame, DataFrame) => DataFrame =
+    (accumulator, tableToJoin) => accumulator.join(tableToJoin, foreignKeys, "left_outer")
 
   def logger: Logger = Logger.getLogger(getClass)
 
@@ -51,28 +50,27 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
     Logger.getRootLogger.setLevel(Level.ERROR)
     val t0 = System.nanoTime()
-
-    val flatTable = table.df.persist()
-    val nbLinesFlatTable = flatTable.count()
-    logger.info("   Number of lines : " + nbLinesFlatTable)
-
+    table.df.writeParquet(outputBasePath + "/" + table.name)(saveMode)
     val t1 = System.nanoTime()
-    logger.info("   Flattening Duration " + (t1 - t0) / Math.pow(10, 9) + " sec")
-
-    flatTable.writeParquet(outputBasePath + "/" + table.name)("append")
-    flatTable.unpersist()
-
-    val t2 = System.nanoTime()
-    logger.info("   writing duration " + table.name + (t2 - t1) / Math.pow(10, 9) + " sec")
+    logger.info(s"   writing duration ${table.name} ${(t1 - t0) / Math.pow(10, 9)} sec")
   }
 
+  /*
+   * if monthlyPartitionColumn is set, the data will be partitioned in year and month
+   * if not, the data will be partitioned in year
+   * We can output the data in specifying its months and years
+   */
   def writeAsParquet(): Unit = {
     flatTablePerYear
       .foreach {
         year =>
           if (monthlyPartitionColumn.isDefined) {
             logger.info("Join by year and month: " + year)
-            Range(1, 13).foreach {
+            val filteredMonths = config.onlyOutput.find(_.year == year) match {
+              case None => List.empty[Int]
+              case Some(thisYear) => thisYear.months
+            }
+            Range(1, 13).filter(filteredMonths.isEmpty || filteredMonths.contains(_)).foreach {
               month =>
                 logger.info("Month: " + month)
                 val joinedTable = joinByYearAndDate(year, month, monthlyPartitionColumn.get)
