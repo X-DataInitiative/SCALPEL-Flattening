@@ -11,9 +11,7 @@ case class InputTable(
     inputTable: String,
     PartitionColumn: String,
     FormatDateInput: String,
-    inputsPath: List[String])
-  extends JsonSerializable
-
+    inputPaths: List[String])
 
 case class OperationMetadata(
     outputTable: String,

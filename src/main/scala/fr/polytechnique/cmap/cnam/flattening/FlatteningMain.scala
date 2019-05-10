@@ -10,7 +10,6 @@ import fr.polytechnique.cmap.cnam.utilities.reporting._
 import org.apache.spark.sql.{Dataset, SQLContext}
 
 import scala.collection.mutable
-import scala.util.control.Breaks
 
 object FlatteningMain extends Main {
 
@@ -87,9 +86,9 @@ object FlatteningMain extends Main {
 
     import scala.collection.mutable.ListBuffer
     //Table Input Name
-    var NamesInputTables = new ListBuffer[String]()
+    val NamesInputTables = new ListBuffer[String]()
     //Table Input Path
-    var PathsInputTables = new ListBuffer[String]()
+    val PathsInputTables = new ListBuffer[String]()
     //Partition Table
     var PartitionTables : String = ""
     //Format Date
@@ -111,8 +110,6 @@ object FlatteningMain extends Main {
       /*Partition Column*/
       logger.info("Main - JoinTableConfig partition :" + x.monthlyPartitionColumn)
 
-      val loop = new Breaks;
-
       /*Input Table Name*/
       logger.info("Main - JoinTableConfig input :" + x.mainTableName)
       NamesInputTables += x.mainTableName
@@ -123,7 +120,6 @@ object FlatteningMain extends Main {
       for (y <- NamesInputTables.toList) {
         logger.info("Main - JoinTableConfig inputtojoin :" + y)
 
-        loop.breakable {
           conf.partitions.foreach {
             config: ConfigPartition =>
               if (y.equals(config.name)) {
@@ -141,12 +137,10 @@ object FlatteningMain extends Main {
                 /*Output*/
                 logger.info("Main - ConfigPartition output :" + config.output)
 
-                InputTables += new InputTable(y, PartitionTables, DateTables, PathsInputTables.toList)
-                PathsInputTables.clear()
-                loop.break()
               }
           }
-        }
+        InputTables += InputTable(y, PartitionTables, DateTables, PathsInputTables.toList)
+        PathsInputTables.clear()
       }
 
       /*Join Keys*/
