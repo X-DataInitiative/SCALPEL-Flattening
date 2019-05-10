@@ -101,7 +101,6 @@ object FlatteningMain extends Main {
     val InputTables = new ListBuffer[InputTable]()
 
     logger.info("Main - FlatteningConfig flattablepath :" + conf.flatTablePath)
-    logger.info("Main - FlatteningConfig save :" + conf.singleTableSaveMode)
 
     for (x <- conf.joinTableConfigs) {
       /*Output Table*/
@@ -155,8 +154,7 @@ object FlatteningMain extends Main {
           OutputTable,
           Path(OutputPath),
           InputTables.toList,
-          JoinKeys.toList,
-          conf.singleTableSaveMode
+          JoinKeys.toList
         )
       }
 
