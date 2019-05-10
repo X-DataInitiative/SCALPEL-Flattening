@@ -21,7 +21,7 @@ object FlatteningMain extends Main {
     // Generate schemas from csv
     val columnsTypeMap: Map[String, List[(String, String)]] = conf.columnTypes
 
-    conf.partitions.foreach {
+    conf.partitions.filter(_.saveSingleTable).foreach {
       config: ConfigPartition =>
         val t0 = System.nanoTime()
         logger.info("converting table " + config.name)
@@ -29,11 +29,12 @@ object FlatteningMain extends Main {
 
         val rawTable = readCSV(sqlContext, config.inputPaths)
         val typedTable = applySchema(rawTable, columnsType, config.dateFormat)
-
+        //Do not partition data with a column including only few values
+        //it will cause data skew and reduce the performance when huge data comes
         if (config.partitionColumn.isDefined)
-          typedTable.writeParquet(config.output, config.partitionColumn.get)(conf.singleTableSaveMode)
+          typedTable.writeParquet(config.output, config.partitionColumn.get)(config.singleTableSaveMode)
         else
-          typedTable.writeParquet(config.output)(conf.singleTableSaveMode)
+          typedTable.writeParquet(config.output)(config.singleTableSaveMode)
 
         val t1 = System.nanoTime()
         logger.info("Duration  " + (t1 - t0) / Math.pow(10, 9) + " sec")
@@ -42,7 +43,7 @@ object FlatteningMain extends Main {
   }
 
   def computeFlattenedFiles(sqlContext: SQLContext, conf: FlatteningConfig): Unit = {
-    conf.joinTableConfigs.foreach { config =>
+    conf.joinTableConfigs.filter(_.saveFlatTable).foreach { config =>
       logger.info("begin flattening " + config.name)
       new FlatTable(sqlContext, config).writeAsParquet()
     }

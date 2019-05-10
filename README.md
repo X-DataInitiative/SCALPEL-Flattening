@@ -2,38 +2,53 @@
 [![codecov](https://codecov.io/gh/X-DataInitiative/SNIIRAM-flattening/branch/master/graph/badge.svg?token=GWYM6JLi0z)](https://codecov.io/gh/X-DataInitiative/SNIIRAM-flattening)
 
 # Flattening
-
-C'est une étape de dénormalisation de la donnée initiale qui provient d'une base de donnée SQL. C'est une jointure entre les différentes table. Par exemple, DCIR contient plusieurs tables comme ER_PHA_F ou ER_PRS_F que nous recevons dans des fichiers CSV distincts. L'aplatissement va produire une seule table à partir de ces fichiers. le résultat est sauvegardé sur HDFS au format parquet. L'avantage d'une telle approche est de nous permettre d'utiliser la donnée beaucoup plus rapidement par la suite. En effet, faire des filtres avec Spark est beaucoup plus rapide que de faire des jointures.
-
-## Input Data
-C'est une étape de dénormalisation de la donnée initiale qui provient d'une base de donnée SQL. C'est une jointure entre les différentes table. Par exemple, DCIR contient plusieurs tables comme ER_PHA_F ou ER_PRS_F que nous recevons dans des fichiers CSV distincts. L'aplatissement va produire une seule table à partir de ces fichiers. le résultat est sauvegardé sur HDFS au format parquet. L'avantage d'une telle approche est de nous permettre d'utiliser la donnée beaucoup plus rapidement par la suite. En effet, faire des filtres avec Spark est beaucoup plus rapide que de faire des jointures.
+This is an stage of denormalisation of original data issued from a SQL database. There will be a join among the different tables. For example, DCIR contains several tables like:  ER_PHA_F or ER_PRS_F from distinct CSV files. The flattening will produce a single table from these files and save it in HDFS in the format of Parquet. The advantage of this approach allows us to use the data much faster for analytics later in the following pipeline.     
 
 ## Processing and Parameters
-Deux ensembles de paramètres sont requis pour cette étape:
-* Les schémas des tables d'entrées;
-* Les clés nécessaires pour faire les jointures (ainsi que le nom de la table centrale).
+2 parts of parameters are required for this stage:
+* The schemas of input tables
+* The join keys for table join (as well the center table name)
 
-Ces paramètres sont nécessaires car le format CSV ne permet pas de conserver de métadonnée ou d’information sur le type des colonnes. Nous avons donc besoin d’un fichier de configuration qui va contenir les types de colonnes et le format de dates. Par ailleurs nous avons besoin de préciser le format des jointures car il ne peut être inféré. Nous avons donc besoin d’un autre fichier de configuration pour les clés de jointures et la table principale.
+These parameters are necessary since the csv format is not allowed to keep the metadata or information about the types of columns. Hence, we need a configuration file including the types of columns and the format of date. Besides, we need to precise the type of join as it cannot be inferered. So, we need another configuration file for the join keys and the main table.
 
-On procède donc en deux temps. Tout d’abord on applique le schéma aux tables (en vérifiant sa cohérence avec la donnée), puis on calcule la jointure des différentes tables.
+We proceed in two stages. Firstly, we apply the schéma in the tables (in checking their coherence with the data), then we join different tables.
 
-Pendant la jointure, pour chaque ligne de la table centrale (ER_PRS_F dans le cas de DCIR), les colonnes additionnelles des autres tables sont étalées sur une seule ligne dont le résultat est une grande table plate. La dénomination technique de ce type de jointure est "left_outer". Le processus qui permet d'arriver à ce résultat est une dénormalisation. Le diagramme ci-dessus représente la dénormalisation de DCIR.
+During the join, for every line of the main table (For example: ER_PRS_F in the DCIR), the additional columns of other tables are spread sur une single line, in which le result is a large plate table. The type de join is "left_outer". The process qui allows to reach the result is a denormalisation. Le diagram below show the processing of denormalisation.
 
-Cependant, la dénormalisation peut provoquer un effet d'expansion de la donnée. For example, while flattening DCIR, let's assume one entry in the central table (ER_PRS_F) contains one corresponding in ER_CAM_F, and 3 corresponding entry in the table ER_PHA_F, the resulting flat table will have two extra lines.  En effet les tables peuvent être liées entre elle par des relation OneToMany et, de ce fait, pousser à la réplication des lignes afin de posséder l'exhaustivité des combinaisons possibles. On peut donc se retrouver avec un nombre de ligne largement plus grand à la sortie de cette étape.
+However, This denormalisation may provoke an effect of expansion of data. For example, while flattening DCIR, let's assume one entry in the central table (ER_PRS_F) contains one corresponding in ER_CAM_F, and 3 corresponding entry in the table ER_PHA_F, the resulting flat table will have two extra lines. In fact, the tables can be joint in the relation of OneToMany, therefore, push for line replication to have the completeness of possible combinations. We can therefore end up with a much greater number of line at the end. 
 
-Cette expansion n'est pas un soucis car Spark nous permet d'effectuer des filtrages de façon très efficace. Néanmoins nous pourrons éventuellement faire évoluer cette stratégie ultérieurement et utiliser des colonnes d'ensembles imbriquées (on pourrait alors stocker une liste de valeur dans une seule colonne).
+This expansion is not a problem because Spark allows us to perform filtering very efficiently.
 
 ## Output Data
-Une fois que la transformation est finie, les tables dénormalisées sont sauvegardées sur HDFS au format parquet. On sauvegarde aussi chaque table source au format parquet pour les recherches ultérieures sur la donnée brute. Le schéma de la donnée finale est le même que celui de la donnée initiale. Il utilise les types fournis dans le fichier de configuration.
+Once the transformation is finished, the denormalized tables are saved in HDFS in the format of Parquet. We also save every original table in the format of Parquet in order to search the raw data in the later. The schema of the final data is the same as the original data. It uses the data types provided by configuration files.
+The final denormalized tables as follow :
 
-Les tables actuellement dénormalisées sont les suivantes :
-
-| Tables transformées | Tables sources                                    |
+| Transformed Tables  | Tables sources                                    |
 |---------------------|---------------------------------------------------|
-| DCIR                | ER_PRS_F, ER_PHA_F, ER_CAM_F                      |
+| DCIR                | ER_PRS_F, ER_PHA_F, ER_CAM_F, ER_ETE_F            |
 | PMSI_MCO            | T_MCOXXC, T_MCOXXA, T_MCOXXB, T_MCOXXD, T_MCOXXUM |
-
+| PMSI_MCO_CE         | T_MCOXXCSTC, T_MCOXXFMSTC, T_MCOXXFASTC           |
 ---
+
+**Configuration**
+
+A configuration file is needed for indicating all the parameters of single and flat tables. The format and default values for each environment can be found in [this directory](https://github.com/X-DataInitiative/SNIIRAM-flattening/tree/master/src/main/resources/flattening/config).
+
+**Usage**
+
+```bash
+spark-submit \
+  --driver-memory 40G \
+  --executor-memory 110G \
+  --class fr.polytechnique.cmap.cnam.flattening.FlatteningMain \
+  --conf spark.sql.shuffle.partitions=720 \
+  --conf spark.task.maxFailures=20 \
+  --conf spark.driver.maxResultSize=20G \
+  --conf spark.sql.broadcastTimeout=3600 \
+  --conf spark.locality.wait=30s \
+  --conf spark.sql.autoBroadcastJoinThreshold=104857600  \
+  /path/to/SNIIRAM-flattening/target/scala-2.11/SNIIRAM-flattening-assembly-1.1.jar env=cmap conf=/path/conf
+  ```
 
 # Statistics
 This repository contains two types of statistics.
@@ -47,7 +62,7 @@ This statistics can be run to compare the results of the newest flattening with 
  
 **Configuration**
 
-A configuration file is needed for indicating the paths for the input and the output. The format and default values for each environment can be found in [this directory](https://github.com/X-DataInitiative/SNIIRAM-flattening/tree/master/src/main/resources/statistics).
+A configuration file is needed for indicating all the parameters for th. The format and default values for each environment can be found in [this directory](https://github.com/X-DataInitiative/SNIIRAM-flattening/tree/master/src/main/resources/statistics).
 
 **Usage**
 

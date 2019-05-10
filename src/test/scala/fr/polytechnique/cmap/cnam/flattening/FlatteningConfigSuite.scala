@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigFactory
 import pureconfig._
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.config.ConfigLoader
-import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.{JoinTableConfig, PartitionConfig, TableConfig}
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.{JoinTableConfig, PartitionConfig, TableConfig, YearAndMonths}
 
 /**
   * Created by sathiya on 21/02/17.
@@ -14,12 +14,16 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
 
   "load" should "loads the correct config file" in {
     val defaultConf = FlatteningConfig.load("", "test")
-    val expected = defaultConf.copy(basePath = "/path/base/output", schemaFilePath = List("/path/schema"),
-      join = List(JoinTableConfig(name = "MCO", inputPath = Some("/path/to/input"), joinKeys = List("ETA_NUM", "RSA_NUM"), mainTableName = "MCO_C",
-        tablesToJoin = List("MCO_B", "MCO_A", "MCO_D", "MCO_UM"), flatOutputPath = Some("/path/to/flat_table"))))
+    val expected = defaultConf.copy(basePath = "/path/base/output", schemaFilePath = List("/path/schema"), withTimestamp = true,
+      join = List(JoinTableConfig(name = "DCIR", inputPath = Some("/path/to/input"), joinKeys = List( "DCT_ORD_NUM",
+        "FLX_DIS_DTD", "FLX_EMT_NUM", "FLX_EMT_ORD", "FLX_EMT_TYP", "FLX_TRT_DTD", "ORG_CLE_NUM", "PRS_ORD_NUM", "REM_TYP_AFF"),
+        mainTableName = "ER_PRS_F", tablesToJoin = List("ER_PHA_F","ER_CAM_F"), monthlyPartitionColumn = Some("FLX_DIS_DTD"),
+        flatOutputPath = Some("/path/to/flat_table"), saveFlatTable = false, onlyOutput = List(YearAndMonths(2006, List(3))))))
     val stringConfig =
       """
         |base_path = "/path/base/output"
+        |
+        |with_timestamp = true
         |
         |schema_file_path = [
         |  "/path/schema"
@@ -27,12 +31,25 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
         |
         |join = [
         |  {
-        |    name = "MCO"
-        |    input_path = "/path/to/input"
-        |    join_keys = ["ETA_NUM", "RSA_NUM"]
-        |    main_table_name = "MCO_C"
-        |    tables_to_join = ["MCO_B", "MCO_A", "MCO_D", "MCO_UM"]
-        |    flat_output_path = "/path/to/flat_table"
+        |   name = "DCIR"
+        |   input_path = "/path/to/input"
+        |   monthly_partition_column = "FLX_DIS_DTD"
+        |   join_keys = [
+        |     "DCT_ORD_NUM"
+        |     "FLX_DIS_DTD"
+        |     "FLX_EMT_NUM"
+        |     "FLX_EMT_ORD"
+        |     "FLX_EMT_TYP"
+        |     "FLX_TRT_DTD"
+        |     "ORG_CLE_NUM"
+        |     "PRS_ORD_NUM"
+        |     "REM_TYP_AFF"
+        |   ]
+        |   main_table_name = "ER_PRS_F"
+        |   tables_to_join = ["ER_PHA_F","ER_CAM_F"]
+        |   flat_output_path = "/path/to/flat_table"
+        |   save_flat_table = false
+        |   only_output = [{year = 2006, months : [3]}]
         |  }
         |]
       """.trim.stripMargin
