@@ -106,6 +106,7 @@ HAD_C;SEJ_RET;$;2;0;String
 HAD_C;SEX_RET;$;2;0;String
 HAD_C;SOR_DAT;;9;0;Integer
 HAD_C;SOR_AM;;6;0;Integer
+HAD_C;SOR_MOI;;2;0;Integer
 HAD_C;SOR_ANN;;6;0;Integer
 HAD_C;FORMAT;$;2;0;String
 HAD_C;VID_HOSP_FOR;$;2;0;String
