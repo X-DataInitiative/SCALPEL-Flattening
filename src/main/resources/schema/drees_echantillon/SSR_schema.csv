@@ -109,6 +109,7 @@ SSR_FH;ACH_PRI;;6;2;Double
 SSR_FH;COD_UCP_CIP;$;13;0;String
 SSR_FH;COD_TAU;$;5;0;String
 SSR_FH;DEL_DAT_ENT;;6;0;Integer
+SSR_FH;ACT_DEL;;6;0;Integer
 SSR_FH;ENT_ANN;;6;0;Integer
 SSR_FH;ENT_MOI;;6;0;Integer
 SSR_FH;ETA_NUM;$;9;0;String
