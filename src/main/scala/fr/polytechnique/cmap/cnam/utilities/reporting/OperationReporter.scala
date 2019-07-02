@@ -1,6 +1,5 @@
 package fr.polytechnique.cmap.cnam.utilities.reporting
 
-import fr.polytechnique.cmap.cnam.utilities.Path
 import org.apache.log4j.Logger
 
 /**
@@ -20,28 +19,28 @@ object OperationReporter {
   /**
     * The main method for generating the report for the given operation
     *
-    * @param TableNameOutput      Name of tables output
-    * @param TablePathOutput      Path where table output is
+    * @param tableNameOutput      Name of tables output
+    * @param tablePathOutput      Path where table output is
     * @param singleTables         Tables input
     * @param joinKeys             Path where tables input are
     * @param saveMode             The strategy of output data(default = overwrite)
     * @return an instance of OperationMetadata
     */
   def report(
-              TableNameOutput: String,
-              TablePathOutput: Path,
+              tableNameOutput: String,
+              tablePathOutput: String,
               singleTables: List[InputTable],
               joinKeys: List[String],
               saveMode: String = "errorIfExists"): OperationMetadata = {
 
-    logger.info(s"""=> Reporting operation "$TableNameOutput" of output path "$TablePathOutput"""")
+    logger.info(s"""=> Reporting operation "$tableNameOutput" of output path "$tablePathOutput"""")
 
-    val dataPath: Path = Path(TablePathOutput)
+    val dataPath: String = tablePathOutput + "/" + tableNameOutput
 
-    val baseMetadata = OperationMetadata(TableNameOutput, TablePathOutput.toString, singleTables, joinKeys)
+    val baseMetadata = OperationMetadata(tableNameOutput, tablePathOutput.toString, singleTables, joinKeys)
 
     baseMetadata.copy(
-      outputPath = dataPath.toString
+      outputPath = dataPath
     )
   }
 }

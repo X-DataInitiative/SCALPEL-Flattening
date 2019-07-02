@@ -9,8 +9,8 @@ package fr.polytechnique.cmap.cnam.utilities.reporting
 
 case class InputTable(
     inputTable: String,
-    PartitionColumn: String,
-    FormatDateInput: String,
+    partitionColumn: Option[String],
+    formatDateInput: String,
     inputPaths: List[String])
 
 case class OperationMetadata(

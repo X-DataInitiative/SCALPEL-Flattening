@@ -5,7 +5,6 @@ import java.io.PrintWriter
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
-import fr.polytechnique.cmap.cnam.utilities.Path
 import fr.polytechnique.cmap.cnam.utilities.reporting._
 import org.apache.spark.sql.{Dataset, SQLContext}
 
@@ -49,6 +48,8 @@ object FlatteningMain extends Main {
   }
 
   def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
+
+    val startTimestamp = new java.util.Date()
     argsMap.get("conf").foreach(sqlContext.setConf("conf", _))
     argsMap.get("env").foreach(sqlContext.setConf("env", _))
 
@@ -67,99 +68,72 @@ object FlatteningMain extends Main {
     logger.info("Flattening Duration  " + (t1 - t0) / Math.pow(10, 9) + " sec")
 
     logger.info("begin report")
-    report(conf)
+    report(conf,startTimestamp)
     logger.info("finished report")
 
     None
   }
 
   //Create Metadata Flattening
-  def report (conf: FlatteningConfig): Unit = {
+  def report (conf: FlatteningConfig, startTimestamp: java.util.Date): Unit = {
     val operationsMetadata = mutable.Buffer[OperationMetadata]()
-    val startTimestamp = new java.util.Date()
     val format = new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss")
 
-
     //Output Table
-    var OutputTable : String = ""
+    var outputTable : String = ""
     //Output Path
-    val OutputPath = conf.flatTablePath
+    val outputPath = conf.flatTablePath
 
     import scala.collection.mutable.ListBuffer
     //Table Input Name
-    val NamesInputTables = new ListBuffer[String]()
+    val namesInputTables = new ListBuffer[String]()
     //Table Input Path
-    val PathsInputTables = new ListBuffer[String]()
+    val pathsInputTables = new ListBuffer[String]()
     //Partition Table
-    var PartitionTables : String = ""
+    var partitionTables = None: Option[String]
     //Format Date
-    var DateTables : String = ""
+    var dateTables : String = ""
     //Table Join Keys
-    var JoinKeys = new ListBuffer[String]()
+    val joinKeys = new ListBuffer[String]()
 
     //Single Tables
-    val InputTables = new ListBuffer[InputTable]()
+    val inputTables = new ListBuffer[InputTable]()
 
-    logger.info("Main - FlatteningConfig flattablepath :" + conf.flatTablePath)
 
-    for (x <- conf.joinTableConfigs) {
-      /*Output Table*/
-      logger.info("Main - JoinTableConfig Noms de table en sortie :" + x.name)
-      OutputTable = x.name
+    for (table <- conf.joinTableConfigs) {
+      outputTable = table.name
+      namesInputTables += table.mainTableName
+      namesInputTables ++= table.tablesToJoin
 
-      /*Partition Column*/
-      logger.info("Main - JoinTableConfig partition :" + x.monthlyPartitionColumn)
-
-      /*Input Table Name*/
-      logger.info("Main - JoinTableConfig input :" + x.mainTableName)
-      NamesInputTables += x.mainTableName
-      for(w <- x.tablesToJoin) {
-        NamesInputTables += w
-      }
-
-      for (y <- NamesInputTables.toList) {
-        logger.info("Main - JoinTableConfig inputtojoin :" + y)
-
+      for (table <- namesInputTables.toList) {
           conf.partitions.foreach {
             config: ConfigPartition =>
-              if (y.equals(config.name)) {
-                logger.info("Main - ConfigPartition name :" + config.name)
-                logger.info("Main - ConfigPartition partitionColumn :" + config.partitionColumn)
-                logger.info("Main - ConfigPartition dateformat :" + config.dateFormat)
-                PartitionTables = config.partitionColumn.toString
-                DateTables = config.dateFormat
+              if (table.equals(config.name)) {
+                partitionTables = config.partitionColumn
+                dateTables = config.dateFormat
 
                 /*Input Table Path*/
-                for (x <- config.inputPaths) {
-                  logger.info("Main - ConfigPartition path :" + x)
-                  PathsInputTables += x
-                }
-                /*Output*/
-                logger.info("Main - ConfigPartition output :" + config.output)
-
+                pathsInputTables ++= config.inputPaths
               }
           }
-        InputTables += InputTable(y, PartitionTables, DateTables, PathsInputTables.toList)
-        PathsInputTables.clear()
+        inputTables += InputTable(table, partitionTables, dateTables.toString, pathsInputTables.toList)
+        pathsInputTables.clear()
       }
 
       /*Join Keys*/
-      for (z <- x.joinKeys) {
-        logger.info("Main - JoinTableConfig keysjoin :" + z)
-        JoinKeys += z
-      }
+      joinKeys ++= table.joinKeys
 
       operationsMetadata += {
         OperationReporter.report(
-          OutputTable,
-          Path(OutputPath),
-          InputTables.toList,
-          JoinKeys.toList
+          outputTable,
+          outputPath,
+          inputTables.toList,
+          joinKeys.toList
         )
       }
 
-      NamesInputTables.clear()
-      InputTables.clear()
+      namesInputTables.clear()
+      inputTables.clear()
     }
 
     logger.info("Write metadata")
