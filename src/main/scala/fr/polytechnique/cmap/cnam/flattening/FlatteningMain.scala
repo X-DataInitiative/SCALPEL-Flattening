@@ -3,6 +3,7 @@ package fr.polytechnique.cmap.cnam.flattening
 import org.apache.spark.sql.{Dataset, SQLContext}
 import fr.polytechnique.cmap.cnam.Main
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
+import fr.polytechnique.cmap.cnam.utilities.ConfigUtils
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
 object FlatteningMain extends Main {
@@ -47,6 +48,11 @@ object FlatteningMain extends Main {
     argsMap.get("env").foreach(sqlContext.setConf("env", _))
 
     val conf: FlatteningConfig = load(argsMap.getOrElse("conf", ""), argsMap("env"))
+    if (conf.autoBroadcastJoinThreshold.nonEmpty) {
+      val newThresholdValue = ConfigUtils.byteStringAsBytes(conf.autoBroadcastJoinThreshold.get)
+      if (newThresholdValue > 0)
+        sqlContext.setConf("spark.sql.autoBroadcastJoinThreshold", newThresholdValue.toString)
+    }
 
 
     logger.info("begin converting csv to parquet")
