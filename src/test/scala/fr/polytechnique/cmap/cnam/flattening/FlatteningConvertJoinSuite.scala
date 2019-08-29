@@ -1,14 +1,14 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import org.apache.spark.sql
-import org.apache.spark.sql._
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
-class FlatteningMainSuite extends SharedContext {
+class FlatteningConvertJoinSuite extends SharedContext {
 
-  "run" should "convert the dummy csv into parquet then join them in a flattened file" in {
+  "run convert and join together" should "convert the dummy csv into parquet then join them in a flattened file" in {
 
     //Given
     val sqlCtx = sqlContext
@@ -16,10 +16,12 @@ class FlatteningMainSuite extends SharedContext {
     val expected: DataFrame = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/MCO")
 
     //When
-    FlatteningMain.run(sqlCtx, Map("env" -> "test"))
+    FlatteningMainConvert.run(sqlCtx, Map("env" -> "test"))
+    FlatteningMainJoin.run(sqlCtx, Map("env" -> "test"))
     val joinedDF = sqlContext.read.parquet(path).withColumn("ETA_NUM", col("ETA_NUM").cast(sql.types.StringType))
 
     //Then
     assert(joinedDF.sameAs(expected, true))
   }
+
 }

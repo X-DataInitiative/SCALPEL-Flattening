@@ -1,0 +1,44 @@
+package fr.polytechnique.cmap.cnam.flattening
+
+import org.apache.log4j.Logger
+import org.apache.spark.sql.SQLContext
+import fr.polytechnique.cmap.cnam.utilities.DFUtils.{applySchema, readCSV, _}
+
+object Flattening {
+
+  def logger: Logger = Logger.getLogger(getClass)
+
+  def saveCSVTablesAsParquet(sqlContext: SQLContext, conf: FlatteningConfig): Unit = {
+
+    // Generate schemas from csv
+    val columnsTypeMap: Map[String, List[(String, String)]] = conf.columnTypes
+
+    conf.partitions.filter(_.saveSingleTable).foreach {
+      config: ConfigPartition =>
+        val t0 = System.nanoTime()
+        logger.info("converting table " + config.name)
+        val columnsType = columnsTypeMap(config.name).toMap
+
+        val rawTable = readCSV(sqlContext, config.inputPaths)
+        val typedTable = applySchema(rawTable, columnsType, config.dateFormat)
+        //Do not partition data with a column including only few values
+        //it will cause data skew and reduce the performance when huge data comes
+        if (config.partitionColumn.isDefined)
+          typedTable.writeParquet(config.output, config.partitionColumn.get)(config.singleTableSaveMode)
+        else
+          typedTable.writeParquet(config.output)(config.singleTableSaveMode)
+
+        val t1 = System.nanoTime()
+        logger.info("Duration  " + (t1 - t0) / Math.pow(10, 9) + " sec")
+
+    }
+  }
+
+  def joinSingleTablesToFlatTable(sqlContext: SQLContext, conf: FlatteningConfig): Unit = {
+    conf.joinTableConfigs.filter(_.saveFlatTable).foreach { config =>
+      logger.info("join table " + config.name)
+      new FlatTable(sqlContext, config).writeAsParquet()
+    }
+  }
+
+}

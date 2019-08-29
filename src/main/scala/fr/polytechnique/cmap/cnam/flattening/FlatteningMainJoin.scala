@@ -2,17 +2,16 @@ package fr.polytechnique.cmap.cnam.flattening
 
 import org.apache.spark.sql.{Dataset, SQLContext}
 import fr.polytechnique.cmap.cnam.Main
-import fr.polytechnique.cmap.cnam.flattening.Flattening._
-import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig._
+import fr.polytechnique.cmap.cnam.flattening.Flattening.joinSingleTablesToFlatTable
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.load
 import fr.polytechnique.cmap.cnam.utilities.ConfigUtils
 
-object FlatteningMain extends Main {
+object FlatteningMainJoin extends Main {
+  override def appName: String = "flattening join"
 
-  def appName = "Flattening"
-
-  def run(sqlContext: SQLContext, argsMap: Map[String, String]): Option[Dataset[_]] = {
-    argsMap.get("conf").foreach(sqlContext.setConf("conf", _))
-    argsMap.get("env").foreach(sqlContext.setConf("env", _))
+  override def run(
+    sqlContext: SQLContext,
+    argsMap: Map[String, String]): Option[Dataset[_]] = {
 
     val conf: FlatteningConfig = load(argsMap.getOrElse("conf", ""), argsMap("env"))
     if (conf.autoBroadcastJoinThreshold.nonEmpty) {
@@ -21,12 +20,7 @@ object FlatteningMain extends Main {
         sqlContext.setConf("spark.sql.autoBroadcastJoinThreshold", newThresholdValue.toString)
     }
 
-
-    logger.info("begin converting csv to parquet")
-    saveCSVTablesAsParquet(sqlContext, conf)
-
     logger.info("begin flattening")
-    logger.info(sqlContext.getConf("spark.sql.shuffle.partitions"))
     val t0 = System.nanoTime()
     joinSingleTablesToFlatTable(sqlContext, conf)
 
@@ -36,4 +30,5 @@ object FlatteningMain extends Main {
 
     None
   }
+
 }
