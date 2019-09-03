@@ -15,15 +15,18 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
   "load" should "loads the correct config file" in {
     val defaultConf = FlatteningConfig.load("", "test")
     val expected = defaultConf.copy(basePath = "/path/base/output", schemaFilePath = List("/path/schema"), withTimestamp = true,
-      join = List(JoinTableConfig(name = "DCIR", inputPath = Some("/path/to/input"), joinKeys = List( "DCT_ORD_NUM",
-        "FLX_DIS_DTD", "FLX_EMT_NUM", "FLX_EMT_ORD", "FLX_EMT_TYP", "FLX_TRT_DTD", "ORG_CLE_NUM", "PRS_ORD_NUM", "REM_TYP_AFF"),
-        mainTableName = "ER_PRS_F", tablesToJoin = List("ER_PHA_F","ER_CAM_F"), monthlyPartitionColumn = Some("FLX_DIS_DTD"),
-        flatOutputPath = Some("/path/to/flat_table"), saveFlatTable = false, onlyOutput = List(YearAndMonths(2006, List(3))))))
+      autoBroadcastJoinThreshold = Some("10m"), join = List(JoinTableConfig(name = "DCIR", inputPath = Some("/path/to/input"),
+        joinKeys = List("DCT_ORD_NUM", "FLX_DIS_DTD", "FLX_EMT_NUM", "FLX_EMT_ORD", "FLX_EMT_TYP", "FLX_TRT_DTD", "ORG_CLE_NUM",
+          "PRS_ORD_NUM", "REM_TYP_AFF"), mainTableName = "ER_PRS_F", tablesToJoin = List("ER_PHA_F", "ER_CAM_F"),
+        monthlyPartitionColumn = Some("FLX_DIS_DTD"), flatOutputPath = Some("/path/to/flat_table"),
+        saveFlatTable = false, onlyOutput = List(YearAndMonths(2006, List(3))))))
     val stringConfig =
       """
         |base_path = "/path/base/output"
         |
         |with_timestamp = true
+        |
+        |auto_broadcast_join_threshold = "10m"
         |
         |schema_file_path = [
         |  "/path/schema"
