@@ -34,7 +34,7 @@ case class FlatteningConfig(
 
   lazy val flatTablePath: String = root + "/flat_table"
 
-  lazy val joinTableConfigs: Seq[JoinTableConfig] = join.map(config => {
+  lazy val joinTableConfigs: List[JoinTableConfig] = join.map(config => {
     val input = if (config.inputPath.isDefined) config.inputPath.get else singleTablePath
     val output = if (config.flatOutputPath.isDefined) config.flatOutputPath.get else flatTablePath
     config.copy(inputPath = Some(input), flatOutputPath = Some(output))

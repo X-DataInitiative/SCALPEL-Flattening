@@ -46,10 +46,9 @@ spark-submit \
   --conf spark.driver.maxResultSize=20G \
   --conf spark.sql.broadcastTimeout=3600 \
   --conf spark.locality.wait=30s \
-  --conf spark.sql.autoBroadcastJoinThreshold=104857600  \
-  /path/to/SNIIRAM-flattening/target/scala-2.11/SNIIRAM-flattening-assembly-1.1.jar env=cmap conf=/path/conf
+  /path/to/SNIIRAM-flattening/target/scala-2.11/SNIIRAM-flattening-assembly-1.1.jar env=cmap conf=/path/conf meta_bin=/path/meta.bin
   ```
-
+Note that when you just run FlatteningMainConvert or FlatteningMainJoin, meta_bin is necessary, which is used to store the intermediary information needed to run both jobs.
 # Statistics
 This repository contains two types of statistics.
 * Descriptive - That helps to validate the flattening process.
