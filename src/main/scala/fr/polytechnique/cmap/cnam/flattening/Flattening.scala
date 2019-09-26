@@ -2,6 +2,7 @@ package fr.polytechnique.cmap.cnam.flattening
 
 import org.apache.log4j.Logger
 import org.apache.spark.sql.SQLContext
+import fr.polytechnique.cmap.cnam.flattening.SpecialFlatteningActions._
 import fr.polytechnique.cmap.cnam.utilities.DFUtils.{applySchema, readCSV, _}
 import fr.polytechnique.cmap.cnam.utilities.reporting.OperationMetadata
 
@@ -24,7 +25,7 @@ object Flattening {
               val columnsType = columnsTypeMap(config.name).toMap
 
               val rawTable = readCSV(sqlContext, config.inputPaths)
-              val typedTable = applySchema(rawTable, columnsType, config.dateFormat)
+              val typedTable = applySchema(rawTable, columnsType, config.dateFormat).processSpecialAction(config)
               //Do not partition data with a column including only few values
               //it will cause data skew and reduce the performance when huge data comes
               if (config.partitionColumn.isDefined)

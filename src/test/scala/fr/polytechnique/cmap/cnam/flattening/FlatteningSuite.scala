@@ -23,7 +23,7 @@ class FlatteningSuite extends SharedContext {
     val meta = Flattening.saveCSVTablesAsParquet(sqlContext, conf)
     val result = meta.map {
       op =>
-        op.outputTable-> sqlContext.read
+        op.outputTable -> sqlContext.read
           .option("mergeSchema", "true")
           .load(op.outputPath + "/" + op.outputTable)
           .toDF
@@ -50,7 +50,7 @@ class FlatteningSuite extends SharedContext {
     val meta = Flattening.joinSingleTablesToFlatTable(sqlContext, configTest)
     val result = meta.map {
       op =>
-        op.outputTable-> sqlContext.read
+        op.outputTable -> sqlContext.read
           .option("mergeSchema", "true")
           .load(op.outputPath + "/" + op.outputTable)
           .toDF
@@ -61,5 +61,27 @@ class FlatteningSuite extends SharedContext {
     assert(expectedDCIR sameAs result("DCIR"))
 
   }
+
+  "joinDCIRAndIR_PHA_R" should "join dcir single tables first and then join ref table IR_PHA_R" in {
+    //Given
+    val confPath = getClass.getResource("/flattening/config/test/test-ref-join.conf").getPath
+    val conf = FlatteningConfig.load(confPath, "test")
+    val configTest = conf.copy(join = conf.join.map(_.copy(inputPath = Some("src/test/resources/flattening/parquet-table/single_table"))))
+    val expectedDCIR: DataFrame = sqlContext.read.option("mergeSchema", "true").parquet("src/test/resources/flattening/parquet-table/flat_table/ref_join/DCIR")
+
+    //When
+    val meta = Flattening.joinSingleTablesToFlatTable(sqlContext, configTest)
+    val result = meta.map {
+      op =>
+        op.outputTable -> sqlContext.read
+          .option("mergeSchema", "true")
+          .load(op.outputPath + "/" + op.outputTable)
+          .toDF
+    }.toMap
+
+    //Then
+    assert(expectedDCIR sameAs result("DCIR"))
+  }
+
 
 }

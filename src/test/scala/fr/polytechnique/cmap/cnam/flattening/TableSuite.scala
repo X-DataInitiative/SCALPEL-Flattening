@@ -1,4 +1,5 @@
 package fr.polytechnique.cmap.cnam.flattening
+
 import org.apache.spark.sql.DataFrame
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
@@ -29,11 +30,39 @@ class TableSuite extends SharedContext {
 
     // When
     import inputTable.TableHelper
-    val result = inputDf.addPrefix("central",List("PatientID"))
+    val result = inputDf.addPrefix("central", List("PatientID"))
 
     // Then
     assert(result sameAs expected)
 
+  }
+
+  "annotate" should "annotate columns names with table name" in {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    // Given
+    val inputDf: DataFrame = Seq(
+      (Some("1"), Some("5"), None, "2008-01-01"),
+      (Some("2"), None, Some("3"), "2008-05-03"),
+      (Some("3"), Some("2"), Some("1"), "2009-02-02"),
+      (Some("4"), None, None, "2005-05-03"),
+      (Some("5"), Some("2"), Some("1"), "2005-03-06")
+    ).toDF("PatientID", "codep", "dab", "date")
+    val inputTable = new Table("central", inputDf)
+    val expected: DataFrame = Seq(
+      (Some("1"), Some("5"), None, "2008-01-01"),
+      (Some("2"), None, Some("3"), "2008-05-03"),
+      (Some("3"), Some("2"), Some("1"), "2009-02-02"),
+      (Some("4"), None, None, "2005-05-03"),
+      (Some("5"), Some("2"), Some("1"), "2005-03-06")
+    ).toDF("PatientID", "central__codep", "central__dab", "central__date")
+
+    // When
+    val result = inputTable.annotate(List("PatientID"))
+
+    // Then
+    assert(result sameAs expected)
   }
 
   "getYears" should "extract years" in {

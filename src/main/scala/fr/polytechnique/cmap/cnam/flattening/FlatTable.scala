@@ -18,9 +18,23 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
   val tableName: String = config.name
   val monthlyPartitionColumn: Option[String] = config.monthlyPartitionColumn
   val saveMode: String = config.flatTableSaveMode
+  val refs: List[(Table, FlatteningConfig.Reference)] = config.refsToJoin.map {
+    refConfig => (Table.build(sqlContext, refConfig.inputPath.get, refConfig.name), refConfig)
+  }
 
   def flatTablePerYear: Array[Int] = mainTable.getYears.filter {
     year => config.onlyOutput.isEmpty || config.onlyOutput.exists(_.year == year)
+  }
+
+  def joinRefs(table: Table): Table = {
+    refs.foldLeft(table) {
+      case (flatTable, (refTable, refConfig)) =>
+        val refDF = refTable.annotate(List.empty[String])
+        val cols = refConfig.joinKeysTuples.map {
+          case (ftKey, refKey) => flatTable.df.col(ftKey) === refDF.col(refKey)
+        }.reduce(_ && _)
+        new Table(flatTable.name, flatTable.df.join(refDF, cols, "left"))
+    }
   }
 
   def joinByYear(year: Int): Table = {
@@ -73,13 +87,13 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
             Range(1, 13).filter(filteredMonths.isEmpty || filteredMonths.contains(_)).foreach {
               month =>
                 logger.info("Month: " + month)
-                val joinedTable = joinByYearAndDate(year, month, monthlyPartitionColumn.get)
+                val joinedTable = joinRefs(joinByYearAndDate(year, month, monthlyPartitionColumn.get))
                 writeTable(joinedTable)
             }
           }
           else {
             logger.info("Join by year : " + year)
-            val joinedTable = joinByYear(year)
+            val joinedTable = joinRefs(joinByYear(year))
             writeTable(joinedTable)
           }
       }

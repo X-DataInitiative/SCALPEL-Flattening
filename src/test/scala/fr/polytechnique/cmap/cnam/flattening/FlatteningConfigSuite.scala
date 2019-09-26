@@ -106,8 +106,9 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
       ConfigPartition("MCO_D", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO07D.csv"),
         "target/test/output/single_table/MCO_D/year=2007", None),
       ConfigPartition("MCO_D", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO08D.csv"),
-        "target/test/output/single_table/MCO_D/year=2008", None)
-
+        "target/test/output/single_table/MCO_D/year=2008", None),
+      ConfigPartition("IR_PHA_R", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/DCIR/IR_PHA_R.csv"),
+        "target/test/output/single_table/IR_PHA_R", None, hasSpecialAction = true)
     )
     // When
     val result = conf.partitions
