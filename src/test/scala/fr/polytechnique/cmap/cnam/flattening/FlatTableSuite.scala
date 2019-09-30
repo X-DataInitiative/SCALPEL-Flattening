@@ -3,7 +3,7 @@ package fr.polytechnique.cmap.cnam.flattening
 import org.mockito.Mockito._
 import org.apache.spark.sql.DataFrame
 import fr.polytechnique.cmap.cnam.SharedContext
-import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.YearAndMonths
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.{Reference, YearAndMonths}
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 import fr.polytechnique.cmap.cnam.utilities.Functions._
 
@@ -50,6 +50,37 @@ class FlatTableSuite extends SharedContext {
     // Then
     val result = mockTable.joinByYear(2015)
     assert(result.df sameAs expectedJoin)
+  }
+
+  "joinRefs" should "join flat table and references" in {
+    //Given
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+    val mockTable = mock(classOf[FlatTable])
+    val central = Seq(
+      ("01234", "3400935418487", 2014),
+      ("56789", "3400935563538", 2014)
+    ).toDF("NUM_ENQ", "ER_PHA_F__PHA_PRS_C13", "year")
+    val centralTable = new Table("central", central)
+    val ref = Seq(
+      ("3400935418487", "GLICLAZIDE"),
+      ("3400935563538", "PIOGLITAZONE")
+    ).toDF("PHA_CIP_C13", "molecule_combination")
+    val refTable = new Table("reference", ref)
+    val config = Reference(name = "reference", joinKeys = List(List("ER_PHA_F__PHA_PRS_C13", "reference__PHA_CIP_C13")))
+    val expected = Seq(
+      ("01234", "3400935418487", 2014, "3400935418487", "GLICLAZIDE"),
+      ("56789", "3400935563538", 2014, "3400935563538", "PIOGLITAZONE")
+    ).toDF("NUM_ENQ", "ER_PHA_F__PHA_PRS_C13", "year", "reference__PHA_CIP_C13", "reference__molecule_combination")
+
+    //when
+    when(mockTable.refs).thenReturn(List((refTable, config)))
+    when(mockTable.joinRefs(centralTable)).thenCallRealMethod()
+
+    //then
+    val result = mockTable.joinRefs(centralTable)
+    assert(result.name == "central")
+    assertDFs(expected, result.df)
   }
 
   "joinByYearAndDate" should "return correct results" in {
