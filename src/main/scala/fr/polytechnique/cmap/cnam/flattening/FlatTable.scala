@@ -18,7 +18,7 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
   val tableName: String = config.name
   val monthlyPartitionColumn: Option[String] = config.monthlyPartitionColumn
   val saveMode: String = config.flatTableSaveMode
-  val refs: List[(Table, FlatteningConfig.Reference)] = config.refsToJoin.map {
+  val referencesToJoin: List[(Table, FlatteningConfig.Reference)] = config.refsToJoin.map {
     refConfig => (Table.build(sqlContext, refConfig.inputPath.get, refConfig.name), refConfig)
   }
 
@@ -27,7 +27,7 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
   }
 
   def joinRefs(table: Table): Table = {
-    refs.foldLeft(table) {
+    referencesToJoin.foldLeft(table) {
       case (flatTable, (refTable, refConfig)) =>
         val refDF = refTable.annotate(List.empty[String])
         val cols = refConfig.joinKeysTuples.map {

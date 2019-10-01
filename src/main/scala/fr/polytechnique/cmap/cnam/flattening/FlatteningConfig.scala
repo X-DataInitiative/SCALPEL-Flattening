@@ -11,7 +11,7 @@ case class ConfigPartition(
   partitionColumn: Option[String] = None,
   saveSingleTable: Boolean = true,
   singleTableSaveMode: String = "append",
-  hasSpecialAction: Boolean = false)
+  actions: List[String] = List.empty[String])
 
 case class FlatteningConfig(
   basePath: String,
@@ -65,12 +65,12 @@ case class FlatteningConfig(
 object FlatteningConfig extends ConfigLoader {
 
   /**
-    * Reads a configuration file and merges it with the default file.
-    *
-    * @param path The path of the given file.
-    * @param env  The environment in the config file (usually can be "cmap", "cnam" or "test").
-    * @return An instance of FlatteningConfig containing all parameters.
-    */
+   * Reads a configuration file and merges it with the default file.
+   *
+   * @param path The path of the given file.
+   * @param env  The environment in the config file (usually can be "cmap", "cnam" or "test").
+   * @return An instance of FlatteningConfig containing all parameters.
+   */
   def load(path: String, env: String): FlatteningConfig = {
     val defaultPath = "flattening/config/main.conf"
     loadConfigWithDefaults[FlatteningConfig](path, defaultPath, env)
@@ -88,7 +88,7 @@ object FlatteningConfig extends ConfigLoader {
       partitionColumn = tableConfig.partitionColumn,
       saveSingleTable = partitionConfig.saveSingleTable,
       singleTableSaveMode = partitionConfig.singleTableSaveMode,
-      hasSpecialAction = tableConfig.hasSpecialAction)
+      actions = tableConfig.actions)
   }
 
   case class YearAndMonths(year: Int, months: List[Int] = List.empty[Int])
@@ -142,7 +142,7 @@ object FlatteningConfig extends ConfigLoader {
     dateFormat: String = "dd/MM/yyyy",
     partitions: List[PartitionConfig] = List.empty[PartitionConfig],
     partitionColumn: Option[String] = None,
-    hasSpecialAction: Boolean = false
+    actions: List[String] = List.empty[String] //actions applied to the table. For example addMoleculeCombinationColumn to IR_PHA_R
   )
 
   case class TablesConfig(tables: List[TableConfig])

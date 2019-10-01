@@ -74,7 +74,7 @@ class FlatTableSuite extends SharedContext {
     ).toDF("NUM_ENQ", "ER_PHA_F__PHA_PRS_C13", "year", "reference__PHA_CIP_C13", "reference__molecule_combination")
 
     //when
-    when(mockTable.refs).thenReturn(List((refTable, config)))
+    when(mockTable.referencesToJoin).thenReturn(List((refTable, config)))
     when(mockTable.joinRefs(centralTable)).thenCallRealMethod()
 
     //then

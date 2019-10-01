@@ -8,8 +8,8 @@ import fr.polytechnique.cmap.cnam.config.ConfigLoader
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.{JoinTableConfig, PartitionConfig, TableConfig, YearAndMonths}
 
 /**
-  * Created by sathiya on 21/02/17.
-  */
+ * Created by sathiya on 21/02/17.
+ */
 class FlatteningConfigSuite extends SharedContext with ConfigLoader {
 
   "load" should "loads the correct config file" in {
@@ -108,7 +108,7 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
       ConfigPartition("MCO_D", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/PMSI/T_MCO08D.csv"),
         "target/test/output/single_table/MCO_D/year=2008", None),
       ConfigPartition("IR_PHA_R", "dd/MM/yyyy", List("src/test/resources/flattening/csv-table/DCIR/IR_PHA_R.csv"),
-        "target/test/output/single_table/IR_PHA_R", None, hasSpecialAction = true)
+        "target/test/output/single_table/IR_PHA_R", None, actions = List("addMoleculeCombinationColumn"))
     )
     // When
     val result = conf.partitions
