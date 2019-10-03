@@ -18,11 +18,16 @@ class Table(val name: String, val df: DataFrame) {
     }
   }
 
+  def annotate(ignoreAnnotateColumns: List[String]): DataFrame = df.addPrefix(name, ignoreAnnotateColumns)
+
   def getYears: Array[Int] = df.select(col("year")).distinct.collect().map(_.getInt(0))
 
   def filterByYear(year: Int): DataFrame = df.filter(col("year") === year)
 
-  def filterByYearAndMonth(year: Int, month: Int, colDate: String): DataFrame = df.filter(col("year") === year).filter(functions.month(col(colDate)) === month)
+  def filterByYearAndMonth(
+    year: Int,
+    month: Int,
+    colDate: String): DataFrame = df.filter(col("year") === year).filter(functions.month(col(colDate)) === month)
 
   def filterByYearAndAnnotate(year: Int, ignoreAnnotateColumns: List[String]): DataFrame = {
     filterByYear(year)
@@ -30,7 +35,11 @@ class Table(val name: String, val df: DataFrame) {
       .addPrefix(name, ignoreAnnotateColumns)
   }
 
-  def filterByYearMonthAndAnnotate(year: Int, month: Int, ignoreAnnotateColumns: List[String], dateCol: String): DataFrame = {
+  def filterByYearMonthAndAnnotate(
+    year: Int,
+    month: Int,
+    ignoreAnnotateColumns: List[String],
+    dateCol: String): DataFrame = {
     //logger.info("count table : " + df.count())
     val df1 = filterByYear(year)
       .drop("year")
@@ -41,12 +50,14 @@ class Table(val name: String, val df: DataFrame) {
       .addPrefix(name, ignoreAnnotateColumns)
 
   }
+
 }
 
 object Table {
-  def build(sqlContext: SQLContext,
-              inputBasePath: String,
-              name: String): Table = {
+  def build(
+    sqlContext: SQLContext,
+    inputBasePath: String,
+    name: String): Table = {
     val df = DFUtils.readParquet(sqlContext, inputBasePath + "/" + name)
     new Table(name, df)
   }
