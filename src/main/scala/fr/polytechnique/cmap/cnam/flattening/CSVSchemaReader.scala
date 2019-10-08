@@ -1,3 +1,5 @@
+// License: BSD 3 clause
+
 package fr.polytechnique.cmap.cnam.flattening
 
 import fr.polytechnique.cmap.cnam.utilities.CollectionTool._
