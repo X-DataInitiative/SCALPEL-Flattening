@@ -1,4 +1,4 @@
-name := "SNIIRAM-flattening"
+name := "SCALPEL-Flattening"
 version := "1.2"
 scalaVersion := "2.11.7"
 val sparkVersion = "2.3.0"
