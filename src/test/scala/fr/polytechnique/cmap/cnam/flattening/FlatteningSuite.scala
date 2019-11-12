@@ -81,8 +81,11 @@ class FlatteningSuite extends SharedContext {
           .toDF
     }.toMap
 
+    val resultSources = meta.map(op => op.outputTable -> op.sources).toMap
+
     //Then
     assert(expectedDCIR sameAs result("DCIR"))
+    assert(resultSources("DCIR").contains("IR_PHA_R"))
   }
 
 
