@@ -3,6 +3,7 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import java.nio.file.Paths
+
 import com.typesafe.config.ConfigFactory
 import pureconfig._
 import fr.polytechnique.cmap.cnam.SharedContext
@@ -55,6 +56,91 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
         |   flat_output_path = "/path/to/flat_table"
         |   save_flat_table = false
         |   only_output = [{year = 2006, months : [3]}]
+        |  }
+        |]
+      """.trim.stripMargin
+
+    val tempPath = "target/flattening.conf"
+    pureconfig.saveConfigAsPropertyFile(ConfigFactory.parseString(stringConfig), Paths.get(tempPath), true)
+    //when
+    val result = FlatteningConfig.load(tempPath, "test")
+    //then
+    assert(result == expected)
+  }
+
+  "load DCIR and PMSI config" should "loads the correct pmsi and dcir config file" in {
+    val defaultConf = FlatteningConfig.load("", "test")
+    val expected = defaultConf.copy(
+      basePath = "/path/base/output",
+      schemaFilePath = List("/path/schema"),
+      withTimestamp = true,
+      autoBroadcastJoinThreshold = Some("10m"),
+      join = List(
+        JoinTableConfig(
+          name = "DCIR",
+          inputPath = Some("/path/to/input"),
+          joinKeys = List("DCT_ORD_NUM", "FLX_DIS_DTD", "FLX_EMT_NUM", "FLX_EMT_ORD", "FLX_EMT_TYP", "FLX_TRT_DTD", "ORG_CLE_NUM",
+            "PRS_ORD_NUM", "REM_TYP_AFF"),
+          mainTableName = "ER_PRS_F",
+          tablesToJoin = List("ER_PHA_F", "ER_CAM_F"),
+          monthlyPartitionColumn = Some("FLX_DIS_DTD"),
+          flatOutputPath = Some("/path/to/flat_table"),
+          saveFlatTable = false,
+          onlyOutput = List(YearAndMonths(2006, List(3)))),
+        JoinTableConfig(
+          name = "MCO",
+          inputPath = Some("/path/to/input"),
+          joinKeys = List("ETA_NUM", "RHA_NUM"),
+          mainTableName = "MCO_B",
+          pmsiPatientTableName = Some("MCO_C"),
+          tablesToJoin = List("MCO_A", "MCO_D", "MCO_UM"),
+          flatOutputPath = Some("/path/to/flat_table"),
+          saveFlatTable = false)
+        )
+      )
+    val stringConfig =
+      """
+        |base_path = "/path/base/output"
+        |
+        |with_timestamp = true
+        |
+        |auto_broadcast_join_threshold = "10m"
+        |
+        |schema_file_path = [
+        |  "/path/schema"
+        |]
+        |
+        |join = [
+        |  {
+        |   name = "DCIR"
+        |   input_path = "/path/to/input"
+        |   monthly_partition_column = "FLX_DIS_DTD"
+        |   join_keys = [
+        |     "DCT_ORD_NUM"
+        |     "FLX_DIS_DTD"
+        |     "FLX_EMT_NUM"
+        |     "FLX_EMT_ORD"
+        |     "FLX_EMT_TYP"
+        |     "FLX_TRT_DTD"
+        |     "ORG_CLE_NUM"
+        |     "PRS_ORD_NUM"
+        |     "REM_TYP_AFF"
+        |   ]
+        |   main_table_name = "ER_PRS_F"
+        |   tables_to_join = ["ER_PHA_F","ER_CAM_F"]
+        |   flat_output_path = "/path/to/flat_table"
+        |   save_flat_table = false
+        |   only_output = [{year = 2006, months : [3]}]
+        |  },
+        |  {
+        |  name="MCO"
+        |  input_path = "/path/to/input"
+        |  join_keys = ["ETA_NUM", "RHA_NUM"]
+        |  main_table_name = "MCO_B"
+        |  pmsi_patient_table_name = "MCO_C"
+        |  tables_to_join = ["MCO_A", "MCO_D", "MCO_UM"]
+        |  flat_output_path = "/path/to/flat_table"
+        |  save_flat_table = false
         |  }
         |]
       """.trim.stripMargin

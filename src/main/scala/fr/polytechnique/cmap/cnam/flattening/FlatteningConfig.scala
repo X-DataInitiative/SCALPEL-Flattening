@@ -112,6 +112,7 @@ object FlatteningConfig extends ConfigLoader {
     joinKeys: List[String] = List.empty[String],
     tablesToJoin: List[String] = List.empty[String],
     mainTableName: String,
+    pmsiPatientTableName: Option[String] = None,
     flatOutputPath: Option[String] = None,
     monthlyPartitionColumn: Option[String] = None,
     saveFlatTable: Boolean = true,
