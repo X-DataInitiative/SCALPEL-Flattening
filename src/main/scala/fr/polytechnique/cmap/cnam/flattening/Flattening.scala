@@ -50,7 +50,8 @@ object Flattening {
     conf.joinTableConfigs.filter(_.saveFlatTable).map { config =>
       logger.info("join table " + config.name)
       new FlatTable(sqlContext, config).writeAsParquet()
-      OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+      OperationMetadata(config.name, config.flatOutputPath.get, "flat_table",
+        config.mainTableName :: (config.tablesToJoin ++ config.refsToJoin.map(_.name)), config.joinKeys)
     }
   }
 
