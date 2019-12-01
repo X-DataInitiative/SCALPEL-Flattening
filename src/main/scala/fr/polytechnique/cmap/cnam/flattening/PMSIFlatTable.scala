@@ -25,13 +25,28 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
     refConfig => (Table.build(sqlContext, refConfig.inputPath.get, refConfig.name), refConfig)
   }
 
-  // Building of the central table according to the specificity of PMSI tables :
-  // the central table is the result of joining the main table and the patient table
-  // the columns of the second one are identified by a prefix
+  /**
+   * This method merge two schemas, if a column is not in the schema of the
+   * DataFrame, it created the column as empty
+   */
+  def mergeSchemas(myCols: Set[String], allCols: Set[String]) = {
+    allCols.toList.map(x => x match {
+      case x if myCols.contains(x) => col(x)
+      case _ => lit(null).alias(x)
+    })
+  }
 
-  val pmsiPatientTablePrefix: Table = pmsiPatientTable.addPrefix(config.pmsiPatientTableName, foreignKeys)
-  val tableCentraleDF: DataFrame = joinFunction(mainTable.df, pmsiPatientTablePrefix.df)
-  val table_centrale: Table = Table("pmsiTableCentrale", tableCentraleDF)
+  /**
+   * This method is an amelioration of the union method : if a column exists
+   * in one DataFrame and not in the other, it is created as emptys
+   */
+
+  def unionWithDifferentSchemas(DF1: DataFrame, DF2:DataFrame): DataFrame = {
+    val cols1 = DF1.columns.toSet
+    val cols2 = DF2.columns.toSet
+    val total = cols1 ++ cols2
+    DF1.select(mergeSchemas(cols1, total):_*).union(DF2.select(mergeSchemas(cols2, total):_*))
+  }
 
   def flatTablePerYear: Array[Int] = mainTable.getYears.filter {
     year => config.onlyOutput.isEmpty || config.onlyOutput.exists(_.year == year)
@@ -50,18 +65,24 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
   def joinByYear(year: Int): Table = {
     val name = s"$tableName/year=$year"
+    val centralTableDF: DataFrame = joinFunction(mainTable.filterByYear(year),
+      pmsiPatientTable.filterByYearAndAnnotate(year, foreignKeys))
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearAndAnnotate(year, foreignKeys))
-      .foldLeft(mainTable.filterByYear(year))(joinFunction)
+      .map(table => joinFunction(centralTableDF, table))
+      .reduce(_ unionWithDifferentSchemas _)
 
     new Table(name, joinedDF)
   }
 
   def joinByYearAndDate(year: Int, month: Int, monthCol: String): Table = {
     val name = s"$tableName/year=$year/month=$month"
+    val centralTableDF: DataFrame = joinFunction(mainTable.filterByYearAndMonth(year, month, monthCol),
+      pmsiPatientTable.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
-      .foldLeft(mainTable.filterByYearAndMonth(year, month, monthCol))(joinFunction)
+      .map(table => joinFunction(centralTableDF, table))
+      .reduce(_ unionWithDifferentSchemas _)
 
     new Table(name, joinedDF)
   }

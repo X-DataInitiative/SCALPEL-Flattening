@@ -63,8 +63,7 @@ object Flattening {
       }
       else {
       logger.info("join table " + config.name + " with Pmsi logic")
-        // TODO replace by PMSIFlatTable
-      new FlatTable(sqlContext, config).writeAsParquet()
+      new PMSIFlatTable(sqlContext, config).writeAsParquet()
       OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
     }
     }
