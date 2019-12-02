@@ -6,6 +6,7 @@ import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.functions.{col,lit}
 
 class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
@@ -41,7 +42,7 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
    * in one DataFrame and not in the other, it is created as emptys
    */
 
-  def unionWithDifferentSchemas(DF1: DataFrame, DF2:DataFrame): DataFrame = {
+  def unionWithDifferentSchemas(DF1: DataFrame, DF2: DataFrame): DataFrame = {
     val cols1 = DF1.columns.toSet
     val cols2 = DF2.columns.toSet
     val total = cols1 ++ cols2
@@ -70,7 +71,7 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearAndAnnotate(year, foreignKeys))
       .map(table => joinFunction(centralTableDF, table))
-      .reduce(_ unionWithDifferentSchemas _)
+      .reduce(unionWithDifferentSchemas)
 
     new Table(name, joinedDF)
   }
@@ -82,7 +83,7 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
       .map(table => joinFunction(centralTableDF, table))
-      .reduce(_ unionWithDifferentSchemas _)
+      .reduce(unionWithDifferentSchemas)
 
     new Table(name, joinedDF)
   }
