@@ -6,25 +6,35 @@ import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 import fr.polytechnique.cmap.cnam.utilities.Functions._
 import org.apache.spark.sql.DataFrame
 import org.mockito.Mockito._
+import org.apache.spark.sql.functions._
 
 class PMSIFlatTableSuite extends SharedContext {
 
-  "tableCentrale" should "returns correct results" in {
+  "WriteAsParquet" should "flatten MCO and write it in the correct path" in {
 
-    val path_singles = "../../../resources/flattening/parquet-table/single_table/"
-    val path_PMSI_flat = "../../../resources/flattening/parquet-table/flat_table/PMSI_Flat/"
+    // Given
+    val conf = FlatteningConfig.load("", "test_PMSI")
+    val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
+    val configTest = conf.joinTableConfigs.head.copy(inputPath = Some(parquetTablesPath))
+    val flattenedTableTest = new PMSIFlatTable(sqlContext, configTest)
+    val resultPath = conf.flatTablePath
+    val expectedDF = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/" +
+      "PMSI_Flat/PMSI_Flat.parquet")
+    val expectedDF_cols = expectedDF.columns.toList//.sorted.filter(column => !(column.contains("GHM")))
+    val expectedDF_sorted = expectedDF.select(expectedDF_cols.map(col):_*)
 
-    val path_MCO_B = path_singles + "/MCO_B/year=2008/part-00000-ccdc70ba-9b46-49df-93cf-de3da9d7b18b-c000.parquet"
-    val path_MCO_C = path_singles + "/MCO_C/year=2008/NUM_ENQ=Patient_02/part-00000-2e2334d1-dfe3-470d-a73e-29ab02d6be16.c000.parquet"
 
-    val MCO_B = spark.read.parquet(path_MCO_B)
-    val MCO_C = spark.read.parquet(path_MCO_C).addPrefix("MCO_C", )
-
-    val tableCentrale = spark.read.parquet(path_PMSI_flat + "table_centrale.parquet")
-
-    filterByYearAndAnnotate("2008","MCO_B")
-
-    assert(result sameAs tableCentrale)
-
+    // When
+    flattenedTableTest.writeAsParquet()
+    val result = sqlContext.read.parquet(resultPath)
+    var result_cols = result.columns.toList.sorted
+    result_cols = result_cols//.filter(column => !(column.contains("GHM")))
+    val result_sorted = result.select(result_cols.map(col):_*)
+    println(result_sorted.count())
+    result_sorted.show()
+    // Then
+    assert(resultPath == flattenedTableTest.outputBasePath)
+    assert(expectedDF_sorted.columns.toSet == result_sorted.columns.toSet)
+    //assert(result sameAs expectedDf)
   }
 }

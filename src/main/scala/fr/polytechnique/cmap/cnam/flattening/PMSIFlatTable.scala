@@ -12,7 +12,7 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
   val inputBasePath: String = config.inputPath.get
   val mainTable: Table = Table.build(sqlContext, inputBasePath, config.mainTableName)
-  val pmsiPatientTable: Table = Table.build(sqlContext, inputBasePath, config.pmsiPatientTableName)
+  val pmsiPatientTable: Table = Table.build(sqlContext, inputBasePath, config.pmsiPatientTableName.get)
   val tablesToJoin: List[Table] = config.tablesToJoin.map(
     tableName =>
       Table.build(sqlContext, inputBasePath, tableName)
@@ -66,30 +66,33 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
   def joinByYear(year: Int): Table = {
     val name = s"$tableName/year=$year"
-    val centralTableDF: DataFrame = joinFunction(mainTable.filterByYear(year),
+    val centralTableDF: DataFrame = joinFunction(mainTable.filterByYear(year).drop("year"),
       pmsiPatientTable.filterByYearAndAnnotate(year, foreignKeys))
+    tablesToJoin.foreach{table =>
+      println(table.name)
+      table.df.show()
+    }
+    centralTableDF.show()
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearAndAnnotate(year, foreignKeys))
-      .map(table => joinFunction(centralTableDF, table))
-      .reduce(unionWithDifferentSchemas)
-
+      .map(df => joinFunction(centralTableDF, df)).reduce(unionWithDifferentSchemas)
+    joinedDF.show()
     new Table(name, joinedDF)
   }
 
   def joinByYearAndDate(year: Int, month: Int, monthCol: String): Table = {
     val name = s"$tableName/year=$year/month=$month"
-    val centralTableDF: DataFrame = joinFunction(mainTable.filterByYearAndMonth(year, month, monthCol),
+    val centralTableDF: DataFrame = joinFunction(mainTable.filterByYearAndMonth(year, month, monthCol).drop("year"),
       pmsiPatientTable.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
       .map(table => joinFunction(centralTableDF, table))
       .reduce(unionWithDifferentSchemas)
-
     new Table(name, joinedDF)
   }
 
   val joinFunction: (DataFrame, DataFrame) => DataFrame =
-    (accumulator, tableToJoin) => accumulator.join(tableToJoin, foreignKeys, "left_outer")
+    (accumulator, tableToJoin) => accumulator.join(tableToJoin, foreignKeys, "inner")
 
   def logger: Logger = Logger.getLogger(getClass)
 
