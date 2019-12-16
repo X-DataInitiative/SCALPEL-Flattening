@@ -67,7 +67,7 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
   def joinByYear(year: Int): Table = {
     val name = s"$tableName/year=$year"
     val centralTableDF: DataFrame = joinFunction(mainTable.filterByYear(year).drop("year"),
-      pmsiPatientTable.filterByYearAndAnnotate(year, foreignKeys))
+      pmsiPatientTable.filterByYearAndAnnotate(year, foreignKeys)).cache()
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearAndAnnotate(year, foreignKeys))
       .map(df => joinFunction(centralTableDF, df)).reduce(unionWithDifferentSchemas)
