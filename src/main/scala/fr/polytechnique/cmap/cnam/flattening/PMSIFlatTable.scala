@@ -92,7 +92,7 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
   }
 
   val joinFunction: (DataFrame, DataFrame) => DataFrame =
-    (accumulator, tableToJoin) => accumulator.join(tableToJoin, foreignKeys, "inner")
+    (accumulator, tableToJoin) => accumulator.join(tableToJoin, foreignKeys, "left_outer")
 
   def logger: Logger = Logger.getLogger(getClass)
 
