@@ -12,8 +12,18 @@ object CSVSchemaReader {
   final val typeCSVName: String = "DATATYPE"
 
   def readSchemaFile(filename: String): List[String] = {
-    val inputStream = getClass.getClassLoader.getResourceAsStream(filename)
-    scala.io.Source.fromInputStream(inputStream).getLines().toList
+    print(filename+'\n')
+    /* Distinguish between in-jar schema put at "schema/..." and local csv to be read at execution time*/
+    if (filename.split("/")(0) == "schema") {
+      val inputStream = getClass.getClassLoader.getResourceAsStream(filename)
+      scala.io.Source.fromInputStream(inputStream).getLines().toList
+    }
+    else {
+      val csv_content = scala.io.Source.fromFile(filename)
+      val csv_as_list = csv_content.getLines().toList
+      csv_content.close()
+      csv_as_list
+    }
   }
 
   def readSchemaFiles(filenames: List[String]): List[String] = {
