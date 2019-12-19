@@ -110,6 +110,7 @@ object FlatteningConfig extends ConfigLoader {
     name: String,
     inputPath: Option[String] = None,
     joinKeys: List[String] = List.empty[String],
+    joinKeysPatient: Option[List[String]] = None,
     tablesToJoin: List[String] = List.empty[String],
     mainTableName: String,
     pmsiPatientTableName: Option[String] = None,
