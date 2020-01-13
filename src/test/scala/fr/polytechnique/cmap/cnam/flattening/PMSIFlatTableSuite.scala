@@ -30,11 +30,10 @@ class PMSIFlatTableSuite extends SharedContext {
     var result_cols = result.columns.toList.sorted
     result_cols = result_cols//.filter(column => !(column.contains("GHM")))
     val result_sorted = result.select(result_cols.map(col):_*)
-    println(result_sorted.count())
-    result_sorted.show()
+
     // Then
     assert(resultPath == flattenedTableTest.outputBasePath)
     assert(expectedDF_sorted.columns.toSet == result_sorted.columns.toSet)
-    //assert(result sameAs expectedDf)
+    assert(expectedDF_sorted.count() == result_sorted.count())
   }
 }
