@@ -5,7 +5,7 @@ import org.apache.spark.sql.functions._
 
 class SSRRPIFlatTableSuite extends SharedContext {
 
-  "WriteAsParquet" should "flatten MCO and write it in the correct path" in {
+  "WriteAsParquet" should "flatten SSR and write it in the correct path" in {
 
     // Given
     val conf = FlatteningConfig.load("", "test_PMSI")
