@@ -3,18 +3,18 @@ package fr.polytechnique.cmap.cnam.flattening
 import fr.polytechnique.cmap.cnam.SharedContext
 import org.apache.spark.sql.functions._
 
-class SSRRPIFlatTableSuite extends SharedContext {
+class SSRRIPFlatTableSuite extends SharedContext {
 
   "WriteAsParquet" should "flatten SSR and write it in the correct path" in {
 
     // Given
-    val conf = FlatteningConfig.load("", "test_PMSI")
+    val conf = FlatteningConfig.load("", "ssr")
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
     val configTest = conf.joinTableConfigs.head.copy(inputPath = Some(parquetTablesPath))
     val flattenedTableTest = new SSRRIPFlatTable(sqlContext, configTest)
     val resultPath = conf.flatTablePath
     val expectedDF = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/" +
-      "PMSI_Flat/PMSI_Flat.parquet")
+      "SSR_Flat/SSR_Flat.parquet")
     val expectedDF_cols = expectedDF.columns.toList//.sorted.filter(column => !(column.contains("GHM")))
     val expectedDF_sorted = expectedDF.select(expectedDF_cols.map(col):_*)
 

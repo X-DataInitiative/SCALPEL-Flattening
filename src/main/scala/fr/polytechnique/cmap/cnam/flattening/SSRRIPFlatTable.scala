@@ -8,7 +8,7 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
-class SSRFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
+class SSRRIPFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
   val inputBasePath: String = config.inputPath.get
   val mainTable: Table = Table.build(sqlContext, inputBasePath, config.mainTableName)
