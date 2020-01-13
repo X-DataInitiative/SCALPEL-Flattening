@@ -11,7 +11,7 @@ class SSRRPIFlatTableSuite extends SharedContext {
     val conf = FlatteningConfig.load("", "test_PMSI")
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
     val configTest = conf.joinTableConfigs.head.copy(inputPath = Some(parquetTablesPath))
-    val flattenedTableTest = new PMSIFlatTable(sqlContext, configTest)
+    val flattenedTableTest = new SSRRIPFlatTable(sqlContext, configTest)
     val resultPath = conf.flatTablePath
     val expectedDF = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/" +
       "PMSI_Flat/PMSI_Flat.parquet")
