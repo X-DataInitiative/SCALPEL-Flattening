@@ -46,11 +46,33 @@ object Flattening {
       }.toList
   }
 
+  /**
+  Iterate on the joinTableConfigs and decide which join logic to apply depending on the product:
+   - if pmsiPatientTableName is empty (we are dealing with DCIR tables) :
+        join all tables to the central table with a `foldleft`
+   - else (pmsiPatientTableName is not empty ie. we are dealing with PMSI tables) :
+        join mainTable with pmsiPatientTable as a central table,
+        then join successively each of the periphery tables to this central table and concatenate all of these tables as the flat table.
+   */
   def joinSingleTablesToFlatTable(sqlContext: SQLContext, conf: FlatteningConfig): List[OperationMetadata] = {
     conf.joinTableConfigs.filter(_.saveFlatTable).map { config =>
-      logger.info("join table " + config.name)
-      new FlatTable(sqlContext, config).writeAsParquet()
-      OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+      if (config.pmsiPatientTableName.isEmpty) {
+        logger.info("join table " + config.name + " with Dcir logic")
+        new FlatTable(sqlContext, config).writeAsParquet()
+        OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+      }
+      else {
+        if (config.joinKeysPatient.isEmpty) {
+          logger.info("join table " + config.name + " with Pmsi logic")
+          new PMSIFlatTable(sqlContext, config).writeAsParquet()
+          OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+        }
+        else {
+          logger.info("join SSR table " + config.name + " with Pmsi logic")
+          new SSRFlatTable(sqlContext, config).writeAsParquet()
+          OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+        }
+      }
     }
   }
 
