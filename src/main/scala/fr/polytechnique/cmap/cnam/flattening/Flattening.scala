@@ -59,18 +59,21 @@ object Flattening {
       if (config.pmsiPatientTableName.isEmpty) {
         logger.info("join table " + config.name + " with Dcir logic")
         new FlatTable(sqlContext, config).writeAsParquet()
-        OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+        OperationMetadata(config.name, config.flatOutputPath.get, "flat_table",
+          config.mainTableName :: (config.tablesToJoin ++ config.refsToJoin.map(_.name)), config.joinKeys)
       }
       else {
         if (config.joinKeysPatient.isEmpty) {
           logger.info("join table " + config.name + " with Pmsi logic")
           new PMSIFlatTable(sqlContext, config).writeAsParquet()
-          OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+          OperationMetadata(config.name, config.flatOutputPath.get, "flat_table",
+            config.mainTableName :: (config.tablesToJoin ++ config.refsToJoin.map(_.name)), config.joinKeys)
         }
         else {
           logger.info("join SSR table " + config.name + " with Pmsi logic")
           new SSRRIPFlatTable(sqlContext, config).writeAsParquet()
-          OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+          OperationMetadata(config.name, config.flatOutputPath.get, "flat_table",
+            config.mainTableName :: (config.tablesToJoin ++ config.refsToJoin.map(_.name)), config.joinKeys)
         }
       }
     }
