@@ -19,7 +19,7 @@ class PMSIFlatTableSuite extends SharedContext {
     val flattenedTableTest = new PMSIFlatTable(sqlContext, configTest)
     val resultPath = conf.flatTablePath
     val expectedDF = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/" +
-      "PMSI_Flat/PMSI_Flat.parquet")
+      "PMSI_Flat/PMSI_flat.parquet")
     val expectedDF_cols = expectedDF.columns.toList//.sorted.filter(column => !(column.contains("GHM")))
     val expectedDF_sorted = expectedDF.select(expectedDF_cols.map(col):_*)
 
