@@ -3,10 +3,6 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
-/*import fr.polytechnique.cmap.cnam.flattening.PMSIFlatTable
-import fr.polytechnique.cmap.cnam.utilities.DFUtils._
-import org.apache.log4j.{Level, Logger}
-import org.apache.spark.sql.functions.{col, lit}*/
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
 class SSRRIPFlatTable(sqlContext: SQLContext, config: JoinTableConfig)
