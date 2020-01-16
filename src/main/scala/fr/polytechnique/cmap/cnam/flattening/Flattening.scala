@@ -62,10 +62,17 @@ object Flattening {
         OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
       }
       else {
-      logger.info("join table " + config.name + " with Pmsi logic")
-      new PMSIFlatTable(sqlContext, config).writeAsParquet()
-      OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
-    }
+        if (config.joinKeysPatient.isEmpty) {
+          logger.info("join table " + config.name + " with Pmsi logic")
+          new PMSIFlatTable(sqlContext, config).writeAsParquet()
+          OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+        }
+        else {
+          logger.info("join SSR table " + config.name + " with Pmsi logic")
+          new SSRRIPFlatTable(sqlContext, config).writeAsParquet()
+          OperationMetadata(config.name, config.flatOutputPath.get, "flat_table", config.mainTableName :: config.tablesToJoin, config.joinKeys)
+        }
+      }
     }
   }
 
