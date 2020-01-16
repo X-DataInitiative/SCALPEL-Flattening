@@ -1,25 +1,20 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import fr.polytechnique.cmap.cnam.SharedContext
-import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.YearAndMonths
-import fr.polytechnique.cmap.cnam.utilities.DFUtils._
-import fr.polytechnique.cmap.cnam.utilities.Functions._
-import org.apache.spark.sql.DataFrame
-import org.mockito.Mockito._
 import org.apache.spark.sql.functions._
 
-class PMSIFlatTableSuite extends SharedContext {
+class SSRRIPFlatTableSuite extends SharedContext {
 
-  "WriteAsParquet" should "flatten MCO and write it in the correct path" in {
+  "WriteAsParquet" should "flatten SSR and write it in the correct path" in {
 
     // Given
-    val conf = FlatteningConfig.load("", "test_PMSI")
+    val conf = FlatteningConfig.load("", "ssr")
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
     val configTest = conf.joinTableConfigs.head.copy(inputPath = Some(parquetTablesPath))
-    val flattenedTableTest = new PMSIFlatTable(sqlContext, configTest)
+    val flattenedTableTest = new SSRRIPFlatTable(sqlContext, configTest)
     val resultPath = conf.flatTablePath
     val expectedDF = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/" +
-      "PMSI_Flat/PMSI_flat.parquet")
+      "SSR_Flat/SSR_flat.parquet")
     val expectedDF_cols = expectedDF.columns.toList//.sorted.filter(column => !(column.contains("GHM")))
     val expectedDF_sorted = expectedDF.select(expectedDF_cols.map(col):_*)
 

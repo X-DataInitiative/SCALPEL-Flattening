@@ -141,7 +141,7 @@ class FlatTableSuite extends SharedContext {
     val result = flattenedTableTest.flatTablePerYear
 
     // Then
-    assert(expected === result)
+    assert(expected.sorted === result.sorted)
   }
 
   "WriteAsParquet" should "flatten MCO and write it in the correct path" in {
