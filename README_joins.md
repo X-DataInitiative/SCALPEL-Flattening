@@ -13,8 +13,7 @@ and the two others the different PMSI databases.
 ### The DCIR Flattening
 
 This solution is the most straightforward. It consists in successive left outer joints on a main table on the same keys (fig 1.). 
-It's very well adapted when each table to join has at most one line
-corresponding to each line of the main table. It suits to the construction of the DCIR database.
+It's very well adapted when each line in the tables to be joined has at most one corresponding line in the main table. It suits to the construction of the DCIR database.
 
 <div style="text-align:center" title="fig. 1" ><img src="img/fig1.pdf"/></div>
 
@@ -54,34 +53,34 @@ For example, this is our configuration for the DCIR :
 ## The PMSI Flattening
 
 In the case of PMSI tables, the main table contains hospital stays and
-the tables to join acts or informations on these acts. Therefore we can have several
-acts by hospital stays, or in other terms more than one line for each line
+the tables to join acts or information on these acts. Therefore we can have lines coming from several
+affiliated tables for one hospital stay, thus multiple lines from multiples tables for each line
 of the main table. One of the tables to join has also a specific status : the patient table.
-It gathers informations on the patient of the hospital stays. For this table there 
-must be a perfect correspondence with the lines of the main table.
+It gathers information on the patient of the hospital stay. For this table, there 
+must be a one-to-one correspondence with the lines of the main table.
 
 If we used successive joints like for the DCIR, it would result in a tremendous 
 cartesian product of all the lines of the input tables. It would take a very long time
-and result in a huge flattened tables with redundant informations. We had to design a new way to flatten the 
-PMSI tables
+and result in a huge flattened tables with redundant information. We had to design a new way to flatten the 
+PMSI tables.
 
 The first step is the creation of a central table consisting of the left outer joint of the main table
 and the patient table (fig. 3). 
 
 <div style="text-align:center" title="fig. 3" ><img src="img/fig3.pdf"/></div>
 
-Then we joint separately the other tables to the central table and concatenate the results (fig. 4). The result is a table with as many lines as the sum of all the lines of the tables to join and every columns of all the input tables. Only the informations of the central
-table is repeated (as many times as the number of tables to join). This non-redundance results
+Then we joint separately the other tables to the central table and concatenate the results (fig. 4). The result is a table with as many lines as the sum of all the lines of the tables to join and every columns of all the input tables. Only the information of the central
+table is repeated (as many times as the number of tables to join). This non-redundancy results
 in the presence of a lot of empty blocks (fig. 4). The flattened table can thus be obtained in a short time
 and does use a reasonable amount of storage disk space.
 
 <div style="text-align:center" title="fig. 4" ><img src="img/fig4.pdf"/></div>
 
-In the conf file, you have to precise one additional parameter :
+Compared to the first use-case, in the conf file, you have to precise one additional parameter :
 
-* **pmsi\_patient\_table_name**: the name of the patient table.
+* **pmsi\_patient\_table_name** : the name of the patient table.
 
-If this parameter is present the solution above will be used, otherwise it's the 
+If this parameter is present, the solution above will be used, otherwise it's the 
 first one which will be used.
 
 For example, this is our configuration for the PMSI-MCO :
