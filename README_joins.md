@@ -91,7 +91,7 @@ For example, this is our configuration for the PMSI-MCO :
     join_keys = ["ETA_NUM", "RSA_NUM"]
     main_table_name = "MCO_B"
     pmsi_patient_table_name = "MCO_C"
-    tables_to_join = ["MCO_A", "MCO_D", "MCO_UM", "MCO_MED", "MCO_MEDATU", "MCO_MEDTHROMBO"]#, "MCO_VALO"]
+    tables_to_join = ["MCO_A", "MCO_D", "MCO_UM", "MCO_MED", "MCO_MEDATU", "MCO_MEDTHROMBO"]
 }
 ```
 
@@ -122,6 +122,6 @@ For example, this is our configuration for the PMSI-SSR :
     join_keys = ["ETA_NUM", "RHA_NUM", "RHS_NUM"]
     pmsi_patient_table_name =  "SSR_C"
     main_table_name = "SSR_B"
-    tables_to_join = ["SSR_CCAM", "SSR_D", "SSR_CSARR", "SSR_MED", "SSR_MEDATU"] # TODO SSR_STC (au moins en single table, c'est au niveau sejour [ETA_NUM_EPMSI, RIP_NUM]
+    tables_to_join = ["SSR_CCAM", "SSR_D", "SSR_CSARR", "SSR_MED", "SSR_MEDATU"]
 }
 ```
