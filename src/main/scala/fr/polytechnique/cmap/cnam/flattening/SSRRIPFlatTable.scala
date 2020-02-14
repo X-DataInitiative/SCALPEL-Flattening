@@ -22,8 +22,8 @@ class SSRRIPFlatTable(sqlContext: SQLContext, config: JoinTableConfig)
 
   override def joinByYearAndDate(year: Int, month: Int, monthCol: String): Table = {
     val name = s"$tableName/year=$year/month=$month"
-    val centralTableDF: DataFrame = joinFunctionPatientKeys(mainTable.filterByYearAndMonth(year, month, monthCol).drop("year"),
-      pmsiPatientTable.filterByYearMonthAndAnnotate(year, month, patientKeys, monthCol))
+    val centralTableDF: DataFrame = joinFunctionPatientKeys(mainTable.filterByYearMonthAndAnnotate(year, month, foreignKeys,  monthCol).drop("year"),
+      pmsiPatientTable.filterByYearAndMonth(year, month, monthCol))
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
       .map(table => joinFunction(centralTableDF, table))

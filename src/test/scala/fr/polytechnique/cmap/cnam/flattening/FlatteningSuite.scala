@@ -5,6 +5,7 @@ package fr.polytechnique.cmap.cnam.flattening
 import org.apache.spark.sql._
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
+import org.apache.spark.sql.functions.col
 
 class FlatteningSuite extends SharedContext {
 
@@ -61,6 +62,99 @@ class FlatteningSuite extends SharedContext {
     //Then
     assert(expectedMCO sameAs result("MCO"))
     assert(expectedDCIR sameAs result("DCIR"))
+
+  }
+
+  "joinSingleTablesToFlatTable" should "join the single tables correctly for MCO with patient tables logic" in {
+
+    //Given
+    val conf = FlatteningConfig.load("", "test_PMSI")
+    val expectedDF = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/" +
+      "PMSI_Flat/PMSI_flat.parquet")
+    val expectedDF_cols = expectedDF.columns.toList//.sorted.filter(column => !(column.contains("GHM")))
+    val expectedDF_sorted = expectedDF.select(expectedDF_cols.map(col):_*)
+    val configTest = conf.copy(join = conf.join.map(_.copy(inputPath = Some("src/test/resources/flattening/parquet-table/single_table_PMSI_SSR"))))
+
+    //When
+    val meta = Flattening.joinSingleTablesToFlatTable(sqlContext, configTest)
+    val result = meta.map {
+      op =>
+        op.outputTable -> sqlContext.read
+          .option("mergeSchema", "true")
+          .load(op.outputPath + "/" + op.outputTable)
+          .toDF
+    }.toMap
+
+    val resultMCO = result("MCO")
+    var result_cols = resultMCO.columns.toList.sorted
+    result_cols = result_cols//.filter(column => !(column.contains("GHM")))
+    val result_sorted = resultMCO.select(result_cols.map(col):_*)
+
+    //Then
+    assert(expectedDF_sorted.columns.toSet == result_sorted.columns.toSet)
+    assert(expectedDF_sorted.count() == result_sorted.count())
+
+  }
+
+  "joinSingleTablesToFlatTablePMSI" should "join the single tables correctly for MCO with patient tables logic" in {
+
+    //Given
+    val conf = FlatteningConfig.load("", "test_PMSI")
+    val expectedDF = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/" +
+      "PMSI_Flat/PMSI_flat.parquet")
+    val expectedDF_cols = expectedDF.columns.toList//.sorted.filter(column => !(column.contains("GHM")))
+    val expectedDF_sorted = expectedDF.select(expectedDF_cols.map(col):_*)
+    val configTest = conf.copy(join = conf.join.map(_.copy(inputPath = Some("src/test/resources/flattening/parquet-table/single_table_PMSI_SSR"))))
+
+    //When
+    val meta = Flattening.joinSingleTablesToFlatTable(sqlContext, configTest)
+    val result = meta.map {
+      op =>
+        op.outputTable -> sqlContext.read
+          .option("mergeSchema", "true")
+          .load(op.outputPath + "/" + op.outputTable)
+          .toDF
+    }.toMap
+
+    val resultMCO = result("MCO")
+    var result_cols = resultMCO.columns.toList.sorted
+    result_cols = result_cols//.filter(column => !(column.contains("GHM")))
+    val result_sorted = resultMCO.select(result_cols.map(col):_*)
+
+    //Then
+    assert(expectedDF_sorted.columns.toSet == result_sorted.columns.toSet)
+    assert(expectedDF_sorted.count() == result_sorted.count())
+
+  }
+
+  "joinSingleTablesToFlatTableSSR" should "join the single tables correctly for SSR with patient tables logic" in {
+
+    //Given
+    val conf = FlatteningConfig.load("", "ssr")
+    val expectedDF = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/" +
+      "SSR_Flat")
+    val expectedDF_cols = expectedDF.columns.toList//.sorted.filter(column => !(column.contains("GHM")))
+    val expectedDF_sorted = expectedDF.select(expectedDF_cols.map(col):_*)
+    val configTest = conf.copy(join = conf.join.map(_.copy(inputPath = Some("src/test/resources/flattening/parquet-table/single_table_PMSI_SSR"))))
+
+    //When
+    val meta = Flattening.joinSingleTablesToFlatTable(sqlContext, configTest)
+    val result = meta.map {
+      op =>
+        op.outputTable -> sqlContext.read
+          .option("mergeSchema", "true")
+          .load(op.outputPath + "/" + op.outputTable)
+          .toDF
+    }.toMap
+
+    val resultSSR = result("SSR")
+    var result_cols = resultSSR.columns.toList.sorted
+    result_cols = result_cols//.filter(column => !(column.contains("GHM")))
+    val result_sorted = resultSSR.select(result_cols.map(col):_*)
+
+    //Then
+    assert(expectedDF_sorted.columns.toSet == result_sorted.columns.toSet)
+    assert(expectedDF_sorted.count() == result_sorted.count())
 
   }
 

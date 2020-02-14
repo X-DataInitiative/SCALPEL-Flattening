@@ -43,8 +43,8 @@ class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig)
 
   override def joinByYearAndDate(year: Int, month: Int, monthCol: String): Table = {
     val name = s"$tableName/year=$year/month=$month"
-    val centralTableDF: DataFrame = joinFunction(mainTable.filterByYearAndMonth(year, month, monthCol).drop("year"),
-      pmsiPatientTable.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
+    val centralTableDF: DataFrame = joinFunction(mainTable.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol).drop("year"),
+      pmsiPatientTable.filterByYearAndMonth(year, month, monthCol))
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
       .map(table => joinFunction(centralTableDF, table))
