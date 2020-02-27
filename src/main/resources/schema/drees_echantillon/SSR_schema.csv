@@ -76,6 +76,7 @@ SSR_CCAM;EXT_PMSI;;2;0;Integer
 SSR_C;ENT_AM;;9;0;Integer
 SSR_C;SOR_AM;;9;0;Integer
 SSR_C;ETA_NUM;$;9;0;String
+SSR_C;ETA_NUM_RET;$;2;0;String
 SSR_C;MOI_LUN_1S;$;2;0;String
 SSR_C;ANN_LUN_1S;$;4;0;String
 SSR_C;NIR_RET;$;2;0;String
