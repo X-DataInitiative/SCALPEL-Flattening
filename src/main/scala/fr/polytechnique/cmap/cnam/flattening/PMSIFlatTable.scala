@@ -2,9 +2,9 @@
 
 package fr.polytechnique.cmap.cnam.flattening
 
-import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
 import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 import org.apache.spark.sql.functions.{col, lit}
+import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
 
 class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig)
   extends FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {

@@ -1,16 +1,12 @@
 package fr.polytechnique.cmap.cnam.flattening
 
+import org.apache.spark.sql.functions._
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.YearAndMonths
-import fr.polytechnique.cmap.cnam.utilities.DFUtils._
-import fr.polytechnique.cmap.cnam.utilities.Functions._
-import org.apache.spark.sql.DataFrame
-import org.mockito.Mockito._
-import org.apache.spark.sql.functions._
 
 class PMSIFlatTableSuite extends SharedContext {
 
-  "WriteAsParquet" should "flatten MCO and write it in the correct path" in {
+  "writeAsParquet" should "flatten MCO and write it in the correct path" in {
 
     // Given
     val conf = FlatteningConfig.load("", "test_PMSI")
@@ -37,7 +33,7 @@ class PMSIFlatTableSuite extends SharedContext {
     assert(expectedDF_sorted.count() == result_sorted.count())
   }
 
-  "WriteAsParquetMonth" should "flatten MCO monthly and write it in the correct path" in {
+  "writeAsParquetMonth" should "flatten MCO monthly and write it in the correct path" in {
 
     // Given
     val conf = FlatteningConfig.load("", "test_PMSI_month")

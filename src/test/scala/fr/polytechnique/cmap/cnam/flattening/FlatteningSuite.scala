@@ -3,9 +3,9 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import org.apache.spark.sql._
+import org.apache.spark.sql.functions.col
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
-import org.apache.spark.sql.functions.col
 
 class FlatteningSuite extends SharedContext {
 

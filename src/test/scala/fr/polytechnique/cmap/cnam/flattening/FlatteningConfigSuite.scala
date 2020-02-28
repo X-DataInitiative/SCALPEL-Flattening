@@ -3,6 +3,7 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import java.nio.file.Paths
+
 import com.typesafe.config.ConfigFactory
 import pureconfig._
 import fr.polytechnique.cmap.cnam.SharedContext

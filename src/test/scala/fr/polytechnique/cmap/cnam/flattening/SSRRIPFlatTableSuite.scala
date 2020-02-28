@@ -1,8 +1,9 @@
 package fr.polytechnique.cmap.cnam.flattening
 
+import org.apache.spark.sql.functions._
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.YearAndMonths
-import org.apache.spark.sql.functions._
+
 
 class SSRRIPFlatTableSuite extends SharedContext {
 
