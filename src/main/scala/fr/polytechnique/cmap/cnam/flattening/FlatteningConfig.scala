@@ -17,6 +17,7 @@ case class ConfigPartition(
 
 case class FlatteningConfig(
   basePath: String,
+  delimiter: String = ";",
   withTimestamp: Boolean = false,
   timestampFormat: String = "/yyyy_MM_dd",
   autoBroadcastJoinThreshold: Option[String] = None,

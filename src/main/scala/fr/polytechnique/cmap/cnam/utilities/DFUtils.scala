@@ -12,11 +12,12 @@ object DFUtils {
 
   def readCSV(
     sqlContext: SQLContext,
-    inputPath: Seq[String]): DataFrame = {
+    inputPath: Seq[String],
+    delimiter: String): DataFrame = {
     sqlContext
       .read
       .option("header", "true")
-      .option("delimiter", ";")
+      .option("delimiter", delimiter)
       .csv(inputPath: _*)
   }
 

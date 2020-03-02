@@ -26,7 +26,7 @@ object Flattening {
               logger.info("converting table " + config.name)
               val columnsType = columnsTypeMap(config.name).toMap
 
-              val rawTable = readCSV(sqlContext, config.inputPaths)
+              val rawTable = readCSV(sqlContext, config.inputPaths, conf.delimiter)
               val typedTable = applySchema(rawTable, columnsType, config.dateFormat).processActions(config)
               //Do not partition data with a column including only few values
               //it will cause data skew and reduce the performance when huge data comes
