@@ -21,7 +21,7 @@ The result is a flattened table with one line for each line of the main table
 with every columns of the main table plus the tables we joined to it (fig 2). Some of the lines can be partially or totally empty except for the main table variables.
 
 
-<img src="/img/fig2.pdf "alt="fig. 2"/>
+<div style="text-align:center" title="fig. 2" ><img src="/img/fig2.png"/></div>
 
 In the conf file you have to precise 4 parameters :
 
@@ -68,14 +68,14 @@ PMSI tables.
 The first step is the creation of a central table consisting of the left outer joint of the main table
 and the patient table (fig. 3). 
 
-<div style="text-align:center" title="fig. 3" ><img src="img/fig3.pdf"/></div>
+<div style="text-align:center" title="fig. 3" ><img src="img/fig3.png"/></div>
 
 Then we joint separately the other tables to the central table and concatenate the results (fig. 4). The result is a table with as many lines as the sum of all the lines of the tables to join and every columns of all the input tables. Only the information of the central
 table is repeated (as many times as the number of tables to join). This non-redundancy results
 in the presence of a lot of empty blocks (fig. 4). The flattened table can thus be obtained in a short time
 and does use a reasonable amount of storage disk space.
 
-<div style="text-align:center" title="fig. 4" ><img src="img/fig4.pdf"/></div>
+<div style="text-align:center" title="fig. 4" ><img src="img/fig4.png"/></div>
 
 Compared to the first use-case, in the conf file, you have to precise one additional parameter :
 
@@ -103,11 +103,11 @@ keys than the following joints. We have to be careful to respect this supplement
 
 The first step now use a new set of keys (fig. 5).
 
-<div style="text-align:center" title="fig. 5" ><img src="img/fig5.pdf"/></div>
+<div style="text-align:center" title="fig. 5" ><img src="img/fig5.png"/></div>
 
 The following stay the same (fig. 6). And the result is quite the same (fig. 6).
 
-<div style="text-align:center" title="fig. 6" ><img src="img/fig6.pdf"/></div>
+<div style="text-align:center" title="fig. 6" ><img src="img/fig6.png"/></div>
 
 You have to add a new parameter if you want to use this method (the presence of this parameter
 will determine if this method is used against the precedent one):
