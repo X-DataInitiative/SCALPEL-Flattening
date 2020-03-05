@@ -17,6 +17,8 @@ class DFUtilsSuite extends SharedContext {
     val sqlCtx = sqlContext
     val inputPath = Seq("src/test/resources/flattening/csv-table/IR_BEN_R.csv",
       "src/test/resources/flattening/csv-table/IR_BEN_R.csv")
+
+    val delimiter = ";"
     val expectedResult = sqlCtx
       .read
       .option("header", "true")
@@ -24,7 +26,7 @@ class DFUtilsSuite extends SharedContext {
       .csv(inputPath: _*)
 
     //When
-    val result = DFUtils.readCSV(sqlCtx, inputPath)
+    val result = DFUtils.readCSV(sqlCtx, inputPath, delimiter)
 
     //Then
     assert(result sameAs expectedResult)

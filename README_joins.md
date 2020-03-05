@@ -15,7 +15,7 @@ and the two others the different PMSI databases.
 This solution is the most straightforward. It consists in successive left outer joints on a main table on the same keys (fig 1.). 
 It's very well adapted when each line in the tables to be joined has at most one corresponding line in the main table. It suits to the construction of the DCIR database.
 
-<div style="text-align:center" title="fig. 1" ><img src="img/fig1.pdf"/></div>
+<div style="text-align:center" title="fig. 1" ><img src="/img/fig1.png"/></div>
 
 The result is a flattened table with one line for each line of the main table
 with every columns of the main table plus the tables we joined to it (fig 2). Some of the lines can be partially or totally empty except for the main table variables.
