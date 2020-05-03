@@ -26,7 +26,7 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
     val stringConfig =
       """
         |base_path = "/path/base/output"
-        |
+        |file_format= orc
         |with_timestamp = true
         |
         |auto_broadcast_join_threshold = "10m"

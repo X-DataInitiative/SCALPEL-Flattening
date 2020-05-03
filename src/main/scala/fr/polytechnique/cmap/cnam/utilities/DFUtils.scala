@@ -126,21 +126,19 @@ object DFUtils {
     }
 
     @scala.annotation.varargs
-    def writeParquetAndORC(path: String, partitionColumns: String*)
-      (mode: String, fileFormat: String = "parquet"): Unit = {
-      logger.info("writing files in format "+ fileFormat)
-
+    def writeParquetAndORC(path: String,fileFormat: String , partitionColumns: String*)
+      (mode: String): Unit = {
       val writer = dataFrame.write
         .mode(saveMode(mode))
       if (partitionColumns.nonEmpty) {
         fileFormat match {
-          case "orc" => writer.partitionBy(partitionColumns: _*).orc(path)
-          case _ => writer.partitionBy(partitionColumns: _*).parquet(path)
+          case "orc" => logger.info("writing files in orc format ");writer.partitionBy(partitionColumns: _*).orc(path)
+          case _ => logger.info("writing files in parquet format ");writer.partitionBy(partitionColumns: _*).parquet(path)
         }
       } else {
         fileFormat match {
-          case "orc" => writer.orc(path)
-          case _ => writer.parquet(path)
+          case "orc" =>  logger.info("writing files in orc format ");writer.orc(path)
+          case _ => logger.info("writing files in parquet format ");writer.parquet(path)
         }
       }
     }

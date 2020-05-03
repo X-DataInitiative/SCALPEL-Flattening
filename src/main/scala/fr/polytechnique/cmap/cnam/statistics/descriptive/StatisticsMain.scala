@@ -52,7 +52,7 @@ object StatisticsMain extends Main {
       .withColumn("TableName", lit(flatConf.name))
       .persist()
 
-    flatTableStats.writeParquetAndORC(flatConf.output + "/flat_table")(flatConf.saveMode, flatConf.fileFormat)
+    flatTableStats.writeParquetAndORC(flatConf.output + "/flat_table", flatConf.fileFormat)(flatConf.saveMode)
 
     if (flatConf.singleTables.nonEmpty) {
       val singleTablesStats = flatConf.singleTables.map {
@@ -64,13 +64,13 @@ object StatisticsMain extends Main {
           computeSingleTableStats(singleTableData, isCentral, singleTableConf, flatConf.joinKeys)
       }.reduce(_.union(_)).persist()
 
-      singleTablesStats.writeParquetAndORC(flatConf.output + "/single_tables")(flatConf.saveMode, flatConf.fileFormat)
+      singleTablesStats.writeParquetAndORC(flatConf.output + "/single_tables", flatConf.fileFormat)(flatConf.saveMode)
       val diff = exceptOnColumns(
         flatTableStats.select(singleTablesStats.columns.map(col): _*),
         singleTablesStats,
         (singleTablesStats.columns.toSet - "TableName").toList
       ).persist()
-      diff.writeParquetAndORC(flatConf.output + "/diff")(flatConf.saveMode, flatConf.fileFormat)
+      diff.writeParquetAndORC(flatConf.output + "/diff", flatConf.fileFormat)(flatConf.saveMode)
 
       import diff.sparkSession.implicits._
 
@@ -96,7 +96,7 @@ object StatisticsMain extends Main {
         }.toMap
 
         exceptOnJoinKeys(flatTable, singleTables)
-          .writeParquetAndORC(flatConf.output + "/diff_join_keys")(flatConf.saveMode, flatConf.fileFormat)
+          .writeParquetAndORC(flatConf.output + "/diff_join_keys", flatConf.fileFormat)(flatConf.saveMode)
 
       }
 

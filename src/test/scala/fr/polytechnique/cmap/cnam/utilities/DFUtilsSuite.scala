@@ -187,14 +187,14 @@ class DFUtilsSuite extends SharedContext {
     val expected = data
     val expectedAppend = data.union(data)
     //When
-    data.writeParquetAndORC(path)("overwrite")
+    data.writeParquetAndORC(path,"parquet")("overwrite")
     val result = spark.read.parquet(path)
     val exception = intercept[Exception] {
-      data.writeParquetAndORC(path)("errorIfExists")
+      data.writeParquetAndORC(path,"parquet")("errorIfExists")
     }
-    data.writeParquetAndORC(path)("append")
+    data.writeParquetAndORC(path,"parquet")("append")
     val resultAppend = spark.read.parquet(path)
-    data.writeParquetAndORC("target/test/dummy/output")("withTimestamp")
+    data.writeParquetAndORC("target/test/dummy/output","parquet")("withTimestamp")
     val resultWithTimestamp = spark.read.parquet("target/test/dummy/output")
     //Then
     // Then

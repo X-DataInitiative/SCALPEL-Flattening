@@ -66,7 +66,7 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
     Logger.getRootLogger.setLevel(Level.ERROR)
     val t0 = System.nanoTime()
-    table.df.writeParquetAndORC(outputBasePath + "/" + table.name)(saveMode,config.fileFormat)
+    table.df.writeParquetAndORC(outputBasePath + "/" + table.name,fileFormat =  config.fileFormat)(saveMode)
     val t1 = System.nanoTime()
     logger.info(s"   writing duration ${table.name} ${(t1 - t0) / Math.pow(10, 9)} sec")
   }
