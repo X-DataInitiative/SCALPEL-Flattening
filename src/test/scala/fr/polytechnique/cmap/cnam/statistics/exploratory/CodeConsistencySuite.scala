@@ -58,8 +58,8 @@ class CodeConsistencySuite extends SharedContext {
     // When
     CodeConsistency.evaluate(dcirCompact, irBenCompact, mcoCompact, irImbCompact, outputPathRoot)
 
-    import utilities.DFUtils.readParquet
-    val result = readParquet(sqlCtx, outputPathRoot + "/codeConsistency").as[OutputMetric]
+    import utilities.DFUtils.readParquetAndORC
+    val result = readParquetAndORC(sqlCtx, outputPathRoot + "/codeConsistency").as[OutputMetric]
 
     // Then
     assertDSs(expectedResult, result)

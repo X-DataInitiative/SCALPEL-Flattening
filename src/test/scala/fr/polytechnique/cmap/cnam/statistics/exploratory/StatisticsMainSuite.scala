@@ -65,16 +65,16 @@ class StatisticsMainSuite extends SharedContext {
     // When
     StatisticsMain.run(sqlCtx, argsMap)
 
-    import DFUtils.readParquet
-    val nbLinesDcirCountByPatient = readParquet(sqlCtx, outputPathRoot + "/dcirCountByPatient")
-    val nbLinesMcoCountByPatient = readParquet(sqlCtx, outputPathRoot + "/mcoCountByPatient")
-    val nbLinesDcirCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/dcirCountByPatientAndMonth")
-    val nbLinesMcoCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/mcoCountByPatientAndMonth")
+    import DFUtils.readParquetAndORC
+    val nbLinesDcirCountByPatient = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirCountByPatient")
+    val nbLinesMcoCountByPatient = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoCountByPatient")
+    val nbLinesDcirCountByPatientAndMonth = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirCountByPatientAndMonth")
+    val nbLinesMcoCountByPatientAndMonth = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoCountByPatientAndMonth")
 
-    val dcirPurchaseCountByPatient = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByMonth")
-    val mcoDiagCountByPatient = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByMonth")
-    val dcirPurchaseCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatientAndMonth")
-    val mcoDiagCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByPatientAndMonth")
+    val dcirPurchaseCountByPatient = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirPurchaseCountByMonth")
+    val mcoDiagCountByPatient = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoDiagCountByMonth")
+    val dcirPurchaseCountByPatientAndMonth = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatientAndMonth")
+    val mcoDiagCountByPatientAndMonth = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoDiagCountByPatientAndMonth")
 
     // Then
     assertDFs(nbLinesDcirCountByPatient, expectedNbLinesDcirCountByPatient)

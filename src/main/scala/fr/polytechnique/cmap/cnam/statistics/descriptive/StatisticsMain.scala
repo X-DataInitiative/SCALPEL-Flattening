@@ -6,7 +6,7 @@ import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset, SQLContext}
 import fr.polytechnique.cmap.cnam.Main
-import fr.polytechnique.cmap.cnam.utilities.DFUtils.readParquet
+import fr.polytechnique.cmap.cnam.utilities.DFUtils.readParquetAndORC
 
 case class TableSchema(tableName: String, columnTypes: Map[String, String])
 
@@ -26,12 +26,13 @@ object StatisticsMain extends Main {
     import CustomDescriber.CustomDescriberImplicits
     import OldFlatHelper._
 
-    val prefixedData = if (isCentral)
+    val prefixedData = if (isCentral) {
       singleTableData
-    else
+    } else
     // Join keys are removed because their stats are already computed in the central table
+    {
       singleTableData.drop(joinKeys: _*).prefixColumnNames(singleConf.name, "__")
-
+    }
     prefixedData
       .customDescribe(distinctOnly = true)
       .withColumn("TableName", lit(singleConf.name))
@@ -51,23 +52,25 @@ object StatisticsMain extends Main {
       .withColumn("TableName", lit(flatConf.name))
       .persist()
 
-    flatTableStats.writeParquet(flatConf.output + "/flat_table")(flatConf.saveMode)
+    flatTableStats.writeParquetAndORC(flatConf.output + "/flat_table")(flatConf.saveMode, flatConf.fileFormat)
 
     if (flatConf.singleTables.nonEmpty) {
       val singleTablesStats = flatConf.singleTables.map {
         singleTableConf =>
-          val singleTableData = readParquet(data.sqlContext, singleTableConf.inputPath).drop("year")
+          val singleTableData = readParquetAndORC(data.sqlContext, singleTableConf.inputPath, flatConf.fileFormat).drop(
+            "year"
+          )
           val isCentral = flatConf.centralTable == singleTableConf.name
           computeSingleTableStats(singleTableData, isCentral, singleTableConf, flatConf.joinKeys)
       }.reduce(_.union(_)).persist()
 
-      singleTablesStats.writeParquet(flatConf.output + "/single_tables")(flatConf.saveMode)
+      singleTablesStats.writeParquetAndORC(flatConf.output + "/single_tables")(flatConf.saveMode, flatConf.fileFormat)
       val diff = exceptOnColumns(
         flatTableStats.select(singleTablesStats.columns.map(col): _*),
         singleTablesStats,
         (singleTablesStats.columns.toSet - "TableName").toList
       ).persist()
-      diff.writeParquet(flatConf.output + "/diff")(flatConf.saveMode)
+      diff.writeParquetAndORC(flatConf.output + "/diff")(flatConf.saveMode, flatConf.fileFormat)
 
       import diff.sparkSession.implicits._
 
@@ -78,7 +81,7 @@ object StatisticsMain extends Main {
         .map(_.getString(0))
         .collect()
       if (tableNames.nonEmpty) {
-        val flatTable = readParquet(diff.sqlContext, flatConf.inputPath)
+        val flatTable = readParquetAndORC(diff.sqlContext, flatConf.inputPath, flatConf.fileFormat)
           .select(flatConf.joinKeys.map(col): _*)
           .distinct()
           .persist()
@@ -87,13 +90,13 @@ object StatisticsMain extends Main {
           config => tableNames.contains(config.name)
         }.map {
           config =>
-            config.name -> readParquet(diff.sqlContext, config.inputPath)
+            config.name -> readParquetAndORC(diff.sqlContext, config.inputPath, flatConf.fileFormat)
               .select(flatConf.joinKeys.map(col): _*)
               .distinct()
         }.toMap
 
         exceptOnJoinKeys(flatTable, singleTables)
-          .writeParquet(flatConf.output + "/diff_join_keys")(flatConf.saveMode)
+          .writeParquetAndORC(flatConf.output + "/diff_join_keys")(flatConf.saveMode, flatConf.fileFormat)
 
       }
 
@@ -129,10 +132,12 @@ object StatisticsMain extends Main {
 
       statisticsConfig.oldFlat.foreach { conf =>
 
-        val tablesSchema: List[TableSchema] = statisticsConfig.columnTypes.map(x =>
-          TableSchema(x._1, x._2.toMap)).toList
+        val tablesSchema: List[TableSchema] = statisticsConfig.columnTypes.map(
+          x =>
+            TableSchema(x._1, x._2.toMap)
+        ).toList
 
-        val oldFlatData = readParquet(sqlContext, conf.inputPath)
+        val oldFlatData = readParquetAndORC(sqlContext, conf.inputPath, statisticsConfig.fileFormat)
           .drop("key")
           .changeColumnNameDelimiter
           .changeSchema(tablesSchema, conf.centralTable, conf.dateFormat)
@@ -143,7 +148,7 @@ object StatisticsMain extends Main {
 
     // Compute and save stats for the new flattening
     statisticsConfig.newFlat.foreach { conf =>
-      val flatData = readParquet(sqlContext, conf.inputPath)
+      val flatData = readParquetAndORC(sqlContext, conf.inputPath, statisticsConfig.fileFormat)
       describeFlatTable(flatData, conf)
     }
 

@@ -21,7 +21,7 @@ class PMSIFlatTableSuite extends SharedContext {
 
 
     // When
-    flattenedTableTest.writeAsParquet()
+    flattenedTableTest.writeAsParquetAndORC()
     val result = sqlContext.read.parquet(resultPath)
     var result_cols = result.columns.toList.sorted
     result_cols = result_cols//.filter(column => !(column.contains("GHM")))
@@ -49,7 +49,7 @@ class PMSIFlatTableSuite extends SharedContext {
 
 
     // When
-    flattenedTableTest.writeAsParquet()
+    flattenedTableTest.writeAsParquetAndORC()
     val result = sqlContext.read.parquet(resultPath)
     var result_cols = result.columns.toList.sorted
     result_cols = result_cols//.filter(column => !(column.contains("GHM")))

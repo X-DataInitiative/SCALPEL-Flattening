@@ -23,7 +23,7 @@ class FlatteningSuite extends SharedContext {
     }.toMap
 
     //When
-    val meta = Flattening.saveCSVTablesAsParquet(sqlContext, conf)
+    val meta = Flattening.saveCSVTablesAsParquetAndORC(sqlContext, conf)
     val result = meta.map {
       op =>
         op.outputTable -> sqlContext.read

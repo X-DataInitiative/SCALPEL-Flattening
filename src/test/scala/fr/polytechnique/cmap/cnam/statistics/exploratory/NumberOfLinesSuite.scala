@@ -64,14 +64,14 @@ class NumberOfLinesSuite extends SharedContext {
     val outputPathRoot = "target/test/output/statistics/distribution"
 
     // When
-    import utilities.DFUtils.readParquet
+    import utilities.DFUtils.readParquetAndORC
 
     NumberOfLines.evaluate(dcirCompact, mcoCompact, outputPathRoot)
-    val dcirCountByPatient = readParquet(sqlCtx, outputPathRoot + "/dcirCountByPatient")
-    val mcoCountByPatient = readParquet(sqlCtx, outputPathRoot + "/mcoCountByPatient")
+    val dcirCountByPatient = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirCountByPatient")
+    val mcoCountByPatient = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoCountByPatient")
 
-    val dcirCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/dcirCountByPatientAndMonth")
-    val mcoCountByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/mcoCountByPatientAndMonth")
+    val dcirCountByPatientAndMonth = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirCountByPatientAndMonth")
+    val mcoCountByPatientAndMonth = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoCountByPatientAndMonth")
 
     // Then
     assertDFs(dcirCountByPatient, expectedDcirOutputByPatient)

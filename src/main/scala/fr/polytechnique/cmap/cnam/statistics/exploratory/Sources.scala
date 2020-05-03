@@ -8,10 +8,10 @@ import org.apache.spark.sql.{Column, DataFrame, Dataset, SQLContext}
 import fr.polytechnique.cmap.cnam.utilities.DFUtils
 
 case class DcirCompact(
-    DCIR_NUM_ENQ: String,
-    BEN_NAI_ANN: String,
-    BEN_DCD_DTE: Option[Date],
-    Purchase_Date_trunc: String)
+  DCIR_NUM_ENQ: String,
+  BEN_NAI_ANN: String,
+  BEN_DCD_DTE: Option[Date],
+  Purchase_Date_trunc: String)
 
 case class McoCompact(MCO_NUM_ENQ: String, ENT_DAT: Date, Diagnosis_Date_trunc: String)
 
@@ -49,16 +49,16 @@ object Sources {
     col("MCO_B__SOR_ANN")
   )
 
-  import DFUtils.readParquet
+  import DFUtils.readParquetAndORC
 
-  def annotatedDcir(sqlContext: SQLContext, dcirFlatPath: String): DataFrame = {
-    readParquet(sqlContext, dcirFlatPath)
+  def annotatedDcir(sqlContext: SQLContext, dcirFlatPath: String, fileFormat: String): DataFrame = {
+    readParquetAndORC(sqlContext, dcirFlatPath, fileFormat)
       .withColumn("Purchase_Date_trunc", dcirTruncPurchaseDateCol)
       .withColumnRenamed("NUM_ENQ", "DCIR_NUM_ENQ")
   }
 
-  def annotatedMco(sqlContext: SQLContext, mcoFlatPath: String): DataFrame = {
-    readParquet(sqlContext, mcoFlatPath)
+  def annotatedMco(sqlContext: SQLContext, mcoFlatPath: String, fileFormat: String): DataFrame = {
+    readParquetAndORC(sqlContext, mcoFlatPath, fileFormat)
       .withColumn("Diagnosis_Date_trunc", mcoTruncDiagDateCol)
       .withColumnRenamed("NUM_ENQ", "MCO_NUM_ENQ")
   }
@@ -79,17 +79,17 @@ object Sources {
       .distinct
   }
 
-  def irBenCompact(sqlContext: SQLContext, irBenPath: String): Dataset[IrBenCompact] = {
+  def irBenCompact(sqlContext: SQLContext, irBenPath: String, fileFormat: String): Dataset[IrBenCompact] = {
     import sqlContext.implicits._
-    readParquet(sqlContext, irBenPath)
+    readParquetAndORC(sqlContext, irBenPath, fileFormat)
       .select(IrBenCompact.columns: _*)
       .as[IrBenCompact]
       .distinct
   }
 
-  def irImbCompact(sqlContext: SQLContext, irImbPath: String): Dataset[IrImbCompact] = {
+  def irImbCompact(sqlContext: SQLContext, irImbPath: String, fileFormat: String): Dataset[IrImbCompact] = {
     import sqlContext.implicits._
-    readParquet(sqlContext, irImbPath)
+    readParquetAndORC(sqlContext, irImbPath, fileFormat)
       .select(IrImbCompact.columns: _*)
       .as[IrImbCompact]
       .distinct

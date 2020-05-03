@@ -47,9 +47,9 @@ class NumberOfEventsSuite extends SharedContext {
     // When
     NumberOfEvents.computeAndSaveByMonth(dcirCompact, mcoCompact, outputPathRoot)
 
-    import utilities.DFUtils.readParquet
-    val dcirOutput = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByMonth")
-    val mcoOutput = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByMonth")
+    import utilities.DFUtils.readParquetAndORC
+    val dcirOutput = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirPurchaseCountByMonth")
+    val mcoOutput = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoDiagCountByMonth")
 
     // Then
     assertDFs(dcirOutput, expectedDcirOutput, true)
@@ -96,9 +96,9 @@ class NumberOfEventsSuite extends SharedContext {
     // When
     NumberOfEvents.computeAndSaveByPatientAndMonth(dcirCompactInput, mcoCompactInput, outputPathRoot)
 
-    import utilities.DFUtils.readParquet
-    val dcirOutput = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatientAndMonth")
-    val mcoOutput = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByPatientAndMonth")
+    import utilities.DFUtils.readParquetAndORC
+    val dcirOutput = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatientAndMonth")
+    val mcoOutput = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoDiagCountByPatientAndMonth")
 
     // Then
     assertDFs(dcirOutput, expectedDcirOutput, true)
@@ -157,12 +157,12 @@ class NumberOfEventsSuite extends SharedContext {
     // When
     NumberOfEvents.evaluate(dcirCompact, mcoCompact, outputPathRoot)
 
-    import utilities.DFUtils.readParquet
-    val dcirOutputByPatient = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByMonth")
-    val mcoOutputByPatient = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByMonth")
+    import utilities.DFUtils.readParquetAndORC
+    val dcirOutputByPatient = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirPurchaseCountByMonth")
+    val mcoOutputByPatient = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoDiagCountByMonth")
 
-    val dcirOutputByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatientAndMonth")
-    val mcoOutputByPatientAndMonth = readParquet(sqlCtx, outputPathRoot + "/mcoDiagCountByPatientAndMonth")
+    val dcirOutputByPatientAndMonth = readParquetAndORC(sqlCtx, outputPathRoot + "/dcirPurchaseCountByPatientAndMonth")
+    val mcoOutputByPatientAndMonth = readParquetAndORC(sqlCtx, outputPathRoot + "/mcoDiagCountByPatientAndMonth")
 
     // Then
     assertDFs(dcirOutputByPatient, expectedDcirOutputByPatient)

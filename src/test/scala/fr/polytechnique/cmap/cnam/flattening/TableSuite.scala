@@ -155,9 +155,9 @@ class TableSuite extends SharedContext {
     val parquetTablesPath = "src/test/resources/flattening/parquet-table/single_table"
     val tableName = "ER_CAM_F"
     val expectedDf = sqlContext.read.parquet(s"$parquetTablesPath/$tableName")
-
+val fileFormat = "parquet"
     // When
-    val result = Table.build(sqlContext, parquetTablesPath, tableName)
+    val result = Table.build(sqlContext, parquetTablesPath, tableName,fileFormat)
     // Then
     assert(result.df sameAs expectedDf)
     assert(result.name === tableName)

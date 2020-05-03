@@ -9,7 +9,7 @@ import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
 class PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig)
   extends FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
-  val pmsiPatientTable: Table = Table.build(sqlContext, inputBasePath, config.pmsiPatientTableName.get)
+  val pmsiPatientTable: Table = Table.build(sqlContext, inputBasePath, config.pmsiPatientTableName.get,config.fileFormat)
 
   /**
    * This method merge two schemas, if a column is not in the schema of the

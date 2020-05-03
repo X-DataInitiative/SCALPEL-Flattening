@@ -29,7 +29,7 @@ object FlatteningMain extends Main {
 
 
     logger.info("begin converting csv to parquet")
-    val metaConvert = saveCSVTablesAsParquet(sqlContext, conf)
+    val metaConvert = saveCSVTablesAsParquetAndORC(sqlContext, conf)
 
     logger.info("begin flattening")
     logger.info(sqlContext.getConf("spark.sql.shuffle.partitions"))

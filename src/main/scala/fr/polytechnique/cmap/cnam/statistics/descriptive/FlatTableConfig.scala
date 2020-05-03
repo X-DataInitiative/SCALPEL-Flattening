@@ -10,7 +10,8 @@ case class FlatTableConfig(
   inputPath: String,
   outputStatPath: String,
   singleTables: List[SingleTableConfig] = List.empty[SingleTableConfig],
-  saveMode: String = "errorIfExists") {
+  saveMode: String = "errorIfExists",
+  fileFormat: String = "parquet") {
 
   import fr.polytechnique.cmap.cnam.utilities.DFUtils.StringPath
 

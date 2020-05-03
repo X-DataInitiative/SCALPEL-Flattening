@@ -156,7 +156,7 @@ class FlatTableSuite extends SharedContext {
 
 
     // When
-    flattenedTableTest.writeAsParquet()
+    flattenedTableTest.writeAsParquetAndORC()
     val result = sqlContext.read.parquet(resultPath)
 
     // Then
@@ -174,7 +174,7 @@ class FlatTableSuite extends SharedContext {
     val resultPath = conf.flatTablePath
     val expectedDf = sqlContext.read.parquet("src/test/resources/flattening/parquet-table/flat_table/by_month/DCIR")
     // When
-    flattenedTableTest.writeAsParquet()
+    flattenedTableTest.writeAsParquetAndORC()
     val result = sqlContext.read.parquet(resultPath)
     // Then
     assert(resultPath == flattenedTableTest.outputBasePath)
@@ -193,7 +193,7 @@ class FlatTableSuite extends SharedContext {
       .parquet("src/test/resources/flattening/parquet-table/flat_table/by_month/DCIR")
       .filter("month=3")
     // When
-    flattenedTableTest.writeAsParquet()
+    flattenedTableTest.writeAsParquetAndORC()
     val result = sqlContext.read.parquet(resultPath)
     // Then
     assert(resultPath == flattenedTableTest.outputBasePath)

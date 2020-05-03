@@ -59,8 +59,9 @@ object Table {
   def build(
     sqlContext: SQLContext,
     inputBasePath: String,
-    name: String): Table = {
-    val df = DFUtils.readParquet(sqlContext, inputBasePath + "/" + name)
+    name: String,
+    fileFormat: String): Table = {
+    val df = DFUtils.readParquetAndORC(sqlContext, inputBasePath + "/" + name,fileFormat)
     new Table(name, df)
   }
 }

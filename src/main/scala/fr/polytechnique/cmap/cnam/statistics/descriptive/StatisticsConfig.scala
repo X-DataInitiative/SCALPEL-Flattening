@@ -9,7 +9,8 @@ case class StatisticsConfig(
   describeOld: Boolean = true,
   schemaFilePath: List[String] = List.empty[String],
   oldFlat: List[FlatTableConfig] = List.empty[FlatTableConfig],
-  newFlat: List[FlatTableConfig] = List.empty[FlatTableConfig]
+  newFlat: List[FlatTableConfig] = List.empty[FlatTableConfig],
+  fileFormat: String = "parquet"
 ) extends Config {
 
   private lazy val csvSchema = CSVSchemaReader.readSchemaFiles(schemaFilePath)

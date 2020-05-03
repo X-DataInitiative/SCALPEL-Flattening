@@ -13,7 +13,8 @@ case class ConfigPartition(
   partitionColumn: Option[String] = None,
   saveSingleTable: Boolean = true,
   singleTableSaveMode: String = "append",
-  actions: List[String] = List.empty[String])
+  actions: List[String] = List.empty[String],
+  fileFormat: String = "parquet")
 
 case class FlatteningConfig(
   basePath: String,
@@ -37,16 +38,18 @@ case class FlatteningConfig(
 
   lazy val flatTablePath: String = root + "/flat_table"
 
-  lazy val joinTableConfigs: List[JoinTableConfig] = join.map(config => {
-    val input = if (config.inputPath.isDefined) config.inputPath else Some(singleTablePath)
-    val output = if (config.flatOutputPath.isDefined) config.flatOutputPath else Some(flatTablePath)
-    val refs = config.refsToJoin.map {
-      refConfig =>
-        val refInput = if (refConfig.inputPath.isDefined) refConfig.inputPath else input
-        refConfig.copy(inputPath = refInput)
+  lazy val joinTableConfigs: List[JoinTableConfig] = join.map(
+    config => {
+      val input = if (config.inputPath.isDefined) config.inputPath else Some(singleTablePath)
+      val output = if (config.flatOutputPath.isDefined) config.flatOutputPath else Some(flatTablePath)
+      val refs = config.refsToJoin.map {
+        refConfig =>
+          val refInput = if (refConfig.inputPath.isDefined) refConfig.inputPath else input
+          refConfig.copy(inputPath = refInput)
+      }
+      config.copy(inputPath = input, flatOutputPath = output, refsToJoin = refs)
     }
-    config.copy(inputPath = input, flatOutputPath = output, refsToJoin = refs)
-  })
+  )
 
 
   def partitions: List[ConfigPartition] = {
@@ -67,12 +70,12 @@ case class FlatteningConfig(
 object FlatteningConfig extends ConfigLoader {
 
   /**
-   * Reads a configuration file and merges it with the default file.
-   *
-   * @param path The path of the given file.
-   * @param env  The environment in the config file (usually can be "cmap", "cnam" or "test").
-   * @return An instance of FlatteningConfig containing all parameters.
-   */
+    * Reads a configuration file and merges it with the default file.
+    *
+    * @param path The path of the given file.
+    * @param env  The environment in the config file (usually can be "cmap", "cnam" or "test").
+    * @return An instance of FlatteningConfig containing all parameters.
+    */
   def load(path: String, env: String): FlatteningConfig = {
     val defaultPath = "flattening/config/main.conf"
     loadConfigWithDefaults[FlatteningConfig](path, defaultPath, env)
@@ -90,7 +93,8 @@ object FlatteningConfig extends ConfigLoader {
       partitionColumn = tableConfig.partitionColumn,
       saveSingleTable = partitionConfig.saveSingleTable,
       singleTableSaveMode = partitionConfig.singleTableSaveMode,
-      actions = tableConfig.actions)
+      actions = tableConfig.actions
+    )
   }
 
   case class YearAndMonths(year: Int, months: List[Int] = List.empty[Int])
@@ -119,7 +123,8 @@ object FlatteningConfig extends ConfigLoader {
     saveFlatTable: Boolean = true,
     flatTableSaveMode: String = "append",
     onlyOutput: List[YearAndMonths] = List.empty[YearAndMonths],
-    refsToJoin: List[Reference] = List.empty[Reference])
+    refsToJoin: List[Reference] = List.empty[Reference],
+    fileFormat: String = "parquet")
 
   case class PartitionConfig(
     year: Option[String] = None,
@@ -132,10 +137,11 @@ object FlatteningConfig extends ConfigLoader {
      * normal table transforms to parquet files with table name and year
      */
     def outputPath(root: String, strategy: String, name: String): String = {
-      if (strategy == "year")
+      if (strategy == "year") {
         root + "/" + name + "/year=" + year.get
-      else
+      } else {
         root + "/" + name
+      }
     }
 
   }
@@ -146,7 +152,8 @@ object FlatteningConfig extends ConfigLoader {
     dateFormat: String = "dd/MM/yyyy",
     partitions: List[PartitionConfig] = List.empty[PartitionConfig],
     partitionColumn: Option[String] = None,
-    actions: List[String] = List.empty[String] //actions applied to the table. For example addMoleculeCombinationColumn to IR_PHA_R
+    actions: List[String] = List
+      .empty[String] //actions applied to the table. For example addMoleculeCombinationColumn to IR_PHA_R
   )
 
   case class TablesConfig(tables: List[TableConfig])

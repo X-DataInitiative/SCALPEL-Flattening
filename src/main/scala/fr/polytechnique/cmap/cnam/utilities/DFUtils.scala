@@ -20,13 +20,15 @@ object DFUtils {
       .csv(inputPath: _*)
   }
 
-  def readParquet(
+  def readParquetAndORC(
     sqlContext: SQLContext,
-    inputPath: String): DataFrame = {
-    sqlContext
-      .read
-      .option("mergeSchema", "true")
-      .parquet(inputPath)
+    inputPath: String,
+    fileFormat: String = "parquet"): DataFrame = {
+
+    fileFormat match {
+      case "orc" => sqlContext.read.option("mergeSchema", "true").orc(inputPath)
+      case _ => sqlContext.read.option("mergeSchema", "true").parquet(inputPath)
+    }
   }
 
   def applySchema(df: DataFrame, columnsType: Map[String, String], dateFormat: String): DataFrame = {
@@ -77,20 +79,23 @@ object DFUtils {
 
         val dataFrameGroupedByRows = dataFrameOrdered.groupBy(
           dataFrameOrdered.columns.head,
-          dataFrameOrdered.columns.tail: _*).count()
+          dataFrameOrdered.columns.tail: _*
+        ).count()
         val otherGroupedByRows = otherOrdered.groupBy(
           otherOrdered.columns.head,
-          otherOrdered.columns.tail: _*).count()
+          otherOrdered.columns.tail: _*
+        ).count()
 
         dataFrameGroupedByRows.except(otherGroupedByRows).count() == 0 &&
           otherGroupedByRows.except(dataFrameGroupedByRows).count == 0
       }
 
       def columnNameType(schema: StructType): Seq[(String, DataType)] = {
-        if (weakComparaison)
+        if (weakComparaison) {
           schema.fields.sortBy(_.name).map((field: StructField) => (field.name, field.dataType))
-        else
+        } else {
           schema.fields.map((field: StructField) => (field.name, field.dataType))
+        }
       }
 
       columnNameType(dataFrame.schema) == columnNameType(other.schema) &&
@@ -111,20 +116,29 @@ object DFUtils {
         .mode(saveMode(mode))
         .option("delimiter", ",")
         .option("header", "true")
-      if (partitionColumns.nonEmpty)
+      if (partitionColumns.nonEmpty) {
         writer.partitionBy(partitionColumns: _*).csv(path)
-      else
+      } else {
         writer.csv(path)
+      }
     }
 
     @scala.annotation.varargs
-    def writeParquet(path: String, partitionColumns: String*)(mode: String): Unit = {
+    def writeParquetAndORC(path: String, partitionColumns: String*)
+      (mode: String, fileFormat: String = "parquet"): Unit = {
       val writer = dataFrame.write
         .mode(saveMode(mode))
-      if (partitionColumns.nonEmpty)
-        writer.partitionBy(partitionColumns: _*).parquet(path)
-      else
-        writer.parquet(path)
+      if (partitionColumns.nonEmpty) {
+        fileFormat match {
+          case "orc" => writer.partitionBy(partitionColumns: _*).orc(path)
+          case _ => writer.partitionBy(partitionColumns: _*).parquet(path)
+        }
+      } else {
+        fileFormat match {
+          case "orc" => writer.orc(path)
+          case _ => writer.parquet(path)
+        }
+      }
     }
 
   }

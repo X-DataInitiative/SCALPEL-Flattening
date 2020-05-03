@@ -13,23 +13,24 @@ object StatisticsMain extends Main {
 
     val inputPathRoot = argsMap.get("inputPathRoot").get
     val outputPathRoot = argsMap.get("outputPathRoot").get
+    val fileFormat = argsMap.getOrElse("fileFormat", "parquet")
 
     val dcirFlatPath = inputPathRoot + "/flat_table/DCIR"
     val mcoFlatPath = inputPathRoot + "/flat_table/MCO"
     val irBenPath = inputPathRoot + "/single_table/IR_BEN_R"
     val irImbPath = inputPathRoot + "/single_table/IR_IMB_R"
 
-    val dcir = Sources.annotatedDcir(sqlContext, dcirFlatPath)
+    val dcir = Sources.annotatedDcir(sqlContext, dcirFlatPath, fileFormat)
 
-    val mco  = Sources.annotatedMco(sqlContext, mcoFlatPath)
+    val mco = Sources.annotatedMco(sqlContext, mcoFlatPath, fileFormat)
 
     val dcirCompact = Sources.dcirCompact(dcir).persist
 
     val mcoCompact = Sources.mcoCompact(mco).persist
 
-    val irBenCompact = Sources.irBenCompact(sqlContext, irBenPath).persist
+    val irBenCompact = Sources.irBenCompact(sqlContext, irBenPath, fileFormat).persist
 
-    val irImbCompact = Sources.irImbCompact(sqlContext, irImbPath).persist
+    val irImbCompact = Sources.irImbCompact(sqlContext, irImbPath, fileFormat).persist
 
     NumberOfLines.evaluate(dcir, mco, outputPathRoot)
     NumberOfEvents.evaluate(dcirCompact, mcoCompact, outputPathRoot)
