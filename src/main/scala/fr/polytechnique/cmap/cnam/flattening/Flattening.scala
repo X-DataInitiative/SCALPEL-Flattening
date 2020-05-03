@@ -24,6 +24,7 @@ object Flattening {
             config: ConfigPartition =>
               val t0 = System.nanoTime()
               logger.info("converting table " + config.name)
+              logger.info("converting table from "+ conf.fileFormat)
               val columnsType = columnsTypeMap(config.name).toMap
 
               val rawTable = readCSV(sqlContext, config.inputPaths)

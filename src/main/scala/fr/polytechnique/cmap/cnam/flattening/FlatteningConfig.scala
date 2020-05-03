@@ -23,7 +23,8 @@ case class FlatteningConfig(
   autoBroadcastJoinThreshold: Option[String] = None,
   schemaFilePath: List[String] = List.empty[String],
   join: List[JoinTableConfig] = List.empty[JoinTableConfig],
-  tablesConfig: List[TablesConfig] = List.empty[TablesConfig]
+  tablesConfig: List[TablesConfig] = List.empty[TablesConfig],
+  fileFormat: String = "parquet"
 ) extends Config {
 
   import fr.polytechnique.cmap.cnam.utilities.DFUtils.StringPath

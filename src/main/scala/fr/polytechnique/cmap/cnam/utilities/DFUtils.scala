@@ -7,6 +7,7 @@ import java.util.Date
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import fr.polytechnique.cmap.cnam.flattening.Flattening.logger
 
 object DFUtils {
 
@@ -24,6 +25,7 @@ object DFUtils {
     sqlContext: SQLContext,
     inputPath: String,
     fileFormat: String = "parquet"): DataFrame = {
+    logger.info("reading files in format "+ fileFormat)
 
     fileFormat match {
       case "orc" => sqlContext.read.option("mergeSchema", "true").orc(inputPath)
@@ -126,6 +128,8 @@ object DFUtils {
     @scala.annotation.varargs
     def writeParquetAndORC(path: String, partitionColumns: String*)
       (mode: String, fileFormat: String = "parquet"): Unit = {
+      logger.info("writing files in format "+ fileFormat)
+
       val writer = dataFrame.write
         .mode(saveMode(mode))
       if (partitionColumns.nonEmpty) {

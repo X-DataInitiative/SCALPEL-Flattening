@@ -28,7 +28,7 @@ object FlatteningMain extends Main {
     }
 
 
-    logger.info("begin converting csv to parquet")
+    logger.info("begin converting csv to "+ conf.fileFormat)
     val metaConvert = saveCSVTablesAsParquetAndORC(sqlContext, conf)
 
     logger.info("begin flattening")
