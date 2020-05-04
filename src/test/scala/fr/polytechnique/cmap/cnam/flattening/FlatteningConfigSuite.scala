@@ -37,6 +37,7 @@ class FlatteningConfigSuite extends SharedContext with ConfigLoader {
         |
         |join = [
         |  {
+        |  file_format= orc
         |   name = "DCIR"
         |   input_path = "/path/to/input"
         |   monthly_partition_column = "FLX_DIS_DTD"
