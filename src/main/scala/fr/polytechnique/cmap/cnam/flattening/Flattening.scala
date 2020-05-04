@@ -32,11 +32,11 @@ object Flattening {
               //Do not partition data with a column including only few values
               //it will cause data skew and reduce the performance when huge data comes
               if (config.partitionColumn.isDefined) {
-                typedTable.writeParquetAndORC(config.output,config.fileFormat, config.partitionColumn.get)(
+                typedTable.writeParquetAndORC(config.output,conf.fileFormat, config.partitionColumn.get)(
                   config.singleTableSaveMode
                 )
               } else {
-                typedTable.writeParquetAndORC(config.output,config.fileFormat)(config.singleTableSaveMode)
+                typedTable.writeParquetAndORC(config.output,conf.fileFormat)(config.singleTableSaveMode)
               }
               val t1 = System.nanoTime()
               logger.info("Duration  " + (t1 - t0) / Math.pow(10, 9) + " sec")
