@@ -26,7 +26,9 @@ abstract class SharedContext extends FlatSpecLike with BeforeAndAfterAll with Be
   protected val debug: Boolean = false
 
   protected def spark: SparkSession = _spark
+
   protected def sqlContext: SQLContext = _spark.sqlContext
+
   protected def sc: SparkContext = _spark.sparkContext
 
   def assertDFs(ds1: DataFrame, ds2: DataFrame, debug: Boolean = this.debug): Unit =
@@ -57,7 +59,7 @@ abstract class SharedContext extends FlatSpecLike with BeforeAndAfterAll with Be
   }
 
   protected override def beforeAll(): Unit = {
-    if(_spark == null) {
+    if (_spark == null) {
       _spark = SparkSession
         .builder()
         .appName("Tests")
@@ -65,6 +67,7 @@ abstract class SharedContext extends FlatSpecLike with BeforeAndAfterAll with Be
         .config("spark.sql.testkey", "true")
         .config("spark.default.parallelism", 2)
         .config("spark.sql.shuffle.partitions", 2)
+        .config("spark.sql.orc.impl", "native")
         .getOrCreate()
     }
 
@@ -78,7 +81,7 @@ abstract class SharedContext extends FlatSpecLike with BeforeAndAfterAll with Be
 
   override def afterAll() {
     try {
-      if(_spark != null) {
+      if (_spark != null) {
         _spark.stop()
         _spark = null
       }

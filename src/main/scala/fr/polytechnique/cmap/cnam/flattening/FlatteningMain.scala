@@ -27,6 +27,8 @@ object FlatteningMain extends Main {
         sqlContext.setConf("spark.sql.autoBroadcastJoinThreshold", newThresholdValue.toString)
     }
 
+    sqlContext.setConf("spark.sql.orc.impl", "native")
+
 
     logger.info("begin converting csv to "+ conf.fileFormat)
     val metaConvert = saveCSVTablesAsParquetAndORC(sqlContext, conf)
