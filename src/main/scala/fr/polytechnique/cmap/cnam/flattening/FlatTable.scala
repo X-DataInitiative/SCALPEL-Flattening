@@ -2,6 +2,7 @@
 
 package fr.polytechnique.cmap.cnam.flattening
 
+import scala.util.Try
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
@@ -10,10 +11,10 @@ import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
   val inputBasePath: String = config.inputPath.get
-  val mainTable: Table = Table.build(sqlContext, inputBasePath, config.mainTableName,config.fileFormat)
+  val mainTable: Table = Table.build(sqlContext, inputBasePath, config.mainTableName, config.fileFormat)
   val tablesToJoin: List[Table] = config.tablesToJoin.map(
     tableName =>
-      Table.build(sqlContext, inputBasePath, tableName,config.fileFormat)
+      Table.build(sqlContext, inputBasePath, tableName, config.fileFormat)
   )
   val outputBasePath: String = config.flatOutputPath.get
   val foreignKeys: List[String] = config.joinKeys
@@ -21,7 +22,7 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
   val monthlyPartitionColumn: Option[String] = config.monthlyPartitionColumn
   val saveMode: String = config.flatTableSaveMode
   val referencesToJoin: List[(Table, FlatteningConfig.Reference)] = config.refsToJoin.map {
-    refConfig => (Table.build(sqlContext, refConfig.inputPath.get, refConfig.name,config.fileFormat), refConfig)
+    refConfig => (Table.build(sqlContext, refConfig.inputPath.get, refConfig.name, config.fileFormat), refConfig)
   }
 
   def flatTablePerYear: Array[Int] = mainTable.getYears.filter {
@@ -64,9 +65,17 @@ class FlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
 
   def writeTable(table: Table): Unit = {
 
+    val fileFormat = Try {
+      config.fileFormat match {
+        case "orc" => "orc"
+        case _ => "parquet"
+      }
+    }.getOrElse("parquet")
+
     Logger.getRootLogger.setLevel(Level.ERROR)
+
     val t0 = System.nanoTime()
-    table.df.writeParquetAndORC(outputBasePath + "/" + table.name,fileFormat =  config.fileFormat)(saveMode)
+    table.df.writeParquetAndORC(outputBasePath + "/" + table.name, fileFormat = fileFormat)(saveMode)
     val t1 = System.nanoTime()
     logger.info(s"   writing duration ${table.name} ${(t1 - t0) / Math.pow(10, 9)} sec")
   }
