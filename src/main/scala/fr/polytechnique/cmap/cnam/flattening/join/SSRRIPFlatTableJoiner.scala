@@ -1,34 +1,33 @@
 // License: BSD 3 clause
 
-package fr.polytechnique.cmap.cnam.flattening
+package fr.polytechnique.cmap.cnam.flattening.join
 
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
+import fr.polytechnique.cmap.cnam.flattening.tables.{FlatTable, Table}
 
-class SSRRIPFlatTable(sqlContext: SQLContext, config: JoinTableConfig)
-  extends PMSIFlatTable(sqlContext: SQLContext, config: JoinTableConfig) {
+class SSRRIPFlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig)
+  extends PMSIFlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig) {
 
   val patientKeys: List[String] = config.joinKeysPatient.get
 
-  override def joinByYear(year: Int): Table = {
-    val name = s"$tableName/year=$year"
+  override def joinByYear(name: String, year: Int): Table[FlatTable] = {
     val centralTableDF: DataFrame = joinFunctionPatientKeys(mainTable.filterByYearAndAnnotate(year, foreignKeys),
-      pmsiPatientTable.filterByYear(year).drop("year")).cache()
+      pmsiPatientTable.filterByYear(year).drop("year"))
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearAndAnnotate(year, foreignKeys))
       .map(df => joinFunction(centralTableDF, df)).reduce(unionWithDifferentSchemas)
-    new Table(name, joinedDF)
+    FlatTable(name, joinedDF)
   }
 
-  override def joinByYearAndDate(year: Int, month: Int, monthCol: String): Table = {
-    val name = s"$tableName/year=$year/month=$month"
-    val centralTableDF: DataFrame = joinFunctionPatientKeys(mainTable.filterByYearMonthAndAnnotate(year, month, foreignKeys,  monthCol).drop("year"),
+  override def joinByYearAndDate(name: String, year: Int, month: Int, monthCol: String): Table[FlatTable] = {
+    val centralTableDF: DataFrame = joinFunctionPatientKeys(mainTable.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol).drop("year"),
       pmsiPatientTable.filterByYearAndMonth(year, month, monthCol))
     val joinedDF = tablesToJoin
       .map(table => table.filterByYearMonthAndAnnotate(year, month, foreignKeys, monthCol))
       .map(table => joinFunction(centralTableDF, table))
       .reduce(unionWithDifferentSchemas)
-    new Table(name, joinedDF)
+    FlatTable(name, joinedDF)
   }
 
   val joinFunctionPatientKeys: (DataFrame, DataFrame) => DataFrame =

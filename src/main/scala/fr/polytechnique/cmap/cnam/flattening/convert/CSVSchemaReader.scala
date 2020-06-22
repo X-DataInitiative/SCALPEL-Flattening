@@ -1,7 +1,6 @@
-// License: BSD 3 clause
+package fr.polytechnique.cmap.cnam.flattening.convert
 
-package fr.polytechnique.cmap.cnam.flattening
-
+import fr.polytechnique.cmap.cnam.flattening.Schema
 import fr.polytechnique.cmap.cnam.utilities.CollectionTool._
 
 object CSVSchemaReader {
@@ -20,7 +19,7 @@ object CSVSchemaReader {
     filenames.map(readSchemaFile).reduce(_ ++ _)
   }
 
-  def readColumnsType(configLines: List[String]): Map[String, List[(String, String)]] = {
+  def readColumnsType(configLines: List[String]): Schema = {
 
     val colNameLookup: Map[String, Int] = configLines.head.split(delimiter).map(_.trim).zipWithIndex.toMap
 

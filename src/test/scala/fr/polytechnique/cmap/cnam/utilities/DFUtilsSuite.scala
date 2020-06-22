@@ -77,7 +77,7 @@ class DFUtilsSuite extends SharedContext {
     ))
 
     //When
-    val result = applySchema(inputDF, inputSchema, inputFormat)
+    val result = inputDF.applySchema(inputSchema, inputFormat)
 
     //Then
     assert(result.schema == expectedResult)
@@ -107,7 +107,7 @@ class DFUtilsSuite extends SharedContext {
 
     //WhenThen
     intercept[java.util.NoSuchElementException] {
-      applySchema(inputDF, inputSchema, inputFormat)
+      inputDF.applySchema(inputSchema, inputFormat)
     }
   }
 

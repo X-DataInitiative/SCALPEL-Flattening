@@ -21,7 +21,7 @@ class TableSuite extends SharedContext {
       (Some("4"), None, None, "2005-05-03"),
       (Some("5"), Some("2"), Some("1"), "2005-03-06")
     ).toDF("PatientID", "codep", "dab", "date")
-    val inputTable = new Table("inputDf", inputDf)
+    val inputTable = TestTable("inputDf", inputDf)
     val expected: DataFrame = Seq(
       (Some("1"), Some("5"), None, "2008-01-01"),
       (Some("2"), None, Some("3"), "2008-05-03"),
@@ -51,7 +51,7 @@ class TableSuite extends SharedContext {
       (Some("4"), None, None, "2005-05-03"),
       (Some("5"), Some("2"), Some("1"), "2005-03-06")
     ).toDF("PatientID", "codep", "dab", "date")
-    val inputTable = new Table("central", inputDf)
+    val inputTable = TestTable("central", inputDf)
     val expected: DataFrame = Seq(
       (Some("1"), Some("5"), None, "2008-01-01"),
       (Some("2"), None, Some("3"), "2008-05-03"),
@@ -79,7 +79,7 @@ class TableSuite extends SharedContext {
       (Some("4"), None, None, 2005),
       (Some("5"), Some("2"), Some("1"), 2005)
     ).toDF("PatientID", "codep", "dab", "year")
-    val inputTable = new Table("input", inputDf)
+    val inputTable = TestTable("input", inputDf)
     val expected = List(2005, 2008, 2009)
 
     // When
@@ -108,7 +108,7 @@ class TableSuite extends SharedContext {
       (Some("5"), Some("2"), Some("1"), 2005)
     ).toDF("PatientID", "codep", "dab", "year")
 
-    val inputTable = new Table("input", inputDf)
+    val inputTable = TestTable("input", inputDf)
     val filteringYear = 2005
 
     // When
@@ -138,7 +138,7 @@ class TableSuite extends SharedContext {
       (Some("5"), Some("2"), Some("1"))
     ).toDF("PatientID", "input__codep", "input__dab")
 
-    val inputTable = new Table("input", inputDf)
+    val inputTable = TestTable("input", inputDf)
     val filteringYear = 2005
     val annotateColumnsExcept = List("PatientID", "year")
 
@@ -157,7 +157,7 @@ class TableSuite extends SharedContext {
     val expectedDf = sqlContext.read.parquet(s"$parquetTablesPath/$tableName")
 
     // When
-    val result = Table.build(sqlContext, parquetTablesPath, tableName)
+    val result = TestTable(sqlContext, parquetTablesPath, tableName)
     // Then
     assert(result.df sameAs expectedDf)
     assert(result.name === tableName)

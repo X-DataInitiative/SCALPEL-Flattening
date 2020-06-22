@@ -4,7 +4,7 @@ package fr.polytechnique.cmap.cnam.statistics.descriptive
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
-import fr.polytechnique.cmap.cnam.utilities.DFUtils
+import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
 object OldFlatHelper {
 
@@ -27,9 +27,9 @@ object OldFlatHelper {
     }
 
     def changeSchema(
-        schema: List[TableSchema],
-        mainTableName: String,
-        dateFormat: String = "dd/MM/yyyy"): DataFrame = {
+      schema: List[TableSchema],
+      mainTableName: String,
+      dateFormat: String = "dd/MM/yyyy"): DataFrame = {
 
       val unknownColumnNameType = Map("HOS_NNE_MAM" -> "String")
 
@@ -37,12 +37,12 @@ object OldFlatHelper {
         annotateJoiningTablesColumns(tableSchema, mainTableName)
       ).reduce(_ ++ _) ++ unknownColumnNameType
 
-      DFUtils.applySchema(df, flatSchema, dateFormat)
+      df.applySchema(flatSchema, dateFormat)
     }
 
     def annotateJoiningTablesColumns(
-        tableSchema: TableSchema,
-        mainTableName: String): Map[String, String] = {
+      tableSchema: TableSchema,
+      mainTableName: String): Map[String, String] = {
 
       val tableName: String = tableSchema.tableName
       val columnTypeMap: Map[String, String] = tableSchema.columnTypes
@@ -65,4 +65,5 @@ object OldFlatHelper {
       }
     }
   }
+
 }

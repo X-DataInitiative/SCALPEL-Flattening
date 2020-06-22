@@ -1,12 +1,11 @@
-// License: BSD 3 clause
+package fr.polytechnique.cmap.cnam.flattening.tables
 
-package fr.polytechnique.cmap.cnam.flattening
+import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.{DataFrame, functions}
 
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, SQLContext, functions}
-import fr.polytechnique.cmap.cnam.utilities.DFUtils
-
-class Table(val name: String, val df: DataFrame) {
+trait Tableable {
+  val name: String
+  val df: DataFrame
 
   implicit class TableHelper(df: DataFrame) {
 
@@ -21,6 +20,7 @@ class Table(val name: String, val df: DataFrame) {
   }
 
   def annotate(ignoreAnnotateColumns: List[String]): DataFrame = df.addPrefix(name, ignoreAnnotateColumns)
+
 
   def getYears: Array[Int] = df.select(col("year")).distinct.collect().map(_.getInt(0))
 
@@ -42,25 +42,13 @@ class Table(val name: String, val df: DataFrame) {
     month: Int,
     ignoreAnnotateColumns: List[String],
     dateCol: String): DataFrame = {
-    //logger.info("count table : " + df.count())
-    val df1 = filterByYear(year)
+    filterByYear(year)
       .drop("year")
-    //logger.info("df1: " + df1.count())
-    df1.withColumn("month", functions.month(col(dateCol)))
+      .withColumn("month", functions.month(col(dateCol)))
       .filter(col("month") === month)
       .drop("month")
       .addPrefix(name, ignoreAnnotateColumns)
 
   }
 
-}
-
-object Table {
-  def build(
-    sqlContext: SQLContext,
-    inputBasePath: String,
-    name: String): Table = {
-    val df = DFUtils.readParquet(sqlContext, inputBasePath + "/" + name)
-    new Table(name, df)
-  }
 }

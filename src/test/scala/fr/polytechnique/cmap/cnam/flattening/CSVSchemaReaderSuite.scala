@@ -3,6 +3,7 @@
 package fr.polytechnique.cmap.cnam.flattening
 
 import org.scalatest.FlatSpecLike
+import fr.polytechnique.cmap.cnam.flattening.convert.CSVSchemaReader
 
 class CSVSchemaReaderSuite extends FlatSpecLike {
 

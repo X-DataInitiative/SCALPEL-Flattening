@@ -4,6 +4,7 @@ package fr.polytechnique.cmap.cnam.flattening
 
 import fr.polytechnique.cmap.cnam.config.{Config, ConfigLoader}
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.{JoinTableConfig, TableConfig, TablesConfig, toConfigPartition}
+import fr.polytechnique.cmap.cnam.flattening.convert.CSVSchemaReader
 
 case class ConfigPartition(
   name: String,
@@ -31,7 +32,7 @@ case class FlatteningConfig(
 
   private lazy val root = if (withTimestamp) basePath.withTimestampSuffix(format = timestampFormat) else basePath
 
-  lazy val columnTypes: Map[String, List[(String, String)]] = CSVSchemaReader.readColumnsType(csvSchema)
+  lazy val columnTypes: Schema = CSVSchemaReader.readColumnsType(csvSchema)
 
   lazy val singleTablePath: String = root + "/single_table"
 
