@@ -29,33 +29,31 @@ object DFUtils {
       .parquet(inputPath)
   }
 
-  def applySchema(df: DataFrame, columnsType: Map[String, String], dateFormat: String): DataFrame = {
-
-    val inputColumns = df.columns
-
-    val typedColumns = inputColumns.map {
-      columnName =>
-        val columnType = columnsType(columnName)
-
-        if (columnType == "Date") {
-          UDFs.parseDate(dateFormat).apply(col(columnName)).as(columnName)
-        } else {
-          col(columnName).cast(columnType).as(columnName)
-        }
-    }
-
-    df.select(typedColumns: _*)
-  }
-
   implicit class CSVDataFrame(dataFrame: DataFrame) {
 
 
     override def toString: String = dataFrame.toString
 
+    def applySchema(columnsType: Map[String, String], dateFormat: String): DataFrame = {
+
+      val typedColumns = dataFrame.columns.map {
+        columnName =>
+          val columnType = columnsType(columnName)
+
+          if (columnType == "Date") {
+            UDFs.parseDate(dateFormat).apply(col(columnName)).as(columnName)
+          } else {
+            col(columnName).cast(columnType).as(columnName)
+          }
+      }
+
+      dataFrame.select(typedColumns: _*)
+    }
+
 
     /**
-      * This method reorders the dataframe with the alphabetical order of its columns
-      */
+     * This method reorders the dataframe with the alphabetical order of its columns
+     */
     def reorder: DataFrame = {
       val columns: Array[String] = dataFrame.columns
       val reorderedColumnNames: Array[String] = columns.sorted
@@ -63,9 +61,9 @@ object DFUtils {
     }
 
     /**
-      * This method compares the equality of two data frames. To qualify equality, the rows
-      * can be in different order but the columns should be in the right order.
-      */
+     * This method compares the equality of two data frames. To qualify equality, the rows
+     * can be in different order but the columns should be in the right order.
+     */
     //TODO: This implementation may not be efficient, we should use Karau method from this link:
     // https://github.com/holdenk/spark-testing-base/blob/master/src/main/pre-2.0/scala/com/holdenkarau/spark/testing/DataFrameSuiteBase.scala
     def sameAs(other: DataFrame, weakComparaison: Boolean = false): Boolean = {

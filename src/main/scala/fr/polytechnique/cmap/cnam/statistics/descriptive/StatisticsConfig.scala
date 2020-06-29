@@ -3,7 +3,7 @@
 package fr.polytechnique.cmap.cnam.statistics.descriptive
 
 import fr.polytechnique.cmap.cnam.config.{Config, ConfigLoader}
-import fr.polytechnique.cmap.cnam.flattening.CSVSchemaReader
+import fr.polytechnique.cmap.cnam.flattening.convert.CSVSchemaReader
 
 case class StatisticsConfig(
   describeOld: Boolean = true,
