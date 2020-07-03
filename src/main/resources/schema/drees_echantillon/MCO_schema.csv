@@ -7,7 +7,7 @@ MCO_A;PHA_ACT;$;1;0;String
 MCO_A;MOD_ACT;$;4;0;String
 MCO_A;RUM_SEQ;$;2;0;String
 MCO_A;REM_EXP_ACT;$;1;0;String
-MCO_A;ENT_DAT_DEL;;6;0;String
+MCO_A;ENT_DAT_DEL;;6;0;Integer
 MCO_A;ANP_ACT;$;1;0;String
 MCO_A;CDC_ACT;$;7;0;String
 MCO_A;ACV_ACT;$;1;0;String
