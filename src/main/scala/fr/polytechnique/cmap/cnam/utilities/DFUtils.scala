@@ -160,7 +160,7 @@ object DFUtils {
     }
 
     @scala.annotation.varargs
-    def write(path: String, partitionColumns: String*)(mode: String, format: String): Unit = {
+    def write(path: String, partitionColumns: String*)(mode: String, format: String = "parquet"): Unit = {
       format match {
         case "csv" => writeCSV(path, partitionColumns: _*)(mode)
         case "orc" => writeOrc(path, partitionColumns: _*)(mode)

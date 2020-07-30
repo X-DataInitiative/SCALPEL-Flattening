@@ -4,7 +4,7 @@ package fr.polytechnique.cmap.cnam.flattening
 
 import org.apache.spark.sql.{Dataset, SQLContext}
 import fr.polytechnique.cmap.cnam.Main
-import fr.polytechnique.cmap.cnam.flattening.Flattening.saveCSVTablesAsParquet
+import fr.polytechnique.cmap.cnam.flattening.Flattening.saveCSVTablesAsSingleTables
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.load
 import fr.polytechnique.cmap.cnam.utilities.reporting.OperationMetadata
 
@@ -20,7 +20,7 @@ object FlatteningMainConvert extends Main {
     logger.info("begin converting csv to parquet")
     val t0 = System.nanoTime()
 
-    val map = saveCSVTablesAsParquet(sqlContext, conf)
+    val map = saveCSVTablesAsSingleTables(sqlContext, conf)
       .map(operationMetadata => operationMetadata.outputTable -> operationMetadata).toMap
 
     OperationMetadata.serialize(argsMap("meta_bin"), map)

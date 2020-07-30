@@ -4,12 +4,20 @@ package fr.polytechnique.cmap.cnam.utilities
 
 import java.text.SimpleDateFormat
 import java.util.Date
-import org.apache.spark.sql.{AnalysisException, Row}
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.{AnalysisException, Row}
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
 class DFUtilsSuite extends SharedContext {
+
+  "toString" should "show CSV in a String" in {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    val data = Seq(("Patient_A", 1), ("Patient_A", 2), ("Patient_B", 3)).toDF("patientID", "other_col")
+    assert("[patientID: string, other_col: int]" == new CSVDataFrame(data).toString)
+  }
 
   "readCSV" should "read CSV files with correct header and delimiters correctly" in {
 
@@ -58,8 +66,6 @@ class DFUtilsSuite extends SharedContext {
     val sqlCtx = sqlContext
     import sqlCtx.implicits._
 
-    println(sqlCtx.sparkSession.version.split("\\.").head.toInt)
-
     //Given
     val nullable = true
 
@@ -96,7 +102,7 @@ class DFUtilsSuite extends SharedContext {
     val result = inputDF.mergeSchema(inputSchema).applySchema(inputSchema, inputFormat)
     //Then
     assert(result.schema == expectedResult)
-    assertDSs(result, expectedDF)
+    assertDFs(result, expectedDF)
 
   }
 
@@ -316,6 +322,32 @@ class DFUtilsSuite extends SharedContext {
     assert(exception.isInstanceOf[AnalysisException])
     assertDFs(resultAppend, expectedAppend)
     assertDFs(resultWithTimestamp, expected)
+  }
+
+  "write" should "write the data correctly in files with the different format" in {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+    //Given
+    val data = Seq(("Patient_A", 1), ("Patient_A", 2), ("Patient_B", 3)).toDF("patientID", "other_col")
+    val csvPath = "target/test/output.csv"
+    val parquetPath = "target/test/output.parquet"
+    val orcPath = "target/test/output.orc"
+    val expected = data
+    data.write(csvPath, "other_col")("overwrite", "csv")
+    data.write(parquetPath, "other_col")("overwrite")
+    data.write(orcPath, "other_col")("overwrite", "orc")
+    //When
+    val resultCSV = spark.read
+      .option("delimiter", ",")
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv(csvPath)
+    val resultParquet = DFUtils.read(sqlCtx, Seq(parquetPath))
+    val resultOrc = DFUtils.read(sqlCtx, Seq(orcPath), "orc")
+    //Then
+    assertDFs(resultCSV, expected)
+    assertDFs(resultParquet, expected)
+    assertDFs(resultOrc, expected)
   }
 
   "withTimestampSuffix" should "add a timestamp at the end of the path" in {

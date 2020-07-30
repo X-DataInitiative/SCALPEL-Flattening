@@ -4,12 +4,51 @@ package fr.polytechnique.cmap.cnam.flattening
 
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.types._
 import fr.polytechnique.cmap.cnam.SharedContext
+import fr.polytechnique.cmap.cnam.flattening.convert.CSVConverter
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
+import fr.polytechnique.cmap.cnam.utilities.Functions
 
 class FlatteningSuite extends SharedContext {
 
-  "saveCSVTablesAsParquet" should "read all dummy csv tables and save as parquet files" in {
+  it should "read all dummy csv tables and merge schema for orc" in {
+    val sqlCtx = sqlContext
+    //Given
+    val nullable = true
+
+    val conf = ConfigPartition(name = "dummy", inputPaths = List("src/test/resources/flattening/csv-table/dummy.csv"), dateFormat = "dd/MM/yyyy", output = "target/test/output")
+
+    val inputSchema = List(
+      ("BEN_NAI_ANN", "Integer"),
+      ("BEN_DTE_MAJ", "Date"),
+      ("NUM_ENQ", "String")
+    )
+    val schema = Map("dummy" -> inputSchema)
+
+    val expectedResult = StructType(Seq(
+      StructField("NUM_ENQ", StringType, nullable),
+      StructField("BEN_DTE_MAJ", DateType, nullable),
+      StructField("BEN_NAI_ANN", IntegerType, nullable)
+    ))
+
+    val expectedRDD = sc.parallelize(
+      Seq(
+        Row("john", Functions.parseDate("01/01/2006", "dd/MM/yyyy").get, null),
+        Row("george", Functions.parseDate("25/01/2006", "dd/MM/yyyy").get, null),
+        Row("john", null, null)
+      )
+    )
+    val expectedDF = spark.createDataFrame(expectedRDD, expectedResult)
+    //When
+    val table = CSVConverter.read(sqlCtx, conf, schema, "orc")
+    //Then
+    assert(table.df.schema == expectedResult)
+    assertDFs(table.df, expectedDF)
+
+  }
+
+  "saveCSVTablesAsSingleTables" should "read all dummy csv tables and save as single tables" in {
     //Given
     val conf = FlatteningConfig.load("", "test")
 
@@ -23,7 +62,7 @@ class FlatteningSuite extends SharedContext {
     }.toMap
 
     //When
-    val meta = Flattening.saveCSVTablesAsParquet(sqlContext, conf)
+    val meta = Flattening.saveCSVTablesAsSingleTables(sqlContext, conf)
     val result = meta.map {
       op =>
         op.outputTable -> sqlContext.read

@@ -12,7 +12,7 @@ object Flattening {
 
   def logger: Logger = Logger.getLogger(getClass)
 
-  def saveCSVTablesAsParquet(sqlContext: SQLContext, conf: FlatteningConfig): List[OperationMetadata] = {
+  def saveCSVTablesAsSingleTables(sqlContext: SQLContext, conf: FlatteningConfig): List[OperationMetadata] = {
 
     // Generate schemas from csv
     val columnsTypeMap: Schema = conf.columnTypes
