@@ -17,11 +17,7 @@ class DFUtilsSuite extends SharedContext {
     val sqlCtx = sqlContext
     val inputPath = Seq("src/test/resources/flattening/csv-table/IR_BEN_R.csv",
       "src/test/resources/flattening/csv-table/IR_BEN_R.csv")
-    val expectedResult = sqlCtx
-      .read
-      .option("header", "true")
-      .option("delimiter", ";")
-      .csv(inputPath: _*)
+    val expectedResult = DFUtils.read(sqlCtx, inputPath, "csv")
 
     //When
     val result = DFUtils.readCSV(sqlCtx, inputPath)
@@ -35,13 +31,24 @@ class DFUtilsSuite extends SharedContext {
     //Given
     val sqlCtx = sqlContext
     val inputPath = "src/test/resources/flattening/parquet-table/single_table/MCO_A"
-    val expectedResult = sqlCtx
-      .read
-      .option("mergeSchema", "true")
-      .parquet(inputPath)
+    val expectedResult = DFUtils.read(sqlCtx, Seq(inputPath))
 
     //When
     val result = DFUtils.readParquet(sqlCtx, inputPath)
+
+    //Then
+    assert(result sameAs expectedResult)
+  }
+
+  "readOrc" should "read orc file merging the schema of the patitions" in {
+
+    //Given
+    val sqlCtx = sqlContext
+    val inputPath = "src/test/resources/flattening/orc-table/single_table/MCO_A"
+    val expectedResult = DFUtils.read(sqlCtx, Seq(inputPath), "orc")
+
+    //When
+    val result = DFUtils.readOrc(sqlCtx, inputPath)
 
     //Then
     assert(result sameAs expectedResult)
@@ -178,6 +185,31 @@ class DFUtilsSuite extends SharedContext {
 
   }
 
+  "writeOrc" should "write the data correctly in an orc with the different strategies" in {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+    //Given
+    val data = Seq(("Patient_A", 1), ("Patient_A", 2), ("Patient_B", 3)).toDF("patientID", "other_col")
+    val path = "target/test/output"
+    val expected = data
+    val expectedAppend = data.union(data)
+    //When
+    data.writeOrc(path)("overwrite")
+    val result = DFUtils.read(sqlCtx, Seq(path), "orc")
+    val exception = intercept[Exception] {
+      data.writeOrc(path)("errorIfExists")
+    }
+    data.writeOrc(path)("append")
+    val resultAppend = DFUtils.read(sqlCtx, Seq(path), "orc")
+    data.writeOrc("target/test/dummy/output")("withTimestamp")
+    val resultWithTimestamp = DFUtils.read(sqlCtx, Seq("target/test/dummy/output"), "orc")
+    //Then
+    assertDFs(result, expected)
+    assert(exception.isInstanceOf[AnalysisException])
+    assertDFs(resultAppend, expectedAppend)
+    assertDFs(resultWithTimestamp, expected)
+  }
+
   "writeParquet" should "write the data correctly in a parquet with the different strategies" in {
     val sqlCtx = sqlContext
     import sqlCtx.implicits._
@@ -188,16 +220,15 @@ class DFUtilsSuite extends SharedContext {
     val expectedAppend = data.union(data)
     //When
     data.writeParquet(path)("overwrite")
-    val result = spark.read.parquet(path)
+    val result = DFUtils.read(sqlCtx, Seq(path))
     val exception = intercept[Exception] {
       data.writeParquet(path)("errorIfExists")
     }
     data.writeParquet(path)("append")
-    val resultAppend = spark.read.parquet(path)
+    val resultAppend = DFUtils.read(sqlCtx, Seq(path))
     data.writeParquet("target/test/dummy/output")("withTimestamp")
-    val resultWithTimestamp = spark.read.parquet("target/test/dummy/output")
+    val resultWithTimestamp = DFUtils.read(sqlCtx, Seq("target/test/dummy/output"))
     //Then
-    // Then
     assertDFs(result, expected)
     assert(exception.isInstanceOf[AnalysisException])
     assertDFs(resultAppend, expectedAppend)

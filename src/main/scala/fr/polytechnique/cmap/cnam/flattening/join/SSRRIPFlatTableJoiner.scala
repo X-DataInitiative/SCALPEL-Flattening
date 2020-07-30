@@ -6,8 +6,8 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
 import fr.polytechnique.cmap.cnam.flattening.tables.{FlatTable, Table}
 
-class SSRRIPFlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig)
-  extends PMSIFlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig) {
+class SSRRIPFlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig, format: String = "parquet")
+  extends PMSIFlatTableJoiner(sqlContext, config, format) {
 
   val patientKeys: List[String] = config.joinKeysPatient.get
 

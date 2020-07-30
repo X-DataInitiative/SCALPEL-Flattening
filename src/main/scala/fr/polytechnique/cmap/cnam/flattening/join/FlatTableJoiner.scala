@@ -7,20 +7,20 @@ import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
 import fr.polytechnique.cmap.cnam.flattening.tables.{FlatTable, SingleTable, Table}
 
-class FlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig) extends Joiner[SingleTable, FlatTable](sqlContext, config) {
+class FlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig, format: String = "parquet") extends Joiner[SingleTable, FlatTable](sqlContext, config, format) {
 
   val foreignKeys: List[String] = config.joinKeys
 
   val joinFunction: (DataFrame, DataFrame) => DataFrame =
     (accumulator, tableToJoin) => accumulator.join(tableToJoin, foreignKeys, "left_outer")
 
-  val mainTable: Table[SingleTable] = SingleTable(sqlContext, config.inputPath.get, config.mainTableName)
+  val mainTable: Table[SingleTable] = SingleTable(sqlContext, config.inputPath.get, config.mainTableName, format)
   val tablesToJoin: List[Table[SingleTable]] = config.tablesToJoin.map(
     tableName =>
-      SingleTable(sqlContext, config.inputPath.get, tableName)
+      SingleTable(sqlContext, config.inputPath.get, tableName, format)
   )
   val referencesToJoin: List[(Table[SingleTable], FlatteningConfig.Reference)] = config.refsToJoin.map {
-    refConfig => (SingleTable(sqlContext, refConfig.inputPath.get, refConfig.name), refConfig)
+    refConfig => (SingleTable(sqlContext, refConfig.inputPath.get, refConfig.name, format), refConfig)
   }
 
   override def joinRefs(table: Table[FlatTable]): Table[FlatTable] = {
