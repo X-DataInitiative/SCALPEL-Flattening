@@ -6,10 +6,10 @@ import fr.polytechnique.cmap.cnam.flattening.{ConfigPartition, Schema}
 
 trait Converter[A <: AnyTable] {
 
-  def read(sqlContext: SQLContext, config: ConfigPartition, schema: Schema): Table[A]
+  def read(sqlContext: SQLContext, config: ConfigPartition, schema: Schema, format: String = "parquet"): Table[A]
 
   def write(table: Table[A], config: ConfigPartition, format: String = "parquet"): Unit
 
-  def convert(sqlContext: SQLContext, config: ConfigPartition, schema: Schema, format: String = "parquet"): Unit = write(read(sqlContext, config, schema), config, format)
+  def convert(sqlContext: SQLContext, config: ConfigPartition, schema: Schema, format: String = "parquet"): Unit = write(read(sqlContext, config, schema, format), config, format)
 
 }

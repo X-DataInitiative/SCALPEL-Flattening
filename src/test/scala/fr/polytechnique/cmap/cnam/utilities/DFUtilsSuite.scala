@@ -4,7 +4,7 @@ package fr.polytechnique.cmap.cnam.utilities
 
 import java.text.SimpleDateFormat
 import java.util.Date
-import org.apache.spark.sql.AnalysisException
+import org.apache.spark.sql.{AnalysisException, Row}
 import org.apache.spark.sql.types._
 import fr.polytechnique.cmap.cnam.SharedContext
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
@@ -52,6 +52,52 @@ class DFUtilsSuite extends SharedContext {
 
     //Then
     assert(result sameAs expectedResult)
+  }
+
+  "mergeSchema" should "should merge the missing columns according to schema" in {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    println(sqlCtx.sparkSession.version.split("\\.").head.toInt)
+
+    //Given
+    val nullable = true
+
+    val inputDF = Seq(
+      ("john", "01/01/2006"),
+      ("george", "25/01/2006"),
+      ("john", null)
+    ).toDF("NUM_ENQ", "BEN_DTE_MAJ")
+
+    val inputSchema = Map(
+      "BEN_NAI_ANN" -> "Integer",
+      "BEN_DTE_MAJ" -> "Date",
+      "NUM_ENQ" -> "String"
+    )
+
+    val inputFormat = "dd/MM/yyyy"
+
+    val expectedResult = StructType(Seq(
+      StructField("NUM_ENQ", StringType, nullable),
+      StructField("BEN_DTE_MAJ", DateType, nullable),
+      StructField("BEN_NAI_ANN", IntegerType, nullable)
+    ))
+
+    val expectedRDD = sc.parallelize(
+      Seq(
+        Row("john", Functions.parseDate("01/01/2006", inputFormat).get, null),
+        Row("george", Functions.parseDate("25/01/2006", inputFormat).get, null),
+        Row("john", null, null)
+      )
+    )
+    val expectedDF = spark.createDataFrame(expectedRDD, expectedResult)
+
+    //When
+    val result = inputDF.mergeSchema(inputSchema).applySchema(inputSchema, inputFormat)
+    //Then
+    assert(result.schema == expectedResult)
+    assertDSs(result, expectedDF)
+
   }
 
 

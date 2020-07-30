@@ -54,6 +54,10 @@ object DFUtils {
 
     override def toString: String = dataFrame.toString
 
+    def mergeSchema(columnsType: Map[String, String]): DataFrame = {
+      (columnsType.keySet -- dataFrame.columns.toSet).foldLeft(dataFrame)((df, column) => df.withColumn(column, lit(null).cast(StringType)))
+    }
+
     def applySchema(columnsType: Map[String, String], dateFormat: String): DataFrame = {
 
       val typedColumns = dataFrame.columns.map {
