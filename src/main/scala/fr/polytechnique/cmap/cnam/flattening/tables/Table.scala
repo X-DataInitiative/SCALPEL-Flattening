@@ -13,7 +13,7 @@ trait TableBuilder {
 
   def apply[A <: AnyTable](name: String, df: DataFrame): Table[A] = Table[A](name, df, self.category)
 
-  def apply[A <: AnyTable](sqlContext: SQLContext, inputBasePath: String, name: String): Table[A] = apply(name, DFUtils.readParquet(sqlContext, inputBasePath + "/" + name))
+  def apply[A <: AnyTable](sqlContext: SQLContext, inputBasePath: String, name: String, format: String = "parquet"): Table[A] = apply(name, DFUtils.read(sqlContext, Seq(inputBasePath + "/" + name), format))
 
 }
 

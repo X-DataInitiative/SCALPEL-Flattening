@@ -7,10 +7,10 @@ import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
 import fr.polytechnique.cmap.cnam.flattening.tables.{FlatTable, SingleTable, Table}
 
-class PMSIFlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig)
-  extends FlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig) {
+class PMSIFlatTableJoiner(sqlContext: SQLContext, config: JoinTableConfig, format: String = "parquet")
+  extends FlatTableJoiner(sqlContext, config, format) {
 
-  val pmsiPatientTable: Table[SingleTable] = SingleTable(sqlContext, config.inputPath.get, config.pmsiPatientTableName.get)
+  val pmsiPatientTable: Table[SingleTable] = SingleTable(sqlContext, config.inputPath.get, config.pmsiPatientTableName.get, format)
 
   /**
    * This method merge two schemas, if a column is not in the schema of the

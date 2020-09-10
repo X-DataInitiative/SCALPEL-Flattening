@@ -7,7 +7,7 @@ import fr.polytechnique.cmap.cnam.flattening.FlatteningConfig.JoinTableConfig
 import fr.polytechnique.cmap.cnam.flattening.tables.{AnyTable, Table}
 import fr.polytechnique.cmap.cnam.utilities.DFUtils._
 
-abstract class Joiner[A <: AnyTable, B <: AnyTable](sqlContext: SQLContext, config: JoinTableConfig) {
+abstract class Joiner[A <: AnyTable, B <: AnyTable](sqlContext: SQLContext, config: JoinTableConfig, format: String = "parquet") {
 
   def logger: Logger = Logger.getLogger(getClass)
 
@@ -26,7 +26,7 @@ abstract class Joiner[A <: AnyTable, B <: AnyTable](sqlContext: SQLContext, conf
   def writeTable(table: Table[B], outputPath: String, saveMode: String): Unit = {
     Logger.getRootLogger.setLevel(Level.ERROR)
     val t0 = System.nanoTime()
-    table.df.writeParquet(outputPath + "/" + table.name)(saveMode)
+    table.df.write(outputPath + "/" + table.name)(saveMode, format)
     val t1 = System.nanoTime()
     logger.info(s"   writing duration ${table.name} ${(t1 - t0) / Math.pow(10, 9)} sec")
   }

@@ -29,10 +29,34 @@ object DFUtils {
       .parquet(inputPath)
   }
 
+  def readOrc(
+    sqlContext: SQLContext,
+    inputPath: String): DataFrame = {
+    sqlContext
+      .read
+      .option("mergeSchema", "true")
+      .orc(inputPath)
+  }
+
+  def read(
+    sqlContext: SQLContext,
+    inputPath: Seq[String],
+    format: String = "parquet"): DataFrame = {
+    format match {
+      case "orc" => readOrc(sqlContext, inputPath.head)
+      case "csv" => readCSV(sqlContext, inputPath)
+      case _ => readParquet(sqlContext, inputPath.head)
+    }
+  }
+
   implicit class CSVDataFrame(dataFrame: DataFrame) {
 
 
     override def toString: String = dataFrame.toString
+
+    def mergeSchema(columnsType: Map[String, String]): DataFrame = {
+      (columnsType.keySet -- dataFrame.columns.toSet).foldLeft(dataFrame)((df, column) => df.withColumn(column, lit(null).cast(StringType)))
+    }
 
     def applySchema(columnsType: Map[String, String], dateFormat: String): DataFrame = {
 
@@ -123,6 +147,25 @@ object DFUtils {
         writer.partitionBy(partitionColumns: _*).parquet(path)
       else
         writer.parquet(path)
+    }
+
+    @scala.annotation.varargs
+    def writeOrc(path: String, partitionColumns: String*)(mode: String): Unit = {
+      val writer = dataFrame.write
+        .mode(saveMode(mode))
+      if (partitionColumns.nonEmpty)
+        writer.partitionBy(partitionColumns: _*).orc(path)
+      else
+        writer.orc(path)
+    }
+
+    @scala.annotation.varargs
+    def write(path: String, partitionColumns: String*)(mode: String, format: String = "parquet"): Unit = {
+      format match {
+        case "csv" => writeCSV(path, partitionColumns: _*)(mode)
+        case "orc" => writeOrc(path, partitionColumns: _*)(mode)
+        case _ => writeParquet(path, partitionColumns: _*)(mode)
+      }
     }
 
   }

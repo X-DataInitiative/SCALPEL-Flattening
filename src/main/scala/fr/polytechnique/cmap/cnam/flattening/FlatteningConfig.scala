@@ -20,6 +20,7 @@ case class FlatteningConfig(
   basePath: String,
   withTimestamp: Boolean = false,
   timestampFormat: String = "/yyyy_MM_dd",
+  fileFormat: String = "parquet",
   autoBroadcastJoinThreshold: Option[String] = None,
   schemaFilePath: List[String] = List.empty[String],
   join: List[JoinTableConfig] = List.empty[JoinTableConfig],
