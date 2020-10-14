@@ -82,8 +82,17 @@ The Flattening process can be launched as separate Spark jobs, meaning that the
 ### Output
 
 Once a job is finished, the converted tables or the denormalized tables are
- saved in the file system (local file system or HDFS) in Parquet format.
- The schema of the flat tables corresponds to the data types provided in the
+ saved in the file system (local file system or HDFS) in Parquet format or ORC format.
+ 
+Using Apache ORC instead of Parquet could also lead to performance improvements. Parquet was initially chosen
+ over ORC because of better integration with Spark. ORC is now well-integrated in it since spark 2.3 and has been
+ reported to have better performances and a higher compression factor on non-nested data.
+ 
+`file_format` is used to select a data format between Parquet or ORC in the configuration files([examples](src/main/resources/flattening/config/template/template-env.conf))
+ and add a special configuration in the spark-submit command `spark.sql.orc.impl=native`
+  
+ 
+The schema of the flat tables corresponds to the data types provided in the
  schema configuration files.
 
 **Note:** if you are not sure, DO NOT change the table schema
@@ -153,6 +162,7 @@ spark-submit \
   --conf spark.driver.maxResultSize=20G \
   --conf spark.sql.broadcastTimeout=3600 \
   --conf spark.locality.wait=30s \
+  --conf spark.sql.orc.impl=native \
   /path/to/SCALPEL-Flattening/target/scala-2.11/SCALPEL-Flattening-assembly-1.1.jar env=fall conf=/path/config_file.conf meta_bin=/path/meta.bin
   ```
 
