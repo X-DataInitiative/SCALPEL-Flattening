@@ -17,7 +17,7 @@ object FlatteningMainConvert extends Main {
 
     val conf: FlatteningConfig = load(argsMap.getOrElse("conf", ""), argsMap("env"))
 
-    logger.info("begin converting csv to parquet")
+    logger.info("begin converting csv to "+conf.fileFormat)
     val t0 = System.nanoTime()
 
     val map = saveCSVTablesAsSingleTables(sqlContext, conf)
